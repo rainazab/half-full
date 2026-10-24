@@ -9,7 +9,8 @@ type Failure = {
   rejectedStories?: RejectedStory[];
   runLog?: RunLogEntry[];
 };
-type Health = { ready: boolean; environment: Record<string, boolean>; configurationError: string | null };
+type Health = { ready: boolean; environment: Record<string, boolean>; configurationError: string | null;
+  requiredEnvironment: string[]; editor: { label: string; model: string; modelEnv: string } | null };
 
 export default function Home() {
   const [edition, setEdition] = useState<EditionResult | null>(null);
@@ -57,16 +58,17 @@ export default function Home() {
     <header>
       <h1>US</h1>
       <p>A finite news edition. Three to five stories, then you’re done.</p>
-      <p className="note">Apify retrieves current articles. Claude reviews their evidence. “Verified” means supported by the retrieved text; it is not a guarantee of truth.</p>
+      <p className="note">Apify retrieves current articles. {health?.editor?.label ?? "The AI editor"} reviews their evidence. “Verified” means supported by the retrieved text; it is not a guarantee of truth.</p>
     </header>
 
     <section aria-label="Generate edition">
       <button onClick={runEdition} disabled={running}>{running ? "Creating edition…" : "Run today’s edition"}</button>
-      {running && <p role="status">Discovering news with Apify, then checking it with Claude. This can take a few minutes.</p>}
+      {running && <p role="status">Discovering news with Apify, then checking it with {health?.editor?.label ?? "the AI editor"}. This can take a few minutes.</p>}
       {health && <details>
         <summary>Server configuration: {health.ready ? "ready" : "setup required"}</summary>
+        {health.editor && <p>Editor: {health.editor.label} · {health.editor.model}</p>}
         <ul>{Object.entries(health.environment).map(([name, present]) => <li key={name}>
-          <code>{name}</code>: {present ? "set" : name === "ANTHROPIC_MODEL" ? "using server default" : "missing"}
+          <code>{name}</code>: {present ? "set" : health.requiredEnvironment.includes(name) ? "missing" : name === health.editor?.modelEnv ? "using server default" : "optional / not used"}
         </li>)}</ul>
         {health.configurationError && <p>{health.configurationError}</p>}
       </details>}

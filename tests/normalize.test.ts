@@ -55,3 +55,31 @@ test("candidate IDs are stable across tracking links", () => {
   const two = normalizeStories([{ title: "A", url: "https://example.org/a", text: "Evidence" }]);
   assert.equal(one.candidates[0].id, two.candidates[0].id);
 });
+
+test("reads publication date and publisher from matching article JSON-LD", () => {
+  const result = normalizeStories([
+    { metadata: { title: "NPR-style article", url: "https://example.org/npr", jsonLd: [
+      { "@type": "NewsArticle", mainEntityOfPage: { "@id": "https://example.org/npr" }, datePublished: "2026-10-21T01:00:00-04:00", publisher: { name: "NPR test" } },
+    ] }, markdown: "Retrieved text" },
+    { metadata: { title: "BBC-style article", url: "https://example.org/bbc", jsonLd: { "@graph": [
+      { "@type": "WebSite", datePublished: "1999-01-01" },
+      { "@type": "NewsArticle", url: "https://example.org/related", datePublished: "2020-01-01" },
+      { "@type": ["ReportageNewsArticle"], url: "https://example.org/bbc", datePublished: "2026-10-22T16:02:38.572Z", publisher: { name: "BBC test" } },
+    ] } }, markdown: "Retrieved text" },
+  ]);
+  assert.equal(result.candidates[0].publishedAt, "2026-10-21T05:00:00.000Z");
+  assert.equal(result.candidates[0].source, "NPR test");
+  assert.equal(result.candidates[1].publishedAt, "2026-10-22T16:02:38.572Z");
+  assert.equal(result.candidates[1].source, "BBC test");
+});
+
+test("excludes weather/service pages while retaining reported weather articles", () => {
+  const result = normalizeStories([
+    { title: "Local forecast", url: "https://www.bbc.com/weather/2635183", text: "Current forecast with warnings" },
+    { title: "Storm disrupts travel", url: "https://www.bbc.com/news/articles/test-weather", text: "Reported article with evidence" },
+  ]);
+  assert.equal(result.candidates.length, 1);
+  assert.match(result.candidates[0].url, /news\/articles/);
+  assert.equal(result.rejectedStories.length, 1);
+  assert.match(result.rejectedStories[0].reason, /service page/);
+});

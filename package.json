@@ -12,6 +12,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "latest",
     "next": "latest",
+    "openai": "^7.43.0",
     "react": "latest",
     "react-dom": "latest",
     "server-only": "latest",

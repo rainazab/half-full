@@ -1,17 +1,26 @@
 import "server-only";
 import { PipelineError } from "./errors";
+import { getEditorSettings } from "./editor-settings";
 
-export const DEFAULT_MODEL = "claude-sonnet-5-5";
-export const REQUIRED_ENV = ["ANTHROPIC_API_KEY", "APIFY_API_TOKEN", "APIFY_ACTOR_ID"] as const;
+const APIFY_ENV = ["APIFY_API_TOKEN", "APIFY_ACTOR_ID"] as const;
 
 export function environmentStatus() {
-  return Object.fromEntries([...REQUIRED_ENV, "ANTHROPIC_MODEL"].map((name) => [name, Boolean(process.env[name]?.trim())]));
+  return Object.fromEntries([...APIFY_ENV, "ANTHROPIC_API_KEY", "ANTHROPIC_MODEL", "OPENAI_API_KEY", "OPENAI_MODEL", "LLM_PROVIDER"]
+    .map((name) => [name, Boolean(process.env[name]?.trim())]));
+}
+
+export function getEditorConfig() {
+  const settings = getEditorSettings(process.env);
+  const apiKey = process.env[settings.keyEnv]?.trim();
+  if (!apiKey) throw new PipelineError("MISSING_CONFIGURATION", `Missing ${settings.keyEnv} for the selected editor. Set it in .env or .env.local and restart the server.`, 503);
+  return { ...settings, apiKey };
 }
 
 export function getConfig() {
-  const missing = REQUIRED_ENV.filter((name) => !process.env[name]?.trim());
+  const settings = getEditorSettings(process.env);
+  const missing = [...APIFY_ENV, settings.keyEnv].filter((name) => !process.env[name]?.trim());
   if (missing.length) {
-    throw new PipelineError("MISSING_CONFIGURATION", `Missing server environment variables: ${missing.join(", ")}. Set them in .env.local and restart the server.`, 503);
+    throw new PipelineError("MISSING_CONFIGURATION", `Missing server environment variables: ${missing.join(", ")}. Set them in .env or .env.local and restart the server.`, 503);
   }
   const actorId = process.env.APIFY_ACTOR_ID!.trim().replace("/", "~");
   if (!/^[\w-]+(?:~[\w-]+)?$/.test(actorId)) {
@@ -28,21 +37,22 @@ export function getConfig() {
     }
   } else if (actorId === "apify~rag-web-browser") {
     const after = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const year = new Date().getUTCFullYear();
     actorInput = {
-      query: `(site:reuters.com OR site:apnews.com OR site:bbc.com OR site:npr.org) after:${after} news (climate OR science OR education OR economy OR technology OR health)`,
-      maxResults: 10,
+      query: `(site:bbc.com/news/articles/ OR site:npr.org/${year}/) after:${after} news (education OR technology OR science OR economy OR climate OR health)`,
+      maxResults: 20,
       outputFormats: ["markdown"],
-      requestTimeoutSecs: 60,
+      requestTimeoutSecs: 90,
     };
   } else {
     throw new PipelineError("ACTOR_INPUT_REQUIRED", "This Actor requires APIFY_ACTOR_INPUT_JSON. Copy a working JSON input from its Apify Console Input tab; the built-in input only supports apify/rag-web-browser.", 503);
   }
   return {
-    anthropicKey: process.env.ANTHROPIC_API_KEY!.trim(),
+    editor: getEditorConfig(),
     apifyToken: process.env.APIFY_API_TOKEN!.trim(),
     actorId, actorInput,
-    model: process.env.ANTHROPIC_MODEL?.trim() || DEFAULT_MODEL,
   };
 }
 
 export type AppConfig = ReturnType<typeof getConfig>;
+export type EditorConfig = ReturnType<typeof getEditorConfig>;

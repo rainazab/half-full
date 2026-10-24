@@ -1,9 +1,9 @@
 import "server-only";
 import { getConfig } from "./config";
 import { retrieveNews } from "./apify";
-import { reviewCandidates } from "./anthropic";
+import { reviewCandidates } from "./editor";
 import { normalizeStories } from "./normalize";
-import { assembleEditorialResult } from "./validation";
+import { assembleEditorialResult, EditorialValidationError } from "./validation";
 import { PipelineError, publicError } from "./errors";
 import { finishRun } from "./store";
 import type { EditionResult, RunLogEntry, RunRecord } from "./types";
@@ -20,7 +20,7 @@ export async function generateEdition(run: RunRecord): Promise<EditionResult> {
   try {
     log("configuration", "started", "Checking required server configuration.");
     const config = getConfig();
-    log("configuration", "completed", "Apify and Anthropic configuration is present; secrets stay on the server.");
+    log("configuration", "completed", `Apify and ${config.editor.label} configuration is present. Editor model: ${config.editor.model}; secrets stay on the server.`);
     const items = await retrieveNews(config, log, (runId, datasetId) => {
       run.apify = { runId, datasetId };
     });
@@ -35,14 +35,20 @@ export async function generateEdition(run: RunRecord): Promise<EditionResult> {
       throw new PipelineError("NO_USABLE_CANDIDATES", "The Actor returned no usable article candidates. Each item needs a title, an HTTP(S) URL, and a description or text. Inspect the rejection audit and Actor dataset fields.");
     }
     log("normalize", "completed", `${normalized.candidates.length} candidates ready; ${normalized.rejectedStories.length} normalization rejections.`);
-    log("anthropic.review", "started", `Sending ${normalized.candidates.length} candidates to Claude for cautious evidence review and editorial decisions.`);
-    const response = await reviewCandidates(config, normalized.candidates);
-    log("anthropic.review", "completed", "Received Claude's structured editorial response.");
-    log("validate", "started", "Checking complete candidate coverage, source IDs, verbatim evidence, confidence, and edition size.");
+    log(`${config.editor.provider}.review`, "started", `Sending ${normalized.candidates.length} candidates to ${config.editor.label} for cautious evidence review and editorial decisions.`);
+    const response = await reviewCandidates(config.editor, normalized.candidates);
+    log(`${config.editor.provider}.review`, "completed", `Received ${config.editor.label}'s structured editorial response.`);
+    log("validate", "started", "Checking complete candidate coverage, source IDs, retrieved evidence passages, confidence, and edition size.");
     let reviewed: ReturnType<typeof assembleEditorialResult>;
     try { reviewed = assembleEditorialResult(response, normalized.candidates); }
-    catch {
-      throw new PipelineError("CLAUDE_VALIDATION_FAILED", "Claude's response failed strict validation of decision coverage, fields, source IDs, or evidence quotes. No edition was published; retry with substantive article text.");
+    catch (error) {
+      const reason = error instanceof EditorialValidationError ? error.message : "The editorial response could not be validated.";
+      run.rejectedStories = [...normalized.rejectedStories, ...normalized.candidates.map((candidate) => ({
+        title: candidate.title, url: candidate.url, confidence: 0, verificationStatus: "uncertain" as const,
+        reason: `Not published because the editorial response was invalid: ${reason}`,
+      }))];
+      run.stats = { candidatesFound: run.rejectedStories.length, approved: 0, rejected: run.rejectedStories.length };
+      throw new PipelineError("EDITOR_VALIDATION_FAILED", `${reason} No edition was published; every candidate is included in the audit.`);
     }
     const rejectedStories = [...normalized.rejectedStories, ...reviewed.rejectedStories];
     run.rejectedStories = rejectedStories;
