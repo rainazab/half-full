@@ -1,3 +1,4 @@
+import { normalizeMedia } from "./media";
 import { createHash } from "node:crypto";
 import type { CandidateStory, RejectedStory } from "./types";
 
@@ -131,6 +132,7 @@ export function normalizeStories(items: unknown[], limit = 20) {
       id: `candidate-${createHash("sha256").update(url!).digest("hex").slice(0, 16)}`,
       title, url: url!, source: publisher.slice(0, 200), description, text,
       publishedAt: publishedDate(row, metadata, article),
+      media: normalizeMedia(row, url!, publisher),
     });
   }
   return { candidates, rejectedStories };

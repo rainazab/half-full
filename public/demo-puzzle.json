@@ -1,0 +1,181 @@
+{
+  "grid": [
+    [
+      "T",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      "R",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      "A",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      "D",
+      null,
+      null,
+      "P",
+      "H",
+      "P",
+      null,
+      null
+    ],
+    [
+      "E",
+      null,
+      null,
+      "H",
+      null,
+      "H",
+      null,
+      null
+    ],
+    [
+      "S",
+      null,
+      null,
+      "Y",
+      null,
+      "I",
+      null,
+      null
+    ],
+    [
+      "U",
+      null,
+      null,
+      "S",
+      null,
+      "S",
+      null,
+      null
+    ],
+    [
+      "R",
+      null,
+      null,
+      "I",
+      null,
+      "H",
+      null,
+      null
+    ],
+    [
+      "P",
+      "A",
+      "T",
+      "C",
+      "H",
+      "I",
+      "N",
+      "G"
+    ],
+    [
+      "L",
+      null,
+      null,
+      "A",
+      null,
+      "N",
+      null,
+      null
+    ],
+    [
+      "U",
+      null,
+      null,
+      "L",
+      null,
+      "G",
+      null,
+      null
+    ],
+    [
+      "S",
+      null,
+      null,
+      "A",
+      null,
+      null,
+      null,
+      null
+    ],
+    [
+      null,
+      null,
+      null,
+      "I",
+      null,
+      null,
+      null,
+      null
+    ]
+  ],
+  "entries": [
+    {
+      "answer": "TRADESURPLUS",
+      "clue": "The amount of goods and services a country sells abroad compared with what it buys from other countries.",
+      "storyId": "candidate-c92051d0483d11bb",
+      "direction": "down",
+      "row": 0,
+      "col": 0,
+      "number": 1
+    },
+    {
+      "answer": "PHYSICALAI",
+      "clue": "A type of artificial intelligence that can control robots in the real world.",
+      "storyId": "candidate-065e5e8e5204e896",
+      "direction": "down",
+      "row": 3,
+      "col": 3,
+      "number": 2
+    },
+    {
+      "answer": "PHP",
+      "clue": "A popular server-side programming language used in web development for decades.",
+      "storyId": "candidate-2c4b87c1d1d96844",
+      "direction": "across",
+      "row": 3,
+      "col": 3,
+      "number": 2
+    },
+    {
+      "answer": "PHISHING",
+      "clue": "Messages that may exploit publicity around the incident; users are warned to be alert to them.",
+      "storyId": "candidate-2c4b87c1d1d96844",
+      "direction": "down",
+      "row": 3,
+      "col": 5,
+      "number": 3
+    },
+    {
+      "answer": "PATCHING",
+      "clue": "Installing security fixes, which one ethical hacker likened to running a Windows update.",
+      "storyId": "candidate-2c4b87c1d1d96844",
+      "row": 8,
+      "col": 0,
+      "direction": "across",
+      "number": 4
+    }
+  ]
+}

@@ -168,3 +168,13 @@ a:focus-visible,button:focus-visible,summary:focus-visible,h2:focus-visible {
     }
   }
 }
+:root { background:#f5f3ed; color:#30264e; }
+audio { display:block; width:100%; margin:16px 0; }
+.crossword-scroll { overflow:auto; padding:6px 0; }
+.crossword-grid { display:grid; width:max-content; background:#30264e; gap:1px; border:2px solid #30264e; }
+.crossword-cell { position:relative; background:white; height:32px; }
+.crossword-cell span { position:absolute; top:1px; left:2px; font-size:9px; }
+.crossword-cell input { height:100%; width:100%; border:0; padding:10px 0 0; text-align:center; font-size:16px; background:transparent; color:#30264e; border-radius:0; }
+.crossword-cell input[aria-invalid=true] { background:#ffd9d1; }
+.crossword-block { background:#30264e; }
+input:focus-visible { outline:3px solid #2466c2; outline-offset:1px; }

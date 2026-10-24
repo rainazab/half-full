@@ -1,68 +1,60 @@
-# US MVP verification — 2026-10-24
+# US upgrade verification — October 24, 2026
 
-## Baseline and changes
+## Baseline preserved
 
-The existing Next.js/TypeScript app already had the four JSON endpoints, official Apify REST integration, official OpenAI/Anthropic SDK adapters, normalization, strict decision validation, bounded deadlines, an in-memory latest-edition/run store, a basic all-stories page, Docker setup, and 23 passing tests. Its baseline production build passed. The repository was clean before this task's changes; local secret files were not modified.
-
-Completed in this task:
-
-- One-story reader with Back/Next, directional gestures, keyboard arrows, progress, ending screen and review. Transparency preserves reader position.
-- Original sources/dates, confidence limitations, exact retrieved passages and field-level references. Clearly separated insufficient-evidence and other exclusions.
-- Explicit no-key `/demo` mode. Its checked-in snapshot is a real successful run, with original dates, five stories, fifteen exclusions, evidence and audit. It is never used by the live pipeline.
-- Manifest, PNG/maskable/Apple icons, production service worker, installation prompt where supported, standalone offline fixed-demo reader. API/POST/authenticated/external requests bypass caching.
-- Live NDJSON progress as an opt-in representation; existing JSON endpoint behavior preserved.
-- Better publication date parsing, canonical query sorting, duplicate URL/content rejection, unknown-date exclusion, bounded transient retries, complete failure audits and partial-edition exclusion.
-- Source classifications, syndication groups, contradiction flags, per-field passage validation and conservative confidence caps. Semantic support and source independence still require model judgment; these checks are not independent fact-checking.
-- OpenAI preferred when both keys exist; optional Claude preserved. Claude output budget/effort adjusted after an observed incomplete real response.
-- Snapshot validation/update script, tests, deployment and judge walkthrough documentation.
+The repository was clean at audit. Existing Next.js App Router, Apify → Claude evidence pipeline, four routes, NDJSON logs, validation, audit, memory store, concurrency guard, finite reader and PWA were retained. All 48 baseline tests passed. A stale duplicate generated `.next/types` file initially confused TypeScript; the normal production build regenerated that ignored output, after which type checking passed. No secrets or user source changes were overwritten.
 
 ## Automated checks
 
-Final commands:
-
-- `npm test`: **48 tests passed, 0 failed**.
+- `npm test`: **75 passed, 0 failed**, including all original 48.
 - `npm run typecheck`: passed.
-- `npm run build`: passed; `/`, `/demo`, and all four API routes built successfully.
+- `npm run build`: passed; existing four API endpoints and the new audio route are dynamic Node routes.
 - `git diff --check`: passed.
-- No linter is configured in this repository.
-- Exact configured key/token values were checked against `.next/static` and `public`: no matches. `.env` and generated diagnostics remain Git-ignored.
+- No standalone lint script is configured.
 
-Tests include provider HTTP failures and incomplete/refused/invalid JSON, bounded retries, Apify empty/failed/malformed/timeout results, source and passage IDs, contradictions, confidence caps, complete and partial pipeline results, concurrent runs, route error/stream contracts, demo loading, ordering/navigation/ending boundaries, swipe thresholds, publication dates, content deduplication, manifest icon dimensions, and service-worker cache exclusions/offline fallback.
+New tests cover media attribution/rights restrictions, glossary/narration source references, rejection of invented IDs/quotes, legacy narration, Cartesia configuration and SDK requests, invalid MP3/provider failures, bounded audio caching/coalescing/cooldown, HTTP ranges, Reddit normalization/relevance/deduplication, optional retrieval failure, deadline skipping, exact social quote validation, crossword layout/connectivity/numbering/completion, local day streak logic, and offline audio/puzzle assets.
 
-## Actual live calls
+All automated provider tests use mocks. Paid calls were limited to explicit integration checks and preparation of the archive.
 
-The current `.env` contains an Anthropic key and Apify token, but **no OpenAI key**. This differs from the earlier OpenAI handoff. No secret file was overwritten. Consequently this session's live runs used the existing optional Claude adapter; OpenAI's SDK response/error handling and schema were tested with isolated synthetic HTTP fixtures, not a new funded live request.
+## Real provider checks
 
-First hardened run `334231b1-a7fa-42ca-baf1-c9808c6b428c`: Apify retrieved 20 candidates; Claude returned incomplete output. Nothing was published, all 20 candidates were audited, and the failure remained visible.
+- Real Claude call produced five archived quick/default/deeper explanations, contextual definitions and 30–50-second scripts. Source IDs/passages were validated against the archive's retained material.
+- Real Cartesia calls produced five bundled MP3s (approximately 31–42 seconds actual playback). A first exploratory clip was removed when replaced by the final script. `/demo` Play makes no paid request.
+- Real Apify Reddit batch: run `OGAqv39vfPVNqIDoM`, dataset `w0aZ03ZXO02g1SQ8P`. Thirteen recent posts were normalized. A stricter title relevance pass left two specific PHP discussions in the archive; removals are recorded in its enrichment log.
+- Complete upgraded live pipeline: run `0623e0cc-142f-4ae1-84ec-531cef74f344`, October 24 at 21:45–21:48 UTC. **20 candidates, 4 approved, 16 excluded**. All four retained stories had validated experience/narration fields. News Actor `JNZaV2lyBLwIu8LMs`, dataset `IXgxqxfzlS4LeLYva`; social Actor `57g1SSWwzqMUKsr1q`, dataset `5VOIS7jlsVWnp1qXY`.
+- That run exposed two unrelated mental-health social matches. The added bounded Claude relevance check was tested against those already retrieved posts: it removed both and retained the PHP/Barclays topic matches. Unknown IDs or invented supporting quotes fail closed. This extra check never changes verification or confidence.
+- Real live audio POST generated a 539,630-byte MP3. A second POST returned `cached: true`; GET with `Range: bytes=0-99` returned **206** and exactly 100 bytes. `Cache-Control: no-store` was present.
+- Health after the final build reported Claude selected, Apify configuration present, OpenAI key absent, and Cartesia configured. Health is a configuration check, not a new provider authentication call.
 
-After adjusting the optional Claude output budget, browser-triggered streamed run `3eb186ff-3454-443b-8b16-9fb4f1173be5` completed at **2026-10-24T21:14:24.904Z**:
+Local raw verification artifacts are ignored under `generated/`; they contain public results and controlled logs, not credentials. The actual live store is deliberately memory-only and clears on restart.
 
-- Apify run: `kGHyoNPSAPaPRaIV9`
-- Dataset: `V3A7siaFw0pjh2Rbj`
-- Candidates: **20**
-- Published: **5**
-- Excluded: **15**
-- All five stories retained exact evidence and five content-support records.
-- `/api/today` and `/api/run/:id` returned the successful result/record. The checked-in demo snapshot preserves this actual run and explicitly labels it archived.
+## Browser QA
 
-Run history is memory-only and disappears on a restart. Saved diagnostics under `generated/` are ignored and are not runtime storage.
+Chrome on the development machine, not a physical iPhone/iPad:
 
-## Browser and PWA checks performed
+- Actual measured CSS widths **320, 390, 768 and 1024 px**, plus larger desktop: no horizontal page overflow. Browser zoom required compensating viewport requests; measurements used `innerWidth`, not the requested size alone.
+- Archived licensed visual, long headlines, readable explanations, glossary disclosures and receipts rendered.
+- Real bundled MP3 playback advanced time; pause, replay, seek and manual Next worked. Changing stories resets the clip. Explicit listen-through advanced from story one to story two and played the second clip. Initial loading did not autoplay.
+- Keyboard navigation preserved story order; Back/Next ended at “You’re caught up.” Review returned to story one.
+- Filled the real crossword through browser inputs; Check answers displayed “Practice complete.” No game was required to reach the ending.
+- Stopped the Node server, reloaded the page, and verified the clearly labeled offline shell. Cached Cartesia audio played (duration 41.874 seconds for the first clip), navigation worked, and the saved crossword loaded. Restarted the app afterward.
+- Inspected source dates, original NSA/NCSC advisory links and exact passages. Linked documents explicitly say their full contents were not independently retrieved.
+- Screenshots: `generated/qa-reader-upgrade.jpg`, `generated/qa-crossword-upgrade.jpg`, `generated/qa-offline-audio.jpg`.
 
-Chrome on macOS was used, not a physical iPhone:
+## Honest limits
 
-- Desktop layout and a narrow layout (measured 433 CSS pixels; Chrome's window minimum prevented the requested narrower override).
-- No horizontal document overflow at the measured narrow viewport.
-- Buttons, heading focus, keyboard progression, first/end boundaries, review-to-first-story, exclusions and return-to-current-story.
-- Live loading stages, successful streamed result, original source/date display, source classification and confidence explanation.
-- A separate production server on port 3001 with provider keys/token/Actor intentionally empty showed a visible configuration failure; choosing the fixed demo then worked without keys. Actual `.env` was untouched.
-- Stopping the isolated production server and reloading showed the labeled offline shell; saved story navigation continued to work. This tests backend unavailability, not a physical-device radio-off test.
-- Chrome offered the Install US control. Installation itself was not performed.
-- `/sw.js` served HTTP 200, `Cache-Control: no-cache, no-store, must-revalidate`, `Service-Worker-Allowed: /`, and the JavaScript content type.
-- Swipe direction/boundaries were unit-tested; physical touchscreen gestures and iOS VoiceOver/Safari installation remain device checks.
+Physical Safari autoplay/installation, mobile touch gestures and public HTTPS deployment have not been tested on hardware. Swipe classification has automated coverage; browser QA used buttons/keyboard. There is no word-level alignment, multi-image slideshow, TikTok/Instagram adapter, or PDF extraction/page preview. Unknown-rights images are links, not copied photos. Social model relevance is conservative but remains a model judgment. Every story can still be read without images, social context or audio.
 
-## Deployment status and remaining verification
+Deploy one long-running Node process with HTTPS and a 300-second request allowance. Memory-only edition/audio state is not reliable across independent serverless instances. No public deployment or infrastructure changes were made.
 
-No public deployment or infrastructure modification was performed. No Vercel metadata was present. The existing single-process Node/Docker approach is documented; the runtime now includes the public PWA files and Next configuration. Docker is not installed locally, so a container build was not executed. Production Node build/start were executed successfully.
+## Final integrated relevance check
 
-To verify OpenAI end-to-end, supply `OPENAI_API_KEY` and set `LLM_PROVIDER=openai`, restart, then run one edition. To verify deployed PWA behavior, deploy the documented single Node process behind HTTPS with a 300-second proxy deadline and buffering disabled, then test installation/offline behavior on the intended phone. Funding, source availability and editorial evidence determine whether a live run can publish 3–5 stories; failures never lower the threshold or silently substitute the demo.
+Run `8218a99a-b291-4306-a84c-d8b5a833364b` completed at 21:55:58 UTC using the integrated optional Claude social check: **20 candidates, 3 approved, 17 excluded**. All three stories had validated enhanced explanations. The Reddit Actor (`BKtPGveP0qoMSRWZQ`, dataset `ub4O21GYOf2T7Ld3d`) returned nine recent posts; four specific topic matches survived both filters. This confirms optional relevance works inside the full pipeline budget. A subsequent client-only fix makes direct `/demo` → live switching fetch the existing `/api/today` result instead of relying solely on that tab's previously loaded edition.
+
+The current live glossary may not produce a connected crossword with three usable words; in that case no puzzle is forced. The archived five-word crossword is always available for the judge walkthrough. No invented clues or unrelated live puzzle are substituted.
+
+## Demo-ready process left running
+
+Final build run `2083c7de-df1a-47a2-a808-cd3a1ab0da13` completed at **21:59:47 UTC** in approximately 119 seconds: **20 candidates, 4 approved, 16 excluded**, all four with validated explanations/narration. News Actor `KZGJGBqJE5bnrLbn6`, dataset `tPc7Dcgs05Liu0WbV`; social Actor `pMpDFHuTIiBsCcspy`, dataset `ifoYdmHYO0o8J3Ecw`. Twelve recent public posts yielded three specific, quote-validated social links. This edition also forms a validated four-word crossword. Browser verification confirmed direct `/demo` → live switching loads that existing edition. The production process was left running on port 3000; the current live edition is retained until it restarts.
+
+The final live story's Cartesia clip was also generated through the browser Play button and observed playing for over 30 seconds (41.639-second duration). It was paused and reset near the beginning for the demo. Live/demo switching was rechecked on the final production build. A scan of source files and client JavaScript bundles found no configured API secret values.

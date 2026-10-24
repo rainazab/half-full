@@ -3,6 +3,12 @@
     "id": "3eb186ff-3454-443b-8b16-9fb4f1173be5",
     "createdAt": "2026-10-24T21:14:24.904Z",
     "mode": "demo",
+    "demoInfo": {
+      "label": "Fixed demo edition",
+      "recordedAt": "2026-10-24T21:14:24.904Z",
+      "originRunId": "3eb186ff-3454-443b-8b16-9fb4f1173be5",
+      "notice": "Saved successful Apify → Claude run. This is an archived edition, not freshly retrieved news. Original source dates, evidence passages, exclusions and audit are preserved."
+    },
     "stories": [
       {
         "id": "candidate-2c4b87c1d1d96844",
@@ -25,6 +31,198 @@
         "confidence": 0.82,
         "hypeScore": 0.25,
         "verificationReason": "Detailed BBC reporting attributes the claims to named researchers, the PHP Foundation, the NSA and other agencies, and includes the caveat that no successful attacks had been reported.",
+        "media": [
+          {
+            "url": "/media/php-logo.png",
+            "sourceUrl": "https://www.php.net/download-logos.php",
+            "publisher": "PHP Group",
+            "type": "image",
+            "alt": "PHP programming language logo; contextual illustration, not an event photograph",
+            "attribution": "PHP logo by Colin Viebrock · unchanged · CC BY-SA 4.0 · contextual illustration",
+            "rights": "licensed",
+            "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
+            "retrievedAt": "2026-10-24T21:44:00.000Z"
+          }
+        ],
+        "socialContext": {
+          "notice": "A small set of public posts, not a representative survey. Questions and framing are quoted from users, not verified claims or independent corroboration.",
+          "posts": [
+            {
+              "id": "1xbwxya",
+              "title": "'Critical' PHP flaws affected cyber.gov.au. PHP runs about 75% of sites with a known language, W3Techs says",
+              "text": "**[ABC News](https://www.abc.net.au/news/2026-10-22/php-vulnerabilities-cyber-asd/107294812)** · also in The Australian (paywall), [Reuters](https://news.google.com/rss/articles/CBMixAFBVV95cUxNemhoUnNZdUg4Sk9JMjJQU25mTUZSX2lHc1JTNTFpNGlTcWxRRDctcFNCcVZiTUhYQ211YnNjSnRvYTYyS29VNFFKcHE4VGFMcHMxTGNwa3NmVUFNamNnektGaU9BbURibzdIY2hHUlpMbEwtNWhrOG9BenJvYkllVnNfakVVRU5yRzRjdDBjQXc2OEwtS1RwZVZhaWhoRWtlalVmU0xOQm5SbmUyeGVGeGgzUkE2XzRtbFBKdTJnUTJoRWdV?oc=5), [news.com.au](https://news.google.com/rss/articles/CBMivAFBVV95cUxPaTdJQzRNZVBGUm9yYTZQUExzZ1J3M1V1NXdkUzhzeG9GNlJCSWhISzVkU2tTaXRLQzdISHZVbmFyTHJOaW1Qd3lrYkVxSm1DVGgyR2hpMTNtRV9vSG1aRG9aZHZRTzQyYXl5aXVqLWdmU2ZRbTVLYVpWdlpfdVFnaEFCbXBRWWJTaDVaeG5WZ0I2THp0TkVNR1BxMDh0cEt5aDNPUlUxTldWYmxhTG5FNjJKMXJkTzlFVVdyMQ?oc=5)\n\nThe flaws were first found using artificial intelligence, a Google-owned cybersecurity agency says. Hackers are believed to be exploiting them already, and governments overseas have taken sites offline.\n\n- PHP runs about 75 per cent of websites whose programming language can be identified, tracker W3Techs says\n- It's the engine behind WordPress, which powers about 43 per cent of all websites\n- Officials say every version from PHP 5 on could be affected, though PHP hasn't said which ones are vulnerable\n- The Netherlands and Finland took government sites offline as a precaution\n- Cloudflare's Dane Knecht: \"This is a STOPGAP only. Patch as soon as PHP releases the update\"\n\n**Impact:** if your site runs on WordPress, Drupal, Joomla or Magento, it runs on PHP, and the ASD says to apply security patches as they become available.",
+              "url": "https://www.reddit.com/r/AusNewsToday/comments/1xbwxya/critical_php_flaws_affected_cybergovau_php_runs/",
+              "publishedAt": "2026-10-21T19:30:47.000Z",
+              "platform": "Reddit",
+              "community": "AusNewsToday",
+              "questions": [
+                "c1JTNTFpNGlTcWxRRDctcFNCcVZiTUhYQ211YnNjSnRvYTYyS29VNFFKcHE4VGFMcHMxTGNwa3NmVUFNamNnektGaU9BbURibzdIY2hHUlpMbEwtNWhrOG9BenJvYkllVnNfakVVRU5yRzRjdDBjQXc2OEwtS1RwZVZhaWhoRWtlalVmU0xOQm5SbmUyeGVGeGgzUkE2XzRtbFBKdTJnUTJoRWdV?",
+                "xzZ1J3M1V1NXdkUzhzeG9GNlJCSWhISzVkU2tTaXRLQzdISHZVbmFyTHJOaW1Qd3lrYkVxSm1DVGgyR2hpMTNtRV9vSG1aRG9aZHZRTzQyYXl5aXVqLWdmU2ZRbTVLYVpWdlpfdVFnaEFCbXBRWWJTaDVaeG5WZ0I2THp0TkVNR1BxMDh0cEt5aDNPUlUxTldWYmxhTG5FNjJKMXJkTzlFVVdyMQ?"
+              ]
+            },
+            {
+              "id": "1xbufyo",
+              "title": "Two critical security flaws in PHP, the programming language behind much of the internet, are forcing governments to take websites offline, per the BBC. ...",
+              "text": "  \nThe flaws were found by AI. Security firm Wiz called them the “most severe vulnerabilities ever discovered” by the technology.  \n  \nhttp://twitter.com/1200616796295847936/status/2112933627168534867",
+              "url": "https://www.reddit.com/r/unusual_whales/comments/1xbufyo/two_critical_security_flaws_in_php_the/",
+              "publishedAt": "2026-10-21T18:00:09.000Z",
+              "platform": "Reddit",
+              "community": "unusual_whales",
+              "questions": []
+            }
+          ]
+        },
+        "experience": {
+          "quick": {
+            "text": "Two serious flaws were disclosed in PHP, a language widely used for websites. Agencies urged organisations to patch.",
+            "evidence": [
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "It is maintained by a non-profit called [the PHP Foundation](https://thephp.foundation/), composed of individuals and companies which depend on the language and aim to ensure its \"long-term prosperity\".\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Diagram explaining how PHP works using a restaurant analogy. A customer orders a burger, representing a user visiting a website. A waiter passes the order to the kitchen, representing a web server running PHP code to build the webpage. A chef prepares the burger - like PHP builds the page - and the finished burger is then delivered back by the waiter, representing the completed webpage being sent to the user. Arrows show the request and response cycle.](https://ichef.bbci.co.uk/news/480/cpsprodpb/c011/live/b5acfee0-ce38-11f1-9a39-31b474234113.png.webp)\n\n## What is the vulnerability?\n\nA group of cyber-security researchers and organisations disclosed two vulnerabilities within PHP this week, which they warned could have the potential to upend sites across the internet.\n\nCyber firms Wiz and Calif said the flaws were inherent in the language itself, affecting versions of PHP released over the last decade.\n\nThe technical bugs, given the technical IDs CVE-2026-109618 and CVE-2026-109619, were ranked a 9.2 out of 10 in severity by researchers."
+              },
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p7",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "The US National Security Agency [told all organisations](https://www.nsa.gov/Press-Room/Press-Releases-Statements/Press-Release-View/Article/4630238/nsa-advisory-critical-patches-recommended-for-php-vulnerabilities/) that use PHP to take their systems offline if they were unable to patch them immediately, adding that the flaw could provide a \"direct path\" to exploit a system's database.\n\n\"These risks are serious enough to require immediate patching across United States Government departments and agencies,\" the agency said.\n\nIts counterparts in the EU, Singapore and Australia have also issued similar alerts.\n\nJapanese Prime Minister Sanae Takaichi urged people to check if their publicly available websites ran on PHP in posts on X.\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Bloomberg via Getty Images Sanae Takaichi, Japan's prime minister, delivers a policy speech during an extraordinary session at the lower house of parliament in Tokyo, Japan, on Monday, Oct. 5, 2026. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/99ea/live/ae372750-cdb9-11f1-bb56-8df8ff97d155.jpg.webp)Bloomberg via Getty Images\n\nPrime Minister Takaichi issued an \"urgent request for everyone to take action tonight\" in social media posts on Wednesday\n\nTech companies also sought to quickly secure their systems."
+              }
+            ]
+          },
+          "explanation": {
+            "text": "Cyber-security researchers disclosed two vulnerabilities in PHP, a programming language used in web development. Cyber firms Wiz and Calif said the flaws are in the language itself and affect versions released over the last decade. Agencies including the US National Security Agency told organisations using PHP to patch, or take systems offline if they could not. Most people do not need to act, because the issue affects back-end systems.",
+            "evidence": [
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "It is maintained by a non-profit called [the PHP Foundation](https://thephp.foundation/), composed of individuals and companies which depend on the language and aim to ensure its \"long-term prosperity\".\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Diagram explaining how PHP works using a restaurant analogy. A customer orders a burger, representing a user visiting a website. A waiter passes the order to the kitchen, representing a web server running PHP code to build the webpage. A chef prepares the burger - like PHP builds the page - and the finished burger is then delivered back by the waiter, representing the completed webpage being sent to the user. Arrows show the request and response cycle.](https://ichef.bbci.co.uk/news/480/cpsprodpb/c011/live/b5acfee0-ce38-11f1-9a39-31b474234113.png.webp)\n\n## What is the vulnerability?\n\nA group of cyber-security researchers and organisations disclosed two vulnerabilities within PHP this week, which they warned could have the potential to upend sites across the internet.\n\nCyber firms Wiz and Calif said the flaws were inherent in the language itself, affecting versions of PHP released over the last decade.\n\nThe technical bugs, given the technical IDs CVE-2026-109618 and CVE-2026-109619, were ranked a 9.2 out of 10 in severity by researchers."
+              },
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p7",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "The US National Security Agency [told all organisations](https://www.nsa.gov/Press-Room/Press-Releases-Statements/Press-Release-View/Article/4630238/nsa-advisory-critical-patches-recommended-for-php-vulnerabilities/) that use PHP to take their systems offline if they were unable to patch them immediately, adding that the flaw could provide a \"direct path\" to exploit a system's database.\n\n\"These risks are serious enough to require immediate patching across United States Government departments and agencies,\" the agency said.\n\nIts counterparts in the EU, Singapore and Australia have also issued similar alerts.\n\nJapanese Prime Minister Sanae Takaichi urged people to check if their publicly available websites ran on PHP in posts on X.\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Bloomberg via Getty Images Sanae Takaichi, Japan's prime minister, delivers a policy speech during an extraordinary session at the lower house of parliament in Tokyo, Japan, on Monday, Oct. 5, 2026. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/99ea/live/ae372750-cdb9-11f1-bb56-8df8ff97d155.jpg.webp)Bloomberg via Getty Images\n\nPrime Minister Takaichi issued an \"urgent request for everyone to take action tonight\" in social media posts on Wednesday\n\nTech companies also sought to quickly secure their systems."
+              },
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p10",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "The issue affects back-end website and web development processes that will be invisible to many users - meaning most people won't need to take any action.\n\nBut small businesses with sites, including those built using WordPress, may be wondering how to protect themselves.\n\nThose who own websites or manage infrastructure running PHP have been urged to secure their websites by updating to the latest version.\n\nEthical hacker Ken Munro, who has spent years finding security flaws in computer systems, says installing the fixes - known as patching - is \"a bit like running a Windows update\".\n\nIf a hosting company or web developer manages your website, contact them and ask whether the PHP security fixes have been applied - something that must be applied to PHP itself and cannot be resolved by updating WordPress or its plugins.\n\nIf you look after your website yourself, Munro says \"it is your own responsibility to make sure fixes are applied\".\n\nThe UK's National Cyber Security Centre [recommends](https://www.ncsc.gov.uk/news/critical-security-issue-affecting-php) considering temporarily taking sites offline if updates or temporary protections cannot be applied quickly enough.\n\nThe US National Security Agency has also urged \"heightened awareness\" in the coming weeks, telling people to closely monitor updates from software vendors."
+              }
+            ]
+          },
+          "background": {
+            "text": "The BBC reports the researchers used advanced AI tools from OpenAI to find the flaws. One expert said the bugs were not new, but the ability to find them was. Details leaked online, forcing PHP's developers to rush out their announcement. As of Friday morning, no successful attacks had been reported, but experts warn any impact may take time to become apparent.",
+            "evidence": [
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p9",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "According to some cyber-security researchers using scans to check servers at risk of the PHP vulnerability, the rate of organisations implementing patches has climbed - but not as quickly as might be hoped globally.\n\n## How was AI involved?\n\nResearchers at Calif and Wiz who located the vulnerabilities used advanced AI tools, developed by ChatGPT-developer OpenAI, which can analyse code and find flaws much faster than humans or older systems.\n\n\"Modern software is incredibly complex, and some vulnerabilities can remain undetected for years,\" Kanhere said.\n\n\"The underlying bugs weren't new; what changed was our ability to find them,\" Kanhere said.\n\nDetails of the discovery leaked online this week, forcing the PHP platform's developers to rush out its announcement of the security flaw and its huge scale.\n\nThe incident \"highlights how AI can uncover security flaws\" but also how it can \"help attackers rapidly develop offensive tools and exploits,\" OpenAI said in a blog post.\n\nIt said it had also released a program that could check if the PHP platform was secure.\n\n\"Many of these flaws stem from the way software were built in the past, which were built for functionality and not with security in mind,\" said Ryan Ko, at the University of Queensland's Cyber Research Centre.\n\n## What does it mean for you?"
+              },
+              {
+                "sourceId": "candidate-2c4b87c1d1d96844",
+                "passageId": "p8",
+                "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                "publisher": "BBC News",
+                "excerpt": "E-commerce giant Amazon said it was targeted in multiple attempts days before the public disclosure of the PHP issue, but its websites were operating as normal.\n\nMatthew Prince, the boss of internet infrastructure firm Cloudflare, also said it had seen \"thousands\" of attempts to exploit the PHP vulnerabilities across its network in the 10 hours before it was publicly announced.\n\n\"That jumped to tens of thousands in the 45 minutes post announcement, hundreds of thousands within two hours, and millions now,\" he [wrote on X](https://x.com/eastdakota/status/2113079352682570051).\n\nAs of Friday morning, no successful attacks had been reported.\n\nBut experts have warned any impact may take time to become fully apparent.\n\nAnd operators of a number of services where PHP may have been used - not just in web development - are still being urged to check their systems and implement updates, where necessary.\n\n\"It is important to remember that PHP is not limited to web applications,\" said Daniel Stewart, head of threat intelligence at global risk manager LRQA.\n\n\"It is commonly found in the management interfaces of network appliances, load balancers, and embedded devices, which are often overlooked during these incidents.\""
+              }
+            ]
+          },
+          "glossary": [
+            {
+              "text": "A popular server-side programming language used in web development for decades.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-2c4b87c1d1d96844",
+                  "passageId": "p1",
+                  "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                  "publisher": "BBC News",
+                  "excerpt": "PHP: What is it and why did it spark a global cyber security scramble?\n\n[Skip to content](https://www.bbc.com/news/articles/c3qjnwye0ep5o#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# What is PHP and why did it spark a global cyber-security scramble?\n\n1 day ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nLiv McMahon,Technology reporterand\n\nOsmond Chia,Business reporter\n\nHow did AI discover the internet's massive cyber-security risk?\n\nFor more than a decade, serious flaws had gone undetected in the technology underpinning much of the internet.\n\nIt took AI to bring them to light and caused a global cyber-security alert.\n\nResearchers who helped surface the vulnerabilities in PHP - a popular server-side programming language used in web development for decades - warned platforms which use it could be exposed to potential hacks."
+                }
+              ],
+              "term": "PHP"
+            },
+            {
+              "text": "Installing security fixes, which one ethical hacker likened to running a Windows update.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-2c4b87c1d1d96844",
+                  "passageId": "p10",
+                  "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                  "publisher": "BBC News",
+                  "excerpt": "The issue affects back-end website and web development processes that will be invisible to many users - meaning most people won't need to take any action.\n\nBut small businesses with sites, including those built using WordPress, may be wondering how to protect themselves.\n\nThose who own websites or manage infrastructure running PHP have been urged to secure their websites by updating to the latest version.\n\nEthical hacker Ken Munro, who has spent years finding security flaws in computer systems, says installing the fixes - known as patching - is \"a bit like running a Windows update\".\n\nIf a hosting company or web developer manages your website, contact them and ask whether the PHP security fixes have been applied - something that must be applied to PHP itself and cannot be resolved by updating WordPress or its plugins.\n\nIf you look after your website yourself, Munro says \"it is your own responsibility to make sure fixes are applied\".\n\nThe UK's National Cyber Security Centre [recommends](https://www.ncsc.gov.uk/news/critical-security-issue-affecting-php) considering temporarily taking sites offline if updates or temporary protections cannot be applied quickly enough.\n\nThe US National Security Agency has also urged \"heightened awareness\" in the coming weeks, telling people to closely monitor updates from software vendors."
+                }
+              ],
+              "term": "Patching"
+            },
+            {
+              "text": "Messages that may exploit publicity around the incident; users are warned to be alert to them.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-2c4b87c1d1d96844",
+                  "passageId": "p11",
+                  "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+                  "publisher": "BBC News",
+                  "excerpt": "\"Vigilance in applying patches related to those systems is paramount,\" it said.\n\nAnd while the onus lies mainly on website operators, users should stay alert for any security advice issued by affected services, such as requests to change passwords, Kanhere said.\n\nHe warned people to be alert to any phishing messages exploiting the publicity around the incident too.\n\n[\n\n## King warns malicious online actors are evolving tactics\n\n](https://www.bbc.com/news/articles/cme3xl7d18z2o)\n\n[\n\n## Make sure use of AI is safe, data watchdog warns\n\n](https://www.bbc.com/news/articles/cq5ynx0rvexno)\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![A green promotional banner with black squares and rectangles forming pixels, moving in from the right. The text says: “Tech Decoded: The world’s biggest tech news in your inbox every Monday.”](https://ichef.bbci.co.uk/news/480/cpsprodpb/41d3/live/348b21e0-26a8-11f0-8f57-b7237f6a66e6.png.webp)\n\n[Sign up for our Tech Decoded newsletter](https://www.bbc.co.uk/newsletters/zxh6cxs) to follow the world's top tech stories and trends. [Outside the UK? Sign up here](https://cloud.email.bbc.com/techdecoded-newsletter-signup).\n\n[International Business](https://www.bbc.com/news/topics/c4nrdv135zet)\n\n[Cyber-attacks](https://www.bbc.com/news/topics/cp3mvpdp1r2t)"
+                }
+              ],
+              "term": "Phishing"
+            }
+          ]
+        },
+        "narration": {
+          "script": "This is an archived report, not current news. Researchers disclosed two serious flaws in PHP, a programming language widely used for websites. Cyber firms Wiz and Calif said the flaws affect versions released over the last decade. The US National Security Agency told organisations using PHP to patch, or take systems offline if they couldn't. As of Friday morning, the BBC reported no successful attacks, though experts warned the impact may take time to become clear. Most people don't need to do anything. If you run or rely on a website, ask your host or developer whether the PHP fixes have been applied, and be wary of phishing messages that mention the incident.",
+          "evidence": [
+            {
+              "sourceId": "candidate-2c4b87c1d1d96844",
+              "passageId": "p3",
+              "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+              "publisher": "BBC News",
+              "excerpt": "It is maintained by a non-profit called [the PHP Foundation](https://thephp.foundation/), composed of individuals and companies which depend on the language and aim to ensure its \"long-term prosperity\".\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Diagram explaining how PHP works using a restaurant analogy. A customer orders a burger, representing a user visiting a website. A waiter passes the order to the kitchen, representing a web server running PHP code to build the webpage. A chef prepares the burger - like PHP builds the page - and the finished burger is then delivered back by the waiter, representing the completed webpage being sent to the user. Arrows show the request and response cycle.](https://ichef.bbci.co.uk/news/480/cpsprodpb/c011/live/b5acfee0-ce38-11f1-9a39-31b474234113.png.webp)\n\n## What is the vulnerability?\n\nA group of cyber-security researchers and organisations disclosed two vulnerabilities within PHP this week, which they warned could have the potential to upend sites across the internet.\n\nCyber firms Wiz and Calif said the flaws were inherent in the language itself, affecting versions of PHP released over the last decade.\n\nThe technical bugs, given the technical IDs CVE-2026-109618 and CVE-2026-109619, were ranked a 9.2 out of 10 in severity by researchers."
+            },
+            {
+              "sourceId": "candidate-2c4b87c1d1d96844",
+              "passageId": "p7",
+              "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+              "publisher": "BBC News",
+              "excerpt": "The US National Security Agency [told all organisations](https://www.nsa.gov/Press-Room/Press-Releases-Statements/Press-Release-View/Article/4630238/nsa-advisory-critical-patches-recommended-for-php-vulnerabilities/) that use PHP to take their systems offline if they were unable to patch them immediately, adding that the flaw could provide a \"direct path\" to exploit a system's database.\n\n\"These risks are serious enough to require immediate patching across United States Government departments and agencies,\" the agency said.\n\nIts counterparts in the EU, Singapore and Australia have also issued similar alerts.\n\nJapanese Prime Minister Sanae Takaichi urged people to check if their publicly available websites ran on PHP in posts on X.\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Bloomberg via Getty Images Sanae Takaichi, Japan's prime minister, delivers a policy speech during an extraordinary session at the lower house of parliament in Tokyo, Japan, on Monday, Oct. 5, 2026. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/99ea/live/ae372750-cdb9-11f1-bb56-8df8ff97d155.jpg.webp)Bloomberg via Getty Images\n\nPrime Minister Takaichi issued an \"urgent request for everyone to take action tonight\" in social media posts on Wednesday\n\nTech companies also sought to quickly secure their systems."
+            },
+            {
+              "sourceId": "candidate-2c4b87c1d1d96844",
+              "passageId": "p8",
+              "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+              "publisher": "BBC News",
+              "excerpt": "E-commerce giant Amazon said it was targeted in multiple attempts days before the public disclosure of the PHP issue, but its websites were operating as normal.\n\nMatthew Prince, the boss of internet infrastructure firm Cloudflare, also said it had seen \"thousands\" of attempts to exploit the PHP vulnerabilities across its network in the 10 hours before it was publicly announced.\n\n\"That jumped to tens of thousands in the 45 minutes post announcement, hundreds of thousands within two hours, and millions now,\" he [wrote on X](https://x.com/eastdakota/status/2113079352682570051).\n\nAs of Friday morning, no successful attacks had been reported.\n\nBut experts have warned any impact may take time to become fully apparent.\n\nAnd operators of a number of services where PHP may have been used - not just in web development - are still being urged to check their systems and implement updates, where necessary.\n\n\"It is important to remember that PHP is not limited to web applications,\" said Daniel Stewart, head of threat intelligence at global risk manager LRQA.\n\n\"It is commonly found in the management interfaces of network appliances, load balancers, and embedded devices, which are often overlooked during these incidents.\""
+            },
+            {
+              "sourceId": "candidate-2c4b87c1d1d96844",
+              "passageId": "p10",
+              "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+              "publisher": "BBC News",
+              "excerpt": "The issue affects back-end website and web development processes that will be invisible to many users - meaning most people won't need to take any action.\n\nBut small businesses with sites, including those built using WordPress, may be wondering how to protect themselves.\n\nThose who own websites or manage infrastructure running PHP have been urged to secure their websites by updating to the latest version.\n\nEthical hacker Ken Munro, who has spent years finding security flaws in computer systems, says installing the fixes - known as patching - is \"a bit like running a Windows update\".\n\nIf a hosting company or web developer manages your website, contact them and ask whether the PHP security fixes have been applied - something that must be applied to PHP itself and cannot be resolved by updating WordPress or its plugins.\n\nIf you look after your website yourself, Munro says \"it is your own responsibility to make sure fixes are applied\".\n\nThe UK's National Cyber Security Centre [recommends](https://www.ncsc.gov.uk/news/critical-security-issue-affecting-php) considering temporarily taking sites offline if updates or temporary protections cannot be applied quickly enough.\n\nThe US National Security Agency has also urged \"heightened awareness\" in the coming weeks, telling people to closely monitor updates from software vendors."
+            },
+            {
+              "sourceId": "candidate-2c4b87c1d1d96844",
+              "passageId": "p11",
+              "url": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+              "publisher": "BBC News",
+              "excerpt": "\"Vigilance in applying patches related to those systems is paramount,\" it said.\n\nAnd while the onus lies mainly on website operators, users should stay alert for any security advice issued by affected services, such as requests to change passwords, Kanhere said.\n\nHe warned people to be alert to any phishing messages exploiting the publicity around the incident too.\n\n[\n\n## King warns malicious online actors are evolving tactics\n\n](https://www.bbc.com/news/articles/cme3xl7d18z2o)\n\n[\n\n## Make sure use of AI is safe, data watchdog warns\n\n](https://www.bbc.com/news/articles/cq5ynx0rvexno)\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![A green promotional banner with black squares and rectangles forming pixels, moving in from the right. The text says: “Tech Decoded: The world’s biggest tech news in your inbox every Monday.”](https://ichef.bbci.co.uk/news/480/cpsprodpb/41d3/live/348b21e0-26a8-11f0-8f57-b7237f6a66e6.png.webp)\n\n[Sign up for our Tech Decoded newsletter](https://www.bbc.co.uk/newsletters/zxh6cxs) to follow the world's top tech stories and trends. [Outside the UK? Sign up here](https://cloud.email.bbc.com/techdecoded-newsletter-signup).\n\n[International Business](https://www.bbc.com/news/topics/c4nrdv135zet)\n\n[Cyber-attacks](https://www.bbc.com/news/topics/cp3mvpdp1r2t)"
+            }
+          ],
+          "estimatedSeconds": 45,
+          "origin": "claude",
+          "audioUrl": "/demo-audio/d3c87bb89b92038f1477.mp3",
+          "provider": "Cartesia"
+        },
         "evidence": [
           {
             "sourceId": "candidate-2c4b87c1d1d96844",
@@ -234,6 +432,124 @@
         "confidence": 0.8,
         "hypeScore": 0.2,
         "verificationReason": "BBC reporting cites official Chinese statistics and named economists, and includes caveats about weak domestic demand, trade tensions and AI investment doubts.",
+        "media": [],
+        "experience": {
+          "quick": {
+            "text": "China's economy grew 4.5% in the third quarter, per official data. AI-linked exports helped offset weak domestic demand.",
+            "evidence": [
+              {
+                "sourceId": "candidate-c92051d0483d11bb",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                "publisher": "BBC News",
+                "excerpt": "The world's second largest economy grew by 4.5% in the third quarter, up from the previous period but below the 5% expansion recorded from January to March, according to official Chinese data.\n\nThe latest figure is at the bottom end of Beijing's annual growth target of 4.5%-5%, which analysts have said gives policymakers room to address the country's economic challenges.\n\nWhile exports have helped offset weak spending at home, global trade tensions and uncertainty over AI investments are clouding its outlook.\n\nChina's National Bureau of Statistics said on Monday that the economy \"sustained steady development against pressure\" and showed \"momentum with new growth drivers and improving structure\".\n\nWith exports climbing, China's trade surplus - the amount of goods and services it sells abroad compared to what it buys from other countries - is on track to overtake the record $1.2tn (£900bn) seen last year.\n\nSales of high-tech goods rose by 14.3% while the production of both batteries and industrial robots grew by more than 29%, official figures showed.\n\nOxford Economics researcher Sheana Yue said manufacturing and high-tech exports have boosted China's growth, despite weak investment and domestic spending.\n\nBut property investment fell by more than 20% in the first nine months from the same period last year, official data also showed."
+              }
+            ]
+          },
+          "explanation": {
+            "text": "China's economic growth picked up in the three months to the end of September, rebounding from a three-year low. Official data put growth at 4.5%, helped by exports tied to the AI boom. Weak spending at home remains a problem, and property investment fell by more than 20% in the first nine months from a year earlier.",
+            "evidence": [
+              {
+                "sourceId": "candidate-c92051d0483d11bb",
+                "passageId": "p1",
+                "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                "publisher": "BBC News",
+                "excerpt": "China economy: Growth accelerates as AI export boom outweighs domestic weakness\n\n[Skip to content](https://www.bbc.com/news/articles/cm5yn098xz8lo#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# China's growth accelerates as AI boom helps boost exports\n\n6 days ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nOsmond ChiaBusiness reporter\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![VCG via Getty Images Workers produce export orders at the workshop of Dongfang Jiule Automotive Electronics (Shanghai) Co., Ltd. Xinle Branch on September 15, 2026 in Xinle, Hebei Province of China.  \n](https://ichef.bbci.co.uk/news/480/cpsprodpb/7328/live/2759f110-cb64-11f1-a812-d3be2dbc962d.jpg.webp)VCG via Getty Images\n\nChina's economic growth picked up in the three months to the end of September, rebounding from a three-year low as the artificial intelligence (AI) boom helped boost exports."
+              },
+              {
+                "sourceId": "candidate-c92051d0483d11bb",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                "publisher": "BBC News",
+                "excerpt": "The world's second largest economy grew by 4.5% in the third quarter, up from the previous period but below the 5% expansion recorded from January to March, according to official Chinese data.\n\nThe latest figure is at the bottom end of Beijing's annual growth target of 4.5%-5%, which analysts have said gives policymakers room to address the country's economic challenges.\n\nWhile exports have helped offset weak spending at home, global trade tensions and uncertainty over AI investments are clouding its outlook.\n\nChina's National Bureau of Statistics said on Monday that the economy \"sustained steady development against pressure\" and showed \"momentum with new growth drivers and improving structure\".\n\nWith exports climbing, China's trade surplus - the amount of goods and services it sells abroad compared to what it buys from other countries - is on track to overtake the record $1.2tn (£900bn) seen last year.\n\nSales of high-tech goods rose by 14.3% while the production of both batteries and industrial robots grew by more than 29%, official figures showed.\n\nOxford Economics researcher Sheana Yue said manufacturing and high-tech exports have boosted China's growth, despite weak investment and domestic spending.\n\nBut property investment fell by more than 20% in the first nine months from the same period last year, official data also showed."
+              }
+            ]
+          },
+          "background": {
+            "text": "China has struggled with a long-running property slump after years of overbuilding and excessive borrowing. Moody's Analytics economist Dave Chia pointed to reliance on a single external engine in exports as a risk. The article also cites trade tensions and concerns over whether AI investments will deliver the profits promised.",
+            "evidence": [
+              {
+                "sourceId": "candidate-c92051d0483d11bb",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                "publisher": "BBC News",
+                "excerpt": "China's economy has been struggling to shake off a long-running property slump, after years of overbuilding and excessive borrowing by private developers.\n\nThere are still no signs that this trend will end soon, Yue said.\n\nTrade uncertainties and geopolitical issues have also made Chinese consumers more \"pessimistic\" and unwilling to spend, she added.\n\n[\n\n## 'Investing in people': Can China's new push to boost spending revive the economy?\n\n](https://www.bbc.com/news/articles/c70n5xllp1do)\n\n[\n\n## Faisal Islam: Why China and AI are worrying global finance bosses\n\n](https://www.bbc.com/news/articles/cm4g189jvnxjo)\n\nThe effects of Beijing's targeted support measures for businesses have yet to be seen, said Dave Chia, an economist at Moody's Analytics.\n\nSeveral risks stand out from the data, including China's reliance on a \"single external engine\" in exports, he added.\n\nThe technology industry has been a key driver of China's growth in recent quarters.\n\nGlobal demand for computer chips and other components used to build AI data centres has helped to ease pressure on Beijing and cushion the impact of sluggish domestic consumption.\n\nChinese businesses have leaned heavily on exports as a prolonged property slump, weak wage growth and high youth unemployment have weighed on consumer spending at home."
+              },
+              {
+                "sourceId": "candidate-c92051d0483d11bb",
+                "passageId": "p4",
+                "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                "publisher": "BBC News",
+                "excerpt": "In September, Beijing unveiled a raft of support measures, including lower interest rates for some businesses and subsidies for property buyers, in an effort to boost the economy.\n\nBut Beijing is facing a backlash from Western economies - including the US and European Union - as manufacturers struggle to compete with large amounts of cheap Chinese goods.\n\nThere are also concerns over the billions of dollars being spent on AI infrastructure and whether the companies making those investments can deliver on their promises of generating huge profits.\n\n[\n\n## Why is China spending billions to get people to open their wallets?\n\n](https://www.bbc.com/news/articles/cx2gk8j06r0o)\n\n[\n\n## Huge data centres rise at 'China speed' to power its AI ambitions\n\n](https://www.bbc.com/news/articles/cm5ydz4kl65ro)\n\n[International Business](https://www.bbc.com/news/topics/c4nrdv135zet)\n\n[China](https://www.bbc.com/news/world/asia/china)\n\n[GDP](https://www.bbc.com/news/topics/cgxj10yvql2t)\n\n[Artificial intelligence](https://www.bbc.com/news/topics/ce1qrvleleqt)\n\n[Trade](https://www.bbc.com/news/topics/czed6gv89wrt)\n\n* * *\n\nRelated\n\n[\n\n## What is PHP and why did it spark a global cyber-security scramble?\n\n](https://www.bbc.com/news/articles/c3qjnwye0ep5o)\n\n[\n\n## The Indian workers filming their work to train AI\n\n](https://www.bbc.com/news/articles/ckvgyml6pdm9o)\n\n["
+              }
+            ]
+          },
+          "glossary": [
+            {
+              "text": "The amount of goods and services a country sells abroad compared with what it buys from other countries.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-c92051d0483d11bb",
+                  "passageId": "p2",
+                  "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                  "publisher": "BBC News",
+                  "excerpt": "The world's second largest economy grew by 4.5% in the third quarter, up from the previous period but below the 5% expansion recorded from January to March, according to official Chinese data.\n\nThe latest figure is at the bottom end of Beijing's annual growth target of 4.5%-5%, which analysts have said gives policymakers room to address the country's economic challenges.\n\nWhile exports have helped offset weak spending at home, global trade tensions and uncertainty over AI investments are clouding its outlook.\n\nChina's National Bureau of Statistics said on Monday that the economy \"sustained steady development against pressure\" and showed \"momentum with new growth drivers and improving structure\".\n\nWith exports climbing, China's trade surplus - the amount of goods and services it sells abroad compared to what it buys from other countries - is on track to overtake the record $1.2tn (£900bn) seen last year.\n\nSales of high-tech goods rose by 14.3% while the production of both batteries and industrial robots grew by more than 29%, official figures showed.\n\nOxford Economics researcher Sheana Yue said manufacturing and high-tech exports have boosted China's growth, despite weak investment and domestic spending.\n\nBut property investment fell by more than 20% in the first nine months from the same period last year, official data also showed."
+                }
+              ],
+              "term": "Trade surplus"
+            },
+            {
+              "text": "A long-running downturn in China's property sector after years of overbuilding and excessive borrowing by private developers.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-c92051d0483d11bb",
+                  "passageId": "p3",
+                  "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+                  "publisher": "BBC News",
+                  "excerpt": "China's economy has been struggling to shake off a long-running property slump, after years of overbuilding and excessive borrowing by private developers.\n\nThere are still no signs that this trend will end soon, Yue said.\n\nTrade uncertainties and geopolitical issues have also made Chinese consumers more \"pessimistic\" and unwilling to spend, she added.\n\n[\n\n## 'Investing in people': Can China's new push to boost spending revive the economy?\n\n](https://www.bbc.com/news/articles/c70n5xllp1do)\n\n[\n\n## Faisal Islam: Why China and AI are worrying global finance bosses\n\n](https://www.bbc.com/news/articles/cm4g189jvnxjo)\n\nThe effects of Beijing's targeted support measures for businesses have yet to be seen, said Dave Chia, an economist at Moody's Analytics.\n\nSeveral risks stand out from the data, including China's reliance on a \"single external engine\" in exports, he added.\n\nThe technology industry has been a key driver of China's growth in recent quarters.\n\nGlobal demand for computer chips and other components used to build AI data centres has helped to ease pressure on Beijing and cushion the impact of sluggish domestic consumption.\n\nChinese businesses have leaned heavily on exports as a prolonged property slump, weak wage growth and high youth unemployment have weighed on consumer spending at home."
+                }
+              ],
+              "term": "Property slump"
+            }
+          ]
+        },
+        "narration": {
+          "script": "This is an archived report, not current news. According to official Chinese data, the world's second largest economy grew 4.5% in the third quarter, rebounding from a three-year low as exports linked to the AI boom rose. That sits at the bottom end of Beijing's 4.5 to 5% target. Property investment, though, fell by more than 20% in the first nine months. Analysts cited in the BBC report warn about weak domestic spending and reliance on a single export engine, plus trade tensions and doubts over AI investment. If you want the full picture, read the analysts' caveats before judging the headline figure.",
+          "evidence": [
+            {
+              "sourceId": "candidate-c92051d0483d11bb",
+              "passageId": "p1",
+              "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+              "publisher": "BBC News",
+              "excerpt": "China economy: Growth accelerates as AI export boom outweighs domestic weakness\n\n[Skip to content](https://www.bbc.com/news/articles/cm5yn098xz8lo#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# China's growth accelerates as AI boom helps boost exports\n\n6 days ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nOsmond ChiaBusiness reporter\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![VCG via Getty Images Workers produce export orders at the workshop of Dongfang Jiule Automotive Electronics (Shanghai) Co., Ltd. Xinle Branch on September 15, 2026 in Xinle, Hebei Province of China.  \n](https://ichef.bbci.co.uk/news/480/cpsprodpb/7328/live/2759f110-cb64-11f1-a812-d3be2dbc962d.jpg.webp)VCG via Getty Images\n\nChina's economic growth picked up in the three months to the end of September, rebounding from a three-year low as the artificial intelligence (AI) boom helped boost exports."
+            },
+            {
+              "sourceId": "candidate-c92051d0483d11bb",
+              "passageId": "p2",
+              "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+              "publisher": "BBC News",
+              "excerpt": "The world's second largest economy grew by 4.5% in the third quarter, up from the previous period but below the 5% expansion recorded from January to March, according to official Chinese data.\n\nThe latest figure is at the bottom end of Beijing's annual growth target of 4.5%-5%, which analysts have said gives policymakers room to address the country's economic challenges.\n\nWhile exports have helped offset weak spending at home, global trade tensions and uncertainty over AI investments are clouding its outlook.\n\nChina's National Bureau of Statistics said on Monday that the economy \"sustained steady development against pressure\" and showed \"momentum with new growth drivers and improving structure\".\n\nWith exports climbing, China's trade surplus - the amount of goods and services it sells abroad compared to what it buys from other countries - is on track to overtake the record $1.2tn (£900bn) seen last year.\n\nSales of high-tech goods rose by 14.3% while the production of both batteries and industrial robots grew by more than 29%, official figures showed.\n\nOxford Economics researcher Sheana Yue said manufacturing and high-tech exports have boosted China's growth, despite weak investment and domestic spending.\n\nBut property investment fell by more than 20% in the first nine months from the same period last year, official data also showed."
+            },
+            {
+              "sourceId": "candidate-c92051d0483d11bb",
+              "passageId": "p3",
+              "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+              "publisher": "BBC News",
+              "excerpt": "China's economy has been struggling to shake off a long-running property slump, after years of overbuilding and excessive borrowing by private developers.\n\nThere are still no signs that this trend will end soon, Yue said.\n\nTrade uncertainties and geopolitical issues have also made Chinese consumers more \"pessimistic\" and unwilling to spend, she added.\n\n[\n\n## 'Investing in people': Can China's new push to boost spending revive the economy?\n\n](https://www.bbc.com/news/articles/c70n5xllp1do)\n\n[\n\n## Faisal Islam: Why China and AI are worrying global finance bosses\n\n](https://www.bbc.com/news/articles/cm4g189jvnxjo)\n\nThe effects of Beijing's targeted support measures for businesses have yet to be seen, said Dave Chia, an economist at Moody's Analytics.\n\nSeveral risks stand out from the data, including China's reliance on a \"single external engine\" in exports, he added.\n\nThe technology industry has been a key driver of China's growth in recent quarters.\n\nGlobal demand for computer chips and other components used to build AI data centres has helped to ease pressure on Beijing and cushion the impact of sluggish domestic consumption.\n\nChinese businesses have leaned heavily on exports as a prolonged property slump, weak wage growth and high youth unemployment have weighed on consumer spending at home."
+            },
+            {
+              "sourceId": "candidate-c92051d0483d11bb",
+              "passageId": "p4",
+              "url": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+              "publisher": "BBC News",
+              "excerpt": "In September, Beijing unveiled a raft of support measures, including lower interest rates for some businesses and subsidies for property buyers, in an effort to boost the economy.\n\nBut Beijing is facing a backlash from Western economies - including the US and European Union - as manufacturers struggle to compete with large amounts of cheap Chinese goods.\n\nThere are also concerns over the billions of dollars being spent on AI infrastructure and whether the companies making those investments can deliver on their promises of generating huge profits.\n\n[\n\n## Why is China spending billions to get people to open their wallets?\n\n](https://www.bbc.com/news/articles/cx2gk8j06r0o)\n\n[\n\n## Huge data centres rise at 'China speed' to power its AI ambitions\n\n](https://www.bbc.com/news/articles/cm5ydz4kl65ro)\n\n[International Business](https://www.bbc.com/news/topics/c4nrdv135zet)\n\n[China](https://www.bbc.com/news/world/asia/china)\n\n[GDP](https://www.bbc.com/news/topics/cgxj10yvql2t)\n\n[Artificial intelligence](https://www.bbc.com/news/topics/ce1qrvleleqt)\n\n[Trade](https://www.bbc.com/news/topics/czed6gv89wrt)\n\n* * *\n\nRelated\n\n[\n\n## What is PHP and why did it spark a global cyber-security scramble?\n\n](https://www.bbc.com/news/articles/c3qjnwye0ep5o)\n\n[\n\n## The Indian workers filming their work to train AI\n\n](https://www.bbc.com/news/articles/ckvgyml6pdm9o)\n\n["
+            }
+          ],
+          "estimatedSeconds": 41,
+          "origin": "claude",
+          "audioUrl": "/demo-audio/bedb88c23577eab0fcdf.mp3",
+          "provider": "Cartesia"
+        },
         "evidence": [
           {
             "sourceId": "candidate-c92051d0483d11bb",
@@ -408,6 +724,152 @@
         "confidence": 0.8,
         "hypeScore": 0.15,
         "verificationReason": "BBC feature attributes the advice to a named clinical psychologist and the experience to the named person; claims are attributed, not independently studied.",
+        "media": [],
+        "experience": {
+          "quick": {
+            "text": "Hollie Sharman describes living with health anxiety. A psychologist explains signs and coping tips.",
+            "evidence": [
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p1",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "I thought I was dying but it was health anxiety - here's how to recognise the signs\n\n[Skip to content](https://www.bbc.com/news/articles/cm5yez87qwvdo#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# I thought I was dying but it was health anxiety - here's how to recognise the signs\n\n1 day ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nEmily Holt\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Hollie Sharman A woman with long blonde hair, she is wearing a beige cardigan, black top and a gold necklace. The background is trees and an apartment complex. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/d7da/live/16aa3610-bc08-11f1-90b9-913e4354ed35.jpg.webp)Hollie Sharman\n\nHollie Sharman spent hours searching symptoms, feeling panicked and isolated\n\nHollie Sharman was convinced she was dying. She would go to hospital \"four to five times a week\" complaining of excruciating chest pain."
+              },
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Dr Kirren Schnack A woman with long brown hair and a fringe smiling, she is sat down on a blue chair and is wearing a black blouse with white polka dots, the background is  doctor's clinic. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/6caf/live/a34b86a0-bda7-11f1-8373-27235719cf2a.jpg.webp)Dr Kirren Schnack\n\nDr Schnack says health anxiety is an \"obsessional worry\" about being seriously ill\n\nClinical psychologist Dr Kirren Schnack says health anxiety is \"a constant worry about being seriously ill or becoming seriously ill when you are not\".\n\nKey signs can be \"checking\" behaviours, such as frequently examining your body, taking your temperature, blood pressure or researching symptoms online.\n\nAnother is constantly asking the internet, friends or family for reassurance that you are safe and healthy, she tells [Complex with Kimberley Wilson](https://www.bbc.co.uk/sounds/play/p0npp1wb).\n\nOthers may experience \"avoidance\" - not looking at their body or going to doctors appointments because they fear \"the worst\".\n\nSome may \"take on the persona of somebody who has an illness\", she adds.\n\n\"You may slow down your movements and stop exercising, you're treating yourself and your body and mind as if you are already ill.\""
+              }
+            ]
+          },
+          "explanation": {
+            "text": "Hollie Sharman went to hospital four to five times a week with chest pain, but doctors never found anything wrong. She was eventually diagnosed with health anxiety and health-related OCD. Clinical psychologist Dr Kirren Schnack describes health anxiety as a constant worry about being seriously ill when you are not.",
+            "evidence": [
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p1",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "I thought I was dying but it was health anxiety - here's how to recognise the signs\n\n[Skip to content](https://www.bbc.com/news/articles/cm5yez87qwvdo#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# I thought I was dying but it was health anxiety - here's how to recognise the signs\n\n1 day ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nEmily Holt\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Hollie Sharman A woman with long blonde hair, she is wearing a beige cardigan, black top and a gold necklace. The background is trees and an apartment complex. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/d7da/live/16aa3610-bc08-11f1-90b9-913e4354ed35.jpg.webp)Hollie Sharman\n\nHollie Sharman spent hours searching symptoms, feeling panicked and isolated\n\nHollie Sharman was convinced she was dying. She would go to hospital \"four to five times a week\" complaining of excruciating chest pain."
+              },
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "\"I think the longest I spent in A&E was 13 hours,\" says the 25-year-old. But despite numerous tests, doctors could never find anything wrong.\n\nSharman says she had \"always worried\" about her health as a child and remembers \"making up any excuse\" to get sent home from school and get into bed.\n\nHer 22nd birthday meal was spent in the restaurant toilets \"having the worst panic attack I've ever had\".\n\nThat triggered years of health anxiety, with hours spent searching symptoms, feeling panicked and isolated.\n\n## Constantly Googling symptoms\n\n\"I was constantly Googling and using ChatGPT, every source I could get that could tell me what was wrong,\" she says.\n\n\"I spent so long in the hospital. They'd tell me it's nothing, they'd check everything.\n\n\"I'd go home, but then my legs would feel weak, so I'd Google that and then it would say it's a sign of heart failure. So I'd go back, it was literally a constant cycle.\"\n\nAt its worst, she \"completely disconnected from everyone\" and wouldn't reply to messages from family to avoid repetitive conversations.\n\nSharman says her health anxiety also had an extreme affect on her relationship.\n\n\"It got to the point that nothing he said would be the right thing.\n\n\"I would get upset because he didn't understand what was going on inside my own head. How can you tell someone everything's fine when I think I'm actually dying?\""
+              },
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p4",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Hollie Sharman A woman with long blonde hair, she is taking a picture in a mirror with her phone visible in her hand. She is wearing sunglasses on top of her head and a short sleeve beige, button-up top. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/f929/live/0a70f050-bc08-11f1-90b9-913e4354ed35.jpg.webp)Hollie Sharman\n\nSharman says her parents understand her condition more after watching the videos she makes about health anxiety on TikTok\n\nSharman was eventually diagnosed with health anxiety and health-related obsessive compulsive disorder (OCD). She says her family and partner have been \"incredibly supportive\" and have helped her get to a \"better place\" with techniques to manage her anxiety.\n\n\"I'd write down my symptoms like 'chest pain, excruciating'. And then at the end of the day, I'd write that I was fine.\n\n\"And then next time I'd have it, I'd have something to read and I'd be like, but I thought I was dying then and I wasn't.\"\n\nSharman says her health anxiety \"doesn't control her life any more\".\n\n\"You need to push yourself and do things when you're anxious, don't put your life on hold because I did for so many years.\"\n\n## How to manage health anxiety"
+              },
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Dr Kirren Schnack A woman with long brown hair and a fringe smiling, she is sat down on a blue chair and is wearing a black blouse with white polka dots, the background is  doctor's clinic. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/6caf/live/a34b86a0-bda7-11f1-8373-27235719cf2a.jpg.webp)Dr Kirren Schnack\n\nDr Schnack says health anxiety is an \"obsessional worry\" about being seriously ill\n\nClinical psychologist Dr Kirren Schnack says health anxiety is \"a constant worry about being seriously ill or becoming seriously ill when you are not\".\n\nKey signs can be \"checking\" behaviours, such as frequently examining your body, taking your temperature, blood pressure or researching symptoms online.\n\nAnother is constantly asking the internet, friends or family for reassurance that you are safe and healthy, she tells [Complex with Kimberley Wilson](https://www.bbc.co.uk/sounds/play/p0npp1wb).\n\nOthers may experience \"avoidance\" - not looking at their body or going to doctors appointments because they fear \"the worst\".\n\nSome may \"take on the persona of somebody who has an illness\", she adds.\n\n\"You may slow down your movements and stop exercising, you're treating yourself and your body and mind as if you are already ill.\""
+              }
+            ]
+          },
+          "background": {
+            "text": "Dr Schnack says key signs include checking behaviours, such as examining your body or researching symptoms online, and repeatedly seeking reassurance. Some people avoid doctors altogether. Sharman describes a constant cycle of Googling, hospital visits and renewed worry, and says she now feels it no longer controls her life.",
+            "evidence": [
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Dr Kirren Schnack A woman with long brown hair and a fringe smiling, she is sat down on a blue chair and is wearing a black blouse with white polka dots, the background is  doctor's clinic. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/6caf/live/a34b86a0-bda7-11f1-8373-27235719cf2a.jpg.webp)Dr Kirren Schnack\n\nDr Schnack says health anxiety is an \"obsessional worry\" about being seriously ill\n\nClinical psychologist Dr Kirren Schnack says health anxiety is \"a constant worry about being seriously ill or becoming seriously ill when you are not\".\n\nKey signs can be \"checking\" behaviours, such as frequently examining your body, taking your temperature, blood pressure or researching symptoms online.\n\nAnother is constantly asking the internet, friends or family for reassurance that you are safe and healthy, she tells [Complex with Kimberley Wilson](https://www.bbc.co.uk/sounds/play/p0npp1wb).\n\nOthers may experience \"avoidance\" - not looking at their body or going to doctors appointments because they fear \"the worst\".\n\nSome may \"take on the persona of somebody who has an illness\", she adds.\n\n\"You may slow down your movements and stop exercising, you're treating yourself and your body and mind as if you are already ill.\""
+              },
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "\"I think the longest I spent in A&E was 13 hours,\" says the 25-year-old. But despite numerous tests, doctors could never find anything wrong.\n\nSharman says she had \"always worried\" about her health as a child and remembers \"making up any excuse\" to get sent home from school and get into bed.\n\nHer 22nd birthday meal was spent in the restaurant toilets \"having the worst panic attack I've ever had\".\n\nThat triggered years of health anxiety, with hours spent searching symptoms, feeling panicked and isolated.\n\n## Constantly Googling symptoms\n\n\"I was constantly Googling and using ChatGPT, every source I could get that could tell me what was wrong,\" she says.\n\n\"I spent so long in the hospital. They'd tell me it's nothing, they'd check everything.\n\n\"I'd go home, but then my legs would feel weak, so I'd Google that and then it would say it's a sign of heart failure. So I'd go back, it was literally a constant cycle.\"\n\nAt its worst, she \"completely disconnected from everyone\" and wouldn't reply to messages from family to avoid repetitive conversations.\n\nSharman says her health anxiety also had an extreme affect on her relationship.\n\n\"It got to the point that nothing he said would be the right thing.\n\n\"I would get upset because he didn't understand what was going on inside my own head. How can you tell someone everything's fine when I think I'm actually dying?\""
+              },
+              {
+                "sourceId": "candidate-e29b90f397c2f089",
+                "passageId": "p4",
+                "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                "publisher": "BBC News",
+                "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Hollie Sharman A woman with long blonde hair, she is taking a picture in a mirror with her phone visible in her hand. She is wearing sunglasses on top of her head and a short sleeve beige, button-up top. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/f929/live/0a70f050-bc08-11f1-90b9-913e4354ed35.jpg.webp)Hollie Sharman\n\nSharman says her parents understand her condition more after watching the videos she makes about health anxiety on TikTok\n\nSharman was eventually diagnosed with health anxiety and health-related obsessive compulsive disorder (OCD). She says her family and partner have been \"incredibly supportive\" and have helped her get to a \"better place\" with techniques to manage her anxiety.\n\n\"I'd write down my symptoms like 'chest pain, excruciating'. And then at the end of the day, I'd write that I was fine.\n\n\"And then next time I'd have it, I'd have something to read and I'd be like, but I thought I was dying then and I wasn't.\"\n\nSharman says her health anxiety \"doesn't control her life any more\".\n\n\"You need to push yourself and do things when you're anxious, don't put your life on hold because I did for so many years.\"\n\n## How to manage health anxiety"
+              }
+            ]
+          },
+          "glossary": [
+            {
+              "text": "In Dr Schnack's words, a constant worry about being seriously ill or becoming so when you are not.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-e29b90f397c2f089",
+                  "passageId": "p3",
+                  "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                  "publisher": "BBC News",
+                  "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Dr Kirren Schnack A woman with long brown hair and a fringe smiling, she is sat down on a blue chair and is wearing a black blouse with white polka dots, the background is  doctor's clinic. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/6caf/live/a34b86a0-bda7-11f1-8373-27235719cf2a.jpg.webp)Dr Kirren Schnack\n\nDr Schnack says health anxiety is an \"obsessional worry\" about being seriously ill\n\nClinical psychologist Dr Kirren Schnack says health anxiety is \"a constant worry about being seriously ill or becoming seriously ill when you are not\".\n\nKey signs can be \"checking\" behaviours, such as frequently examining your body, taking your temperature, blood pressure or researching symptoms online.\n\nAnother is constantly asking the internet, friends or family for reassurance that you are safe and healthy, she tells [Complex with Kimberley Wilson](https://www.bbc.co.uk/sounds/play/p0npp1wb).\n\nOthers may experience \"avoidance\" - not looking at their body or going to doctors appointments because they fear \"the worst\".\n\nSome may \"take on the persona of somebody who has an illness\", she adds.\n\n\"You may slow down your movements and stop exercising, you're treating yourself and your body and mind as if you are already ill.\""
+                }
+              ],
+              "term": "Health anxiety"
+            },
+            {
+              "text": "Repeatedly asking the internet, friends or family for reassurance that you are safe and healthy.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-e29b90f397c2f089",
+                  "passageId": "p3",
+                  "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+                  "publisher": "BBC News",
+                  "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Dr Kirren Schnack A woman with long brown hair and a fringe smiling, she is sat down on a blue chair and is wearing a black blouse with white polka dots, the background is  doctor's clinic. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/6caf/live/a34b86a0-bda7-11f1-8373-27235719cf2a.jpg.webp)Dr Kirren Schnack\n\nDr Schnack says health anxiety is an \"obsessional worry\" about being seriously ill\n\nClinical psychologist Dr Kirren Schnack says health anxiety is \"a constant worry about being seriously ill or becoming seriously ill when you are not\".\n\nKey signs can be \"checking\" behaviours, such as frequently examining your body, taking your temperature, blood pressure or researching symptoms online.\n\nAnother is constantly asking the internet, friends or family for reassurance that you are safe and healthy, she tells [Complex with Kimberley Wilson](https://www.bbc.co.uk/sounds/play/p0npp1wb).\n\nOthers may experience \"avoidance\" - not looking at their body or going to doctors appointments because they fear \"the worst\".\n\nSome may \"take on the persona of somebody who has an illness\", she adds.\n\n\"You may slow down your movements and stop exercising, you're treating yourself and your body and mind as if you are already ill.\""
+                }
+              ],
+              "term": "Reassurance-seeking"
+            }
+          ]
+        },
+        "narration": {
+          "script": "This is an archived report. Hollie Sharman says she once went to hospital four to five times a week with chest pain, yet doctors found nothing. She was later diagnosed with health anxiety and health-related OCD. Clinical psychologist Dr Kirren Schnack says signs include repeated checking and constantly seeking reassurance. Her tips include challenging worst-case thinking and setting time limits on how often you ask others about symptoms. She also says that for a new, concerning or persistent symptom, it is responsible to check the NHS website. If this sounds familiar, you might try one of those tips.",
+          "evidence": [
+            {
+              "sourceId": "candidate-e29b90f397c2f089",
+              "passageId": "p2",
+              "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+              "publisher": "BBC News",
+              "excerpt": "\"I think the longest I spent in A&E was 13 hours,\" says the 25-year-old. But despite numerous tests, doctors could never find anything wrong.\n\nSharman says she had \"always worried\" about her health as a child and remembers \"making up any excuse\" to get sent home from school and get into bed.\n\nHer 22nd birthday meal was spent in the restaurant toilets \"having the worst panic attack I've ever had\".\n\nThat triggered years of health anxiety, with hours spent searching symptoms, feeling panicked and isolated.\n\n## Constantly Googling symptoms\n\n\"I was constantly Googling and using ChatGPT, every source I could get that could tell me what was wrong,\" she says.\n\n\"I spent so long in the hospital. They'd tell me it's nothing, they'd check everything.\n\n\"I'd go home, but then my legs would feel weak, so I'd Google that and then it would say it's a sign of heart failure. So I'd go back, it was literally a constant cycle.\"\n\nAt its worst, she \"completely disconnected from everyone\" and wouldn't reply to messages from family to avoid repetitive conversations.\n\nSharman says her health anxiety also had an extreme affect on her relationship.\n\n\"It got to the point that nothing he said would be the right thing.\n\n\"I would get upset because he didn't understand what was going on inside my own head. How can you tell someone everything's fine when I think I'm actually dying?\""
+            },
+            {
+              "sourceId": "candidate-e29b90f397c2f089",
+              "passageId": "p4",
+              "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+              "publisher": "BBC News",
+              "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Hollie Sharman A woman with long blonde hair, she is taking a picture in a mirror with her phone visible in her hand. She is wearing sunglasses on top of her head and a short sleeve beige, button-up top. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/f929/live/0a70f050-bc08-11f1-90b9-913e4354ed35.jpg.webp)Hollie Sharman\n\nSharman says her parents understand her condition more after watching the videos she makes about health anxiety on TikTok\n\nSharman was eventually diagnosed with health anxiety and health-related obsessive compulsive disorder (OCD). She says her family and partner have been \"incredibly supportive\" and have helped her get to a \"better place\" with techniques to manage her anxiety.\n\n\"I'd write down my symptoms like 'chest pain, excruciating'. And then at the end of the day, I'd write that I was fine.\n\n\"And then next time I'd have it, I'd have something to read and I'd be like, but I thought I was dying then and I wasn't.\"\n\nSharman says her health anxiety \"doesn't control her life any more\".\n\n\"You need to push yourself and do things when you're anxious, don't put your life on hold because I did for so many years.\"\n\n## How to manage health anxiety"
+            },
+            {
+              "sourceId": "candidate-e29b90f397c2f089",
+              "passageId": "p3",
+              "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+              "publisher": "BBC News",
+              "excerpt": "![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Dr Kirren Schnack A woman with long brown hair and a fringe smiling, she is sat down on a blue chair and is wearing a black blouse with white polka dots, the background is  doctor's clinic. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/6caf/live/a34b86a0-bda7-11f1-8373-27235719cf2a.jpg.webp)Dr Kirren Schnack\n\nDr Schnack says health anxiety is an \"obsessional worry\" about being seriously ill\n\nClinical psychologist Dr Kirren Schnack says health anxiety is \"a constant worry about being seriously ill or becoming seriously ill when you are not\".\n\nKey signs can be \"checking\" behaviours, such as frequently examining your body, taking your temperature, blood pressure or researching symptoms online.\n\nAnother is constantly asking the internet, friends or family for reassurance that you are safe and healthy, she tells [Complex with Kimberley Wilson](https://www.bbc.co.uk/sounds/play/p0npp1wb).\n\nOthers may experience \"avoidance\" - not looking at their body or going to doctors appointments because they fear \"the worst\".\n\nSome may \"take on the persona of somebody who has an illness\", she adds.\n\n\"You may slow down your movements and stop exercising, you're treating yourself and your body and mind as if you are already ill.\""
+            },
+            {
+              "sourceId": "candidate-e29b90f397c2f089",
+              "passageId": "p5",
+              "url": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+              "publisher": "BBC News",
+              "excerpt": "Dr Schnack says if you have a symptom that is \"new, concerning or doesn't go away\", it is \"responsible health behaviour\" to check the NHS website.\n\nIf a symptom has not gone away within two weeks, she advises making a GP appointment. [Here's when to call 111, 999 or go to A&E.](https://www.bbc.co.uk/articles/cd6e91x6qdno)\n\nAnd here are some tips from Dr Schnack that might help:\n\n*   **Challenge worst-case thinking** \\- give your brain other explanations for physical sensations; a stiff back might be poor posture rather than a serious illness.\n*   **Limit reassurance-seeking** - set rules and time limits on how often you ask friends or family about symptoms, and stick to them.\n*   **Burn off anxious energy** - take quick bursts of movement, like jumping jacks, to help process adrenaline and cortisol.\n*   **Ground yourself -** use strong sensory experiences such as holding an ice cube or tasting something sour or spicy.\n*   **Breathing techniques** \\- take a long breath through your nose, add a second inhale at the top and release it with a long sigh through your mouth.\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Your Voice banner image. Your Voice is written in white against a purple background. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/8237/live/f35e5b20-ceac-11f1-9a39-31b474234113.png.webp)"
+            }
+          ],
+          "estimatedSeconds": 39,
+          "origin": "claude",
+          "audioUrl": "/demo-audio/08e027eed04a10891fd2.mp3",
+          "provider": "Cartesia"
+        },
         "evidence": [
           {
             "sourceId": "candidate-e29b90f397c2f089",
@@ -582,6 +1044,111 @@
         "confidence": 0.8,
         "hypeScore": 0.3,
         "verificationReason": "BBC reporting with named workers, company founders and an academic; the uncertainty about job impact is attributed to an academic.",
+        "media": [],
+        "experience": {
+          "quick": {
+            "text": "Workers in India film their work with head cameras. The footage is sold to train AI for robots.",
+            "evidence": [
+              {
+                "sourceId": "candidate-065e5e8e5204e896",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+                "publisher": "BBC News",
+                "excerpt": "The camera only records his hands and fingers - his client's faces are blurred out.\n\n\"The routine is simple, but you have to be disciplined about how you move. The operations team taught me that my hands always have to stay cleanly inside the frame, the lighting has to be sharp, and I can't tilt my head too abruptly while working.\"\n\nHe wears the camera for five or six hours a day.\n\n\"It's good money, but honestly, the feeling of doing something this futuristic is what keeps me excited. I never imagined my razor techniques would be useful to a global tech company,\" says Ashim.\n\nHe is one of hundreds of thousands of workers across the world paid to record their activities.\n\nAshim's footage is collected by a local company, which might have hundreds of people filming their work.\n\nThat video is then sold on to technology companies and research organisations who use it to train artificial intelligence - in particular so-called physical AI, a type of artificial intelligence that can control robots in the real world.\n\nRashdan Technologies collects and processes such human generated data.\n\n\"Every robotics company, every frontier AI lab, has a specific kind of data they want: industrial tasks, agriculture, household chores, small business work like pottery, garment-making, embroidery, candle-making. We go wherever the task is,\" says co-founder and CEO Shahil Baig."
+              }
+            ]
+          },
+          "explanation": {
+            "text": "Workers such as barber Mohammed Ashim in Bengaluru wear cameras to record their tasks. A local company collects the footage and sells it to technology firms and research organisations to train physical AI, a type of AI that can control robots in the real world.",
+            "evidence": [
+              {
+                "sourceId": "candidate-065e5e8e5204e896",
+                "passageId": "p1",
+                "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+                "publisher": "BBC News",
+                "excerpt": "The Indian workers filming their work to train AI\n\n[Skip to content](https://www.bbc.com/news/articles/ckvgyml6pdm9o#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# The Indian workers filming their work to train AI\n\n2 days ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nPriti GuptaTechnology Reporter, Mumbai\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Mohammed Ashim Mohammed Ashim cutting a customer's hair. A headband holds a small camera to his forehead.](https://ichef.bbci.co.uk/news/480/cpsprodpb/ead6/live/079c1c10-b73f-11f1-bc1f-3f186ca4140c.jpg.webp)Mohammed Ashim\n\nMohammed Ashim is paid to film his hands at work\n\nMohammed Ashim has been cutting hair and trimming beards for four years in Bengaluru.\n\nBut recently the 22-year old has been strapping a camera to his head to record his work."
+              },
+              {
+                "sourceId": "candidate-065e5e8e5204e896",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+                "publisher": "BBC News",
+                "excerpt": "The camera only records his hands and fingers - his client's faces are blurred out.\n\n\"The routine is simple, but you have to be disciplined about how you move. The operations team taught me that my hands always have to stay cleanly inside the frame, the lighting has to be sharp, and I can't tilt my head too abruptly while working.\"\n\nHe wears the camera for five or six hours a day.\n\n\"It's good money, but honestly, the feeling of doing something this futuristic is what keeps me excited. I never imagined my razor techniques would be useful to a global tech company,\" says Ashim.\n\nHe is one of hundreds of thousands of workers across the world paid to record their activities.\n\nAshim's footage is collected by a local company, which might have hundreds of people filming their work.\n\nThat video is then sold on to technology companies and research organisations who use it to train artificial intelligence - in particular so-called physical AI, a type of artificial intelligence that can control robots in the real world.\n\nRashdan Technologies collects and processes such human generated data.\n\n\"Every robotics company, every frontier AI lab, has a specific kind of data they want: industrial tasks, agriculture, household chores, small business work like pottery, garment-making, embroidery, candle-making. We go wherever the task is,\" says co-founder and CEO Shahil Baig."
+              }
+            ]
+          },
+          "background": {
+            "text": "Rashdan Technologies' CEO says his company pays $5 to $10 for eight to 10 hours of recorded work, and that consent matters. He says faces are blurred. Clients now want multi-camera setups, which he says are harder to get people to agree to. Professor Bino Paul says it is too early to tell whether workers are collecting data for machines that will do their jobs.",
+            "evidence": [
+              {
+                "sourceId": "candidate-065e5e8e5204e896",
+                "passageId": "p3",
+                "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+                "publisher": "BBC News",
+                "excerpt": "His company pays $5 to $10 (£3.74; £7.47) for eight to 10 hours of recorded work.\n\n\"For a lot of these people, that's meaningful,\" Baig says.\n\nMaking sure workers give their consent and are comfortable with the process is important, he says.\n\n\"We record hands, not faces, and where multi-camera rigs do capture more of the body or environment, we blur faces out. No names, no contact details, nothing that identifies them personally goes into what we hand off.\"\n\nBut his customers are getting more demanding.\n\n\"Now clients are asking for four to six cameras rigged around a person's head to cover the entire scene, not just the hands.\n\n\"Getting someone to agree to one small camera is one conversation. Getting them to agree to wearing what's effectively a five-camera headset is a completely different, and harder, one. We pay more for that tier of data collection because of what we're asking of people.\"\n\nAnd the industry is becoming more crowded, Agarwal expects dozens more competitors to emerge in India this year.\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Rashdan Technologies Shahil Baig wears white cap with a white camera attached. He's wearing glasses and smiling and looking at the camera.](https://ichef.bbci.co.uk/news/480/cpsprodpb/96d8/live/2f4597c0-b751-11f1-a430-4d16ee157c41.jpg.webp)Rashdan Technologies"
+              },
+              {
+                "sourceId": "candidate-065e5e8e5204e896",
+                "passageId": "p5",
+                "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+                "publisher": "BBC News",
+                "excerpt": "Humyn Labs filters the thousands of hours of video supplied by those collectors, selecting the most useful content. It's then labelled so the AI knows what it is looking at and packaged in a format that can be used by clients.\n\n\"You need to source across a variety of factories, a variety of tasks, in different geographies because if you want to build deployment for US factories or US houses, you'd want environments that are a proxy for that. Residential houses in India may not be the right context for building a robotics use case for the US.\"\n\nThe factory workers teaching robots how to work like humans\n\nBut are workers collecting data for machines that will one day do their jobs?\n\nAt the moment it's too early to tell says Bino Paul, senior professor at the School of Management and Labour Studies at the Tata Institute of Social Sciences (TISS) in Mumbai.\n\nFor some workers AI might be a useful tool, but robots could automate other jobs, he says.\n\nThe problem is that, if machines do start to take over, there will be little workers can do about.\n\n\"By the time workers realise what they have participated in, things may have gone too far,\" he says.\n\nLike many others, he wants governments to regulate AI."
+              }
+            ]
+          },
+          "glossary": [
+            {
+              "text": "A type of artificial intelligence that can control robots in the real world.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-065e5e8e5204e896",
+                  "passageId": "p2",
+                  "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+                  "publisher": "BBC News",
+                  "excerpt": "The camera only records his hands and fingers - his client's faces are blurred out.\n\n\"The routine is simple, but you have to be disciplined about how you move. The operations team taught me that my hands always have to stay cleanly inside the frame, the lighting has to be sharp, and I can't tilt my head too abruptly while working.\"\n\nHe wears the camera for five or six hours a day.\n\n\"It's good money, but honestly, the feeling of doing something this futuristic is what keeps me excited. I never imagined my razor techniques would be useful to a global tech company,\" says Ashim.\n\nHe is one of hundreds of thousands of workers across the world paid to record their activities.\n\nAshim's footage is collected by a local company, which might have hundreds of people filming their work.\n\nThat video is then sold on to technology companies and research organisations who use it to train artificial intelligence - in particular so-called physical AI, a type of artificial intelligence that can control robots in the real world.\n\nRashdan Technologies collects and processes such human generated data.\n\n\"Every robotics company, every frontier AI lab, has a specific kind of data they want: industrial tasks, agriculture, household chores, small business work like pottery, garment-making, embroidery, candle-making. We go wherever the task is,\" says co-founder and CEO Shahil Baig."
+                }
+              ],
+              "term": "Physical AI"
+            }
+          ]
+        },
+        "narration": {
+          "script": "This is an archived report. In India, workers such as a barber in Bengaluru are wearing head cameras to record their everyday tasks. The footage is sold to technology companies to train physical AI, which can control robots. One company says it pays $5 to $10 for eight to 10 hours of recorded work, and says consent matters and faces are blurred. An academic says it is too early to tell whether this will lead to jobs being automated. If you're offered paid recording work, it makes sense to read carefully what you're consenting to first.",
+          "evidence": [
+            {
+              "sourceId": "candidate-065e5e8e5204e896",
+              "passageId": "p1",
+              "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+              "publisher": "BBC News",
+              "excerpt": "The Indian workers filming their work to train AI\n\n[Skip to content](https://www.bbc.com/news/articles/ckvgyml6pdm9o#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# The Indian workers filming their work to train AI\n\n2 days ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nPriti GuptaTechnology Reporter, Mumbai\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Mohammed Ashim Mohammed Ashim cutting a customer's hair. A headband holds a small camera to his forehead.](https://ichef.bbci.co.uk/news/480/cpsprodpb/ead6/live/079c1c10-b73f-11f1-bc1f-3f186ca4140c.jpg.webp)Mohammed Ashim\n\nMohammed Ashim is paid to film his hands at work\n\nMohammed Ashim has been cutting hair and trimming beards for four years in Bengaluru.\n\nBut recently the 22-year old has been strapping a camera to his head to record his work."
+            },
+            {
+              "sourceId": "candidate-065e5e8e5204e896",
+              "passageId": "p2",
+              "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+              "publisher": "BBC News",
+              "excerpt": "The camera only records his hands and fingers - his client's faces are blurred out.\n\n\"The routine is simple, but you have to be disciplined about how you move. The operations team taught me that my hands always have to stay cleanly inside the frame, the lighting has to be sharp, and I can't tilt my head too abruptly while working.\"\n\nHe wears the camera for five or six hours a day.\n\n\"It's good money, but honestly, the feeling of doing something this futuristic is what keeps me excited. I never imagined my razor techniques would be useful to a global tech company,\" says Ashim.\n\nHe is one of hundreds of thousands of workers across the world paid to record their activities.\n\nAshim's footage is collected by a local company, which might have hundreds of people filming their work.\n\nThat video is then sold on to technology companies and research organisations who use it to train artificial intelligence - in particular so-called physical AI, a type of artificial intelligence that can control robots in the real world.\n\nRashdan Technologies collects and processes such human generated data.\n\n\"Every robotics company, every frontier AI lab, has a specific kind of data they want: industrial tasks, agriculture, household chores, small business work like pottery, garment-making, embroidery, candle-making. We go wherever the task is,\" says co-founder and CEO Shahil Baig."
+            },
+            {
+              "sourceId": "candidate-065e5e8e5204e896",
+              "passageId": "p3",
+              "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+              "publisher": "BBC News",
+              "excerpt": "His company pays $5 to $10 (£3.74; £7.47) for eight to 10 hours of recorded work.\n\n\"For a lot of these people, that's meaningful,\" Baig says.\n\nMaking sure workers give their consent and are comfortable with the process is important, he says.\n\n\"We record hands, not faces, and where multi-camera rigs do capture more of the body or environment, we blur faces out. No names, no contact details, nothing that identifies them personally goes into what we hand off.\"\n\nBut his customers are getting more demanding.\n\n\"Now clients are asking for four to six cameras rigged around a person's head to cover the entire scene, not just the hands.\n\n\"Getting someone to agree to one small camera is one conversation. Getting them to agree to wearing what's effectively a five-camera headset is a completely different, and harder, one. We pay more for that tier of data collection because of what we're asking of people.\"\n\nAnd the industry is becoming more crowded, Agarwal expects dozens more competitors to emerge in India this year.\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Rashdan Technologies Shahil Baig wears white cap with a white camera attached. He's wearing glasses and smiling and looking at the camera.](https://ichef.bbci.co.uk/news/480/cpsprodpb/96d8/live/2f4597c0-b751-11f1-a430-4d16ee157c41.jpg.webp)Rashdan Technologies"
+            },
+            {
+              "sourceId": "candidate-065e5e8e5204e896",
+              "passageId": "p5",
+              "url": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+              "publisher": "BBC News",
+              "excerpt": "Humyn Labs filters the thousands of hours of video supplied by those collectors, selecting the most useful content. It's then labelled so the AI knows what it is looking at and packaged in a format that can be used by clients.\n\n\"You need to source across a variety of factories, a variety of tasks, in different geographies because if you want to build deployment for US factories or US houses, you'd want environments that are a proxy for that. Residential houses in India may not be the right context for building a robotics use case for the US.\"\n\nThe factory workers teaching robots how to work like humans\n\nBut are workers collecting data for machines that will one day do their jobs?\n\nAt the moment it's too early to tell says Bino Paul, senior professor at the School of Management and Labour Studies at the Tata Institute of Social Sciences (TISS) in Mumbai.\n\nFor some workers AI might be a useful tool, but robots could automate other jobs, he says.\n\nThe problem is that, if machines do start to take over, there will be little workers can do about.\n\n\"By the time workers realise what they have participated in, things may have gone too far,\" he says.\n\nLike many others, he wants governments to regulate AI."
+            }
+          ],
+          "estimatedSeconds": 38,
+          "origin": "claude",
+          "audioUrl": "/demo-audio/b60866b12eacc3f70676.mp3",
+          "provider": "Cartesia"
+        },
         "evidence": [
           {
             "sourceId": "candidate-065e5e8e5204e896",
@@ -749,6 +1316,131 @@
         "confidence": 0.8,
         "hypeScore": 0.3,
         "verificationReason": "BBC reporting accurately frames the work as preliminary, cites the Lancet Digital Health publication and includes an independent expert's caution.",
+        "media": [],
+        "experience": {
+          "quick": {
+            "text": "US researchers report early work on an AI tool that estimates cancer survival from a face photo. It is far from hospital use.",
+            "evidence": [
+              {
+                "sourceId": "candidate-786fd1bc9d9c4e92",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                "publisher": "BBC News",
+                "excerpt": "Trained on millions of healthy faces, and 35,000 photos of cancer patients, the tool can make estimates on survival by looking closely at features near the eyes, the scientists say.\n\nWhile it's a long way from being suitable for use in hospitals, the researchers say their goal is to help doctors recommend the right treatments for their patients.\n\nThe preliminary findings are published in the [Lancet Digital Health](https://www.thelancet.com/journals/landig/article/PIIS2589-7500\\(26\\)00079-8/fulltext) journal.\n\n## The eyes have it\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Mass General Brigham/Lancet Digital Health The image shows a computer graphic of two faces, one for each AI model, and depicts which facial features appear to be most important for assessing biological age and survival, using a heat map colour code. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/a1e6/live/25088dc0-c945-11f1-9357-bdb8a3cad3e4.png.webp)Mass General Brigham/Lancet Digital Health\n\nThe researchers developed two AI tools to estimate biological age and predict cancer survival from a single face photo. The face on the left shows features most important to cancer survival outcomes, while the right face shows those key to age. Areas shown in yellow had the greatest impact on predictions."
+              }
+            ]
+          },
+          "explanation": {
+            "text": "US researchers say an AI tool may help doctors judge how ill a patient is from a single face photograph. It was trained on millions of healthy faces and 35,000 photos of cancer patients, and looks at features near the eyes. The findings are preliminary and published in Lancet Digital Health.",
+            "evidence": [
+              {
+                "sourceId": "candidate-786fd1bc9d9c4e92",
+                "passageId": "p1",
+                "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                "publisher": "BBC News",
+                "excerpt": "Can one photo of your face reveal how ill you are?\n\n[Skip to content](https://www.bbc.com/news/articles/c6lyexv93pkdo#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# Can a simple photo of your face reveal how ill you are?\n\n5 days ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nMichelle RobertsDigital health editor\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Getty Images A tired woman wearing a pink dressing gown looks at herself in the mirror, with her hand touching the side of her forehead](https://ichef.bbci.co.uk/news/480/cpsprodpb/56c3/live/041be760-c945-11f1-9357-bdb8a3cad3e4.jpg.webp)Getty Images\n\nAn AI tool may be able to help doctors judge how ill a patient is using a single photograph of their face, say US researchers."
+              },
+              {
+                "sourceId": "candidate-786fd1bc9d9c4e92",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                "publisher": "BBC News",
+                "excerpt": "Trained on millions of healthy faces, and 35,000 photos of cancer patients, the tool can make estimates on survival by looking closely at features near the eyes, the scientists say.\n\nWhile it's a long way from being suitable for use in hospitals, the researchers say their goal is to help doctors recommend the right treatments for their patients.\n\nThe preliminary findings are published in the [Lancet Digital Health](https://www.thelancet.com/journals/landig/article/PIIS2589-7500\\(26\\)00079-8/fulltext) journal.\n\n## The eyes have it\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Mass General Brigham/Lancet Digital Health The image shows a computer graphic of two faces, one for each AI model, and depicts which facial features appear to be most important for assessing biological age and survival, using a heat map colour code. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/a1e6/live/25088dc0-c945-11f1-9357-bdb8a3cad3e4.png.webp)Mass General Brigham/Lancet Digital Health\n\nThe researchers developed two AI tools to estimate biological age and predict cancer survival from a single face photo. The face on the left shows features most important to cancer survival outcomes, while the right face shows those key to age. Areas shown in yellow had the greatest impact on predictions."
+              }
+            ]
+          },
+          "background": {
+            "text": "The researchers say the goal is to help doctors recommend the right treatments, but it is a long way from hospital use. They also say they need much more data, especially from many ethnic groups. Prof Miroslaw Bober, an outside expert, called it a promising proof of concept that is not ready for clinical use.",
+            "evidence": [
+              {
+                "sourceId": "candidate-786fd1bc9d9c4e92",
+                "passageId": "p2",
+                "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                "publisher": "BBC News",
+                "excerpt": "Trained on millions of healthy faces, and 35,000 photos of cancer patients, the tool can make estimates on survival by looking closely at features near the eyes, the scientists say.\n\nWhile it's a long way from being suitable for use in hospitals, the researchers say their goal is to help doctors recommend the right treatments for their patients.\n\nThe preliminary findings are published in the [Lancet Digital Health](https://www.thelancet.com/journals/landig/article/PIIS2589-7500\\(26\\)00079-8/fulltext) journal.\n\n## The eyes have it\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Mass General Brigham/Lancet Digital Health The image shows a computer graphic of two faces, one for each AI model, and depicts which facial features appear to be most important for assessing biological age and survival, using a heat map colour code. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/a1e6/live/25088dc0-c945-11f1-9357-bdb8a3cad3e4.png.webp)Mass General Brigham/Lancet Digital Health\n\nThe researchers developed two AI tools to estimate biological age and predict cancer survival from a single face photo. The face on the left shows features most important to cancer survival outcomes, while the right face shows those key to age. Areas shown in yellow had the greatest impact on predictions."
+              },
+              {
+                "sourceId": "candidate-786fd1bc9d9c4e92",
+                "passageId": "p4",
+                "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                "publisher": "BBC News",
+                "excerpt": "## Why doing a mix of exercise could be the key to longer life\n\n](https://www.bbc.co.uk/news/articles/cn0y9pqe2zro)\n\n[\n\n## Can two hours of strength training a week reduce the risk of dying early?\n\n](https://www.bbc.co.uk/news/articles/c0r2lekenlpo)\n\n## Fresh-faced?\n\nMak and colleagues are also evaluating an AI tool for predicting biological age, or how old someone looks, as opposed to their birthday age.\n\nThe 'FaceAge' tool suggests the skin below the nose and near the mouth - the so-called nasolabial folds and marionette lines - plus the forehead (frown lines), temples (crows' feet) and cheeks are a good indicator of how fast we age.\n\nSome lifestyle habits can speed that process up, like heavy alcohol use, drug use and smoking.\n\nMak says the tool was \"surprisingly consistent\" across common real-world photos despite variations in pose, lighting, facial expression and make-up.\n\n\"It was also stable across most tested plastic surgery procedures, with only a small shift observed after rhinoplasty \\[a nose job\\],\" he says.\n\nBut the researchers stress they need much more data and photos of faces, particularly from lots of different ethnic groups, to determine how well the tools work. They are still very much under development."
+              },
+              {
+                "sourceId": "candidate-786fd1bc9d9c4e92",
+                "passageId": "p5",
+                "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                "publisher": "BBC News",
+                "excerpt": "The research team is [inviting the public to take part](https://faceage.bwh.harvard.edu/) and receive a personalised biological age estimate by uploading their own facial photo the research team.\n\nProf Miroslaw Bober, an expert in video processing and machine learning at the University of Surrey in the UK, says any claims that the tool could track ageing or lifestyle changes over time would be \"premature\".\n\n\"This is a promising proof of concept, but it is not ready for clinical use,\" he said.\n\n\"The tool still needs testing against doctors' own judgement and across different hospitals and patient groups.\"\n\nAnd he warned: \"Predicting an outcome is not the same as explaining it.\"\n\n[\n\n## AI can forecast your future health – just like the weather\n\n](https://www.bbc.co.uk/news/articles/cx2pj502ev6o)\n\n[\n\n## AI designs antibiotics for gonorrhoea and MRSA superbugs\n\n](https://www.bbc.co.uk/news/articles/cgr94xxye2lo)\n\n[Health](https://www.bbc.com/news/health)\n\n[Artificial intelligence](https://www.bbc.com/news/topics/ce1qrvleleqt)\n\n[Cancer](https://www.bbc.com/news/topics/cywd23g0q11t)\n\n* * *\n\nRelated\n\n[\n\n## Older patients get quicker autism assessments\n\n](https://www.bbc.com/news/articles/cq8jzwe1w11do)\n\n[\n\n## 'They knew she was ill - days later she killed her three kids'\n\n](https://www.bbc.com/news/articles/cmy83q4g1jqlo)\n\n[\n\n## Manx designer inspired by island's folklore and history"
+              }
+            ]
+          },
+          "glossary": [
+            {
+              "text": "An early demonstration that an idea may work; Prof Bober said this tool is promising but not ready for clinical use.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-786fd1bc9d9c4e92",
+                  "passageId": "p5",
+                  "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                  "publisher": "BBC News",
+                  "excerpt": "The research team is [inviting the public to take part](https://faceage.bwh.harvard.edu/) and receive a personalised biological age estimate by uploading their own facial photo the research team.\n\nProf Miroslaw Bober, an expert in video processing and machine learning at the University of Surrey in the UK, says any claims that the tool could track ageing or lifestyle changes over time would be \"premature\".\n\n\"This is a promising proof of concept, but it is not ready for clinical use,\" he said.\n\n\"The tool still needs testing against doctors' own judgement and across different hospitals and patient groups.\"\n\nAnd he warned: \"Predicting an outcome is not the same as explaining it.\"\n\n[\n\n## AI can forecast your future health – just like the weather\n\n](https://www.bbc.co.uk/news/articles/cx2pj502ev6o)\n\n[\n\n## AI designs antibiotics for gonorrhoea and MRSA superbugs\n\n](https://www.bbc.co.uk/news/articles/cgr94xxye2lo)\n\n[Health](https://www.bbc.com/news/health)\n\n[Artificial intelligence](https://www.bbc.com/news/topics/ce1qrvleleqt)\n\n[Cancer](https://www.bbc.com/news/topics/cywd23g0q11t)\n\n* * *\n\nRelated\n\n[\n\n## Older patients get quicker autism assessments\n\n](https://www.bbc.com/news/articles/cq8jzwe1w11do)\n\n[\n\n## 'They knew she was ill - days later she killed her three kids'\n\n](https://www.bbc.com/news/articles/cmy83q4g1jqlo)\n\n[\n\n## Manx designer inspired by island's folklore and history"
+                }
+              ],
+              "term": "Proof of concept"
+            },
+            {
+              "text": "How old someone looks, as opposed to their birthday age, which the FaceAge tool tries to estimate.",
+              "evidence": [
+                {
+                  "sourceId": "candidate-786fd1bc9d9c4e92",
+                  "passageId": "p4",
+                  "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+                  "publisher": "BBC News",
+                  "excerpt": "## Why doing a mix of exercise could be the key to longer life\n\n](https://www.bbc.co.uk/news/articles/cn0y9pqe2zro)\n\n[\n\n## Can two hours of strength training a week reduce the risk of dying early?\n\n](https://www.bbc.co.uk/news/articles/c0r2lekenlpo)\n\n## Fresh-faced?\n\nMak and colleagues are also evaluating an AI tool for predicting biological age, or how old someone looks, as opposed to their birthday age.\n\nThe 'FaceAge' tool suggests the skin below the nose and near the mouth - the so-called nasolabial folds and marionette lines - plus the forehead (frown lines), temples (crows' feet) and cheeks are a good indicator of how fast we age.\n\nSome lifestyle habits can speed that process up, like heavy alcohol use, drug use and smoking.\n\nMak says the tool was \"surprisingly consistent\" across common real-world photos despite variations in pose, lighting, facial expression and make-up.\n\n\"It was also stable across most tested plastic surgery procedures, with only a small shift observed after rhinoplasty \\[a nose job\\],\" he says.\n\nBut the researchers stress they need much more data and photos of faces, particularly from lots of different ethnic groups, to determine how well the tools work. They are still very much under development."
+                }
+              ],
+              "term": "Biological age"
+            }
+          ]
+        },
+        "narration": {
+          "script": "This is an archived report. US researchers say an AI tool may help doctors judge how ill a patient is from a single photo of their face. Trained on millions of healthy faces and 35,000 photos of cancer patients, it estimates survival by looking at features near the eyes. The findings are preliminary, and the researchers say it is a long way from hospital use and needs much more data. An outside expert, Prof Miroslaw Bober, called it a promising proof of concept, but not ready for clinical use. So treat it as early research.",
+          "evidence": [
+            {
+              "sourceId": "candidate-786fd1bc9d9c4e92",
+              "passageId": "p1",
+              "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+              "publisher": "BBC News",
+              "excerpt": "Can one photo of your face reveal how ill you are?\n\n[Skip to content](https://www.bbc.com/news/articles/c6lyexv93pkdo#bbc-main)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n[](https://www.bbc.com/)\n\nSite search\n\n[Home](https://www.bbc.com/)\n\nNews\n\n[Sport](https://www.bbc.com/sport)\n\nBusiness\n\nTechnology\n\n[Health](https://www.bbc.com/health)\n\nCulture\n\nArts\n\nTravel\n\nEarth\n\nAudio\n\nVideo\n\nLive\n\nDocumentaries\n\n[Weather](https://www.bbc.com/weather)\n\n[Newsletters](https://www.bbc.com/newsletters)\n\n[Watch Live](https://www.bbc.com/watch-live-news/)\n\n# Can a simple photo of your face reveal how ill you are?\n\n5 days ago\n\nShareSave\n\n[Add as preferred on Google](https://www.google.com/preferences/source?q=bbc.com)\n\nMichelle RobertsDigital health editor\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Getty Images A tired woman wearing a pink dressing gown looks at herself in the mirror, with her hand touching the side of her forehead](https://ichef.bbci.co.uk/news/480/cpsprodpb/56c3/live/041be760-c945-11f1-9357-bdb8a3cad3e4.jpg.webp)Getty Images\n\nAn AI tool may be able to help doctors judge how ill a patient is using a single photograph of their face, say US researchers."
+            },
+            {
+              "sourceId": "candidate-786fd1bc9d9c4e92",
+              "passageId": "p2",
+              "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+              "publisher": "BBC News",
+              "excerpt": "Trained on millions of healthy faces, and 35,000 photos of cancer patients, the tool can make estimates on survival by looking closely at features near the eyes, the scientists say.\n\nWhile it's a long way from being suitable for use in hospitals, the researchers say their goal is to help doctors recommend the right treatments for their patients.\n\nThe preliminary findings are published in the [Lancet Digital Health](https://www.thelancet.com/journals/landig/article/PIIS2589-7500\\(26\\)00079-8/fulltext) journal.\n\n## The eyes have it\n\n![](https://static.files.bbci.co.uk/bbcdotcom/web/20261019-154138-aa7a263842-web-3.25.0-1/grey-placeholder.png)![Mass General Brigham/Lancet Digital Health The image shows a computer graphic of two faces, one for each AI model, and depicts which facial features appear to be most important for assessing biological age and survival, using a heat map colour code. ](https://ichef.bbci.co.uk/news/480/cpsprodpb/a1e6/live/25088dc0-c945-11f1-9357-bdb8a3cad3e4.png.webp)Mass General Brigham/Lancet Digital Health\n\nThe researchers developed two AI tools to estimate biological age and predict cancer survival from a single face photo. The face on the left shows features most important to cancer survival outcomes, while the right face shows those key to age. Areas shown in yellow had the greatest impact on predictions."
+            },
+            {
+              "sourceId": "candidate-786fd1bc9d9c4e92",
+              "passageId": "p4",
+              "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+              "publisher": "BBC News",
+              "excerpt": "## Why doing a mix of exercise could be the key to longer life\n\n](https://www.bbc.co.uk/news/articles/cn0y9pqe2zro)\n\n[\n\n## Can two hours of strength training a week reduce the risk of dying early?\n\n](https://www.bbc.co.uk/news/articles/c0r2lekenlpo)\n\n## Fresh-faced?\n\nMak and colleagues are also evaluating an AI tool for predicting biological age, or how old someone looks, as opposed to their birthday age.\n\nThe 'FaceAge' tool suggests the skin below the nose and near the mouth - the so-called nasolabial folds and marionette lines - plus the forehead (frown lines), temples (crows' feet) and cheeks are a good indicator of how fast we age.\n\nSome lifestyle habits can speed that process up, like heavy alcohol use, drug use and smoking.\n\nMak says the tool was \"surprisingly consistent\" across common real-world photos despite variations in pose, lighting, facial expression and make-up.\n\n\"It was also stable across most tested plastic surgery procedures, with only a small shift observed after rhinoplasty \\[a nose job\\],\" he says.\n\nBut the researchers stress they need much more data and photos of faces, particularly from lots of different ethnic groups, to determine how well the tools work. They are still very much under development."
+            },
+            {
+              "sourceId": "candidate-786fd1bc9d9c4e92",
+              "passageId": "p5",
+              "url": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+              "publisher": "BBC News",
+              "excerpt": "The research team is [inviting the public to take part](https://faceage.bwh.harvard.edu/) and receive a personalised biological age estimate by uploading their own facial photo the research team.\n\nProf Miroslaw Bober, an expert in video processing and machine learning at the University of Surrey in the UK, says any claims that the tool could track ageing or lifestyle changes over time would be \"premature\".\n\n\"This is a promising proof of concept, but it is not ready for clinical use,\" he said.\n\n\"The tool still needs testing against doctors' own judgement and across different hospitals and patient groups.\"\n\nAnd he warned: \"Predicting an outcome is not the same as explaining it.\"\n\n[\n\n## AI can forecast your future health – just like the weather\n\n](https://www.bbc.co.uk/news/articles/cx2pj502ev6o)\n\n[\n\n## AI designs antibiotics for gonorrhoea and MRSA superbugs\n\n](https://www.bbc.co.uk/news/articles/cgr94xxye2lo)\n\n[Health](https://www.bbc.com/news/health)\n\n[Artificial intelligence](https://www.bbc.com/news/topics/ce1qrvleleqt)\n\n[Cancer](https://www.bbc.com/news/topics/cywd23g0q11t)\n\n* * *\n\nRelated\n\n[\n\n## Older patients get quicker autism assessments\n\n](https://www.bbc.com/news/articles/cq8jzwe1w11do)\n\n[\n\n## 'They knew she was ill - days later she killed her three kids'\n\n](https://www.bbc.com/news/articles/cmy83q4g1jqlo)\n\n[\n\n## Manx designer inspired by island's folklore and history"
+            }
+          ],
+          "estimatedSeconds": 38,
+          "origin": "claude",
+          "audioUrl": "/demo-audio/ed73d8e3e8b80f303630.mp3",
+          "provider": "Cartesia"
+        },
         "evidence": [
           {
             "sourceId": "candidate-786fd1bc9d9c4e92",
@@ -895,13 +1587,7 @@
           "No primary source was identified in the retrieved evidence; this story relies on attributed reporting."
         ]
       }
-    ],
-    "demoInfo": {
-      "label": "Fixed demo edition",
-      "recordedAt": "2026-10-24T21:14:24.904Z",
-      "originRunId": "3eb186ff-3454-443b-8b16-9fb4f1173be5",
-      "notice": "Saved successful Apify → Claude run. This is an archived edition, not freshly retrieved news. Original source dates, evidence passages, exclusions and audit are preserved."
-    }
+    ]
   },
   "rejectedStories": [
     {
@@ -1123,6 +1809,30 @@
       "status": "completed",
       "message": "Edition is ready. You're caught up.",
       "timestamp": "2026-10-24T21:14:24.904Z"
+    },
+    {
+      "step": "archive.enrichment.social",
+      "status": "started",
+      "message": "Searching public Reddit discussions in one bounded Apify batch. These are context, never verification.",
+      "timestamp": "2026-10-24T21:42:14.222Z"
+    },
+    {
+      "step": "archive.enrichment.social.actor",
+      "status": "completed",
+      "message": "Social Apify run ID: OGAqv39vfPVNqIDoM; dataset ID: w0aZ03ZXO02g1SQ8P.",
+      "timestamp": "2026-10-24T21:42:14.746Z"
+    },
+    {
+      "step": "archive.enrichment.social",
+      "status": "completed",
+      "message": "13 recent public posts retrieved; 5 relevant story links retained. Unrelated, duplicate, stale and undated posts were omitted.",
+      "timestamp": "2026-10-24T21:42:34.110Z"
+    },
+    {
+      "step": "archive.enrichment.relevance",
+      "status": "completed",
+      "message": "Additional title-level relevance check removed 3 unrelated public posts; these were never used as evidence.",
+      "timestamp": "2026-10-24T21:44:40.791Z"
     }
   ]
 }

@@ -1,5 +1,7 @@
 import { z } from "zod";
 import type { ApprovedStory, CandidateStory, RejectedStory } from "./types";
+import { contextualMedia } from "./media";
+import { experienceSchema, attachExperience } from "./experience";
 import { evidencePassages } from "./evidence";
 
 const reference = z.object({ sourceId: z.string(), passageId: z.string().min(1).max(20) }).strict();
@@ -32,12 +34,16 @@ export const editorialResponseSchema = z.object({
   }).strict()).max(20),
 }).strict();
 
+export const editorialGenerationSchema = z.object({ decisions: z.array(editorialResponseSchema.shape.decisions.element.extend({ experience: experienceSchema.nullable() })).max(20) }).strict();
+
 export type EditorialResponse = z.infer<typeof editorialResponseSchema>;
 
 export class EditorialValidationError extends Error {}
 
 function parseDecisions(raw: unknown, candidates: CandidateStory[]) {
-  const result = editorialResponseSchema.safeParse(raw);
+  const clean = raw && typeof raw === "object" && "decisions" in raw && Array.isArray(raw.decisions)
+    ? { ...raw, decisions: raw.decisions.map((value: unknown) => { if (!value || typeof value !== "object") return value; const { experience: _optional, ...rest } = value as Record<string, unknown>; return rest; }) } : raw;
+  const result = editorialResponseSchema.safeParse(clean);
   if (!result.success) throw new EditorialValidationError("The editor's JSON violated the required fields, types, or score/length limits.");
   const parsed = result.data;
   const byId = new Map(candidates.map((candidate) => [candidate.id, candidate]));
@@ -157,7 +163,7 @@ export function assembleEditorialResult(raw: unknown, candidates: CandidateStory
     const allReferences = [...decision.evidence, ...Object.values(decision.contentEvidence).flat()];
     const uniqueReferences = [...new Map(allReferences.map((ref) => [`${ref.sourceId}/${ref.passageId}`, ref])).values()];
     stories.push({
-      id: candidate.id, headline: decision.headline, centralClaim: decision.centralClaim,
+      media: [...contextualMedia(decision.headline), ...(candidate.media ?? [])].slice(0, 3), id: candidate.id, headline: decision.headline, centralClaim: decision.centralClaim,
       summary: decision.summary, whyItMatters: decision.whyItMatters, action: decision.action,
       category: decision.category, verificationStatus: "verified", confidence: Math.min(decision.confidence, cap),
       hypeScore: decision.hypeScore, verificationReason: decision.reason,
@@ -176,6 +182,11 @@ export function assembleEditorialResult(raw: unknown, candidates: CandidateStory
         return { id: source.id, title: source.title, url: source.url, publisher: source.source, publishedAt: source.publishedAt };
       }),
     });
+  }
+  const extras = raw && typeof raw === "object" && "decisions" in raw && Array.isArray(raw.decisions) ? raw.decisions : [];
+  for (const story of stories) {
+    const extra = extras.find((d: { candidateId?: string }) => d?.candidateId === story.id);
+    if (extra?.experience) attachExperience(story, extra.experience, candidates);
   }
   return { stories, rejectedStories };
 }

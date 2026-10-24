@@ -16,7 +16,9 @@ export function getEditorConfig() {
   return { ...settings, apiKey };
 }
 
-export function getConfig() {
+export type AppConfig = { editor: EditorConfig; apifyToken: string; actorId: string; actorInput: Record<string, unknown>; social?: { enabled: boolean; actorId: string; input?: Record<string, unknown> } };
+
+export function getConfig(): AppConfig {
   const settings = getEditorSettings(process.env);
   const missing = [...APIFY_ENV, settings.keyEnv].filter((name) => !process.env[name]?.trim());
   if (missing.length) {
@@ -51,8 +53,17 @@ export function getConfig() {
     editor: getEditorConfig(),
     apifyToken: process.env.APIFY_API_TOKEN!.trim(),
     actorId, actorInput,
+    social: socialConfig(),
   };
 }
 
-export type AppConfig = ReturnType<typeof getConfig>;
+function socialConfig(): AppConfig["social"] {
+  if (process.env.APIFY_SOCIAL_ENABLED === "false") return { enabled: false, actorId: "apify~reddit-scraper" };
+  const actorId = (process.env.APIFY_SOCIAL_ACTOR_ID?.trim() || "apify/reddit-scraper").replace("/", "~");
+  if (!/^[\w-]+(?:~[\w-]+)?$/.test(actorId)) return undefined;
+  let input: Record<string, unknown> | undefined;
+  try { if (process.env.APIFY_SOCIAL_ACTOR_INPUT_JSON) { const value = JSON.parse(process.env.APIFY_SOCIAL_ACTOR_INPUT_JSON); if (!value || typeof value !== "object" || Array.isArray(value)) return undefined; input = value; } } catch { return undefined; }
+  if (actorId !== "apify~reddit-scraper" && !input) return undefined;
+  return { enabled: true, actorId, input };
+}
 export type EditorConfig = ReturnType<typeof getEditorConfig>;

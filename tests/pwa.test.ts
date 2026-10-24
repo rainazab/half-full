@@ -36,3 +36,12 @@ test("offline navigation uses explicit fixed shell; install caches only safe loc
   listeners.fetch({request:{url:'https://us.example/',method:'GET',headers:new Headers(),mode:'navigate'},respondWith:(p:Promise<Response>)=>{response=p;}});
   assert.equal(await (await response!).text(),'Offline fixed demo');
 });
+test("archived audio and puzzle are bundled; cached audio byte ranges work offline",async()=>{
+  const demo=JSON.parse(readFileSync("public/demo-edition.json","utf8"));
+  const listeners:Record<string,(event:any)=>void>={};let cachedPaths:string[]=[];
+  vm.runInNewContext(sw,{URL,Response,AbortController,setTimeout,clearTimeout,fetch:async()=>{throw Error("offline");},self:{location:{origin:"https://us.example"},addEventListener:(name:string,fn:any)=>listeners[name]=fn,skipWaiting:async()=>{},clients:{claim:async()=>{}}},caches:{open:async()=>({addAll:async(paths:string[])=>{cachedPaths=paths;}}),match:async()=>new Response(new Uint8Array(100))}});
+  let install:Promise<unknown>=Promise.resolve();listeners.install({waitUntil:(p:Promise<unknown>)=>install=p});await install;
+  assert.ok(cachedPaths.includes("/demo-puzzle.json"));assert.ok(cachedPaths.includes("/offline-puzzle.js"));
+  for(const story of demo.edition.stories){assert.ok(cachedPaths.includes(story.narration.audioUrl));assert.ok(readFileSync(`public${story.narration.audioUrl}`).length>1000);}
+  let result:Promise<Response>|undefined;listeners.fetch({request:{url:`https://us.example${demo.edition.stories[0].narration.audioUrl}`,method:"GET",mode:"cors",headers:new Headers({Range:"bytes=0-9"})},respondWith:(p:Promise<Response>)=>result=p});const response=await result!;assert.equal(response.status,206);assert.equal((await response.arrayBuffer()).byteLength,10);
+});

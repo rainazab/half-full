@@ -1,3 +1,4 @@
+import { cartesiaConfig } from "@/lib/cartesia";
 import { environmentStatus, getConfig } from "@/lib/config";
 import { publicError } from "@/lib/errors";
 import { json } from "@/lib/http";
@@ -11,7 +12,10 @@ export function GET() {
   let editor: ReturnType<typeof getEditorSettings> | null = null;
   try { editor = getEditorSettings(process.env); } catch { /* getConfig reports the safe error below. */ }
   try { getConfig(); } catch (error) { configurationError = publicError(error).message; }
+  let audio = { ready: false, provider: "Cartesia" };
+  try { cartesiaConfig(); audio.ready = true; } catch { /* Audio never blocks news. */ }
   return json({
+    audio,
     ok: true, server: "running", ready: configurationError === null,
     environment: environmentStatus(),
     editor,

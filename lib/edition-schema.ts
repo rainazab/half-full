@@ -2,12 +2,14 @@ import { z } from "zod";
 import type { EditionResult } from "./types";
 
 const httpUrl = z.string().url().refine((value) => {
-  const url = new URL(value);
-  return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password;
+  try { const url = new URL(value);
+  return ["http:", "https:"].includes(url.protocol) && !url.username && !url.password; } catch { return false; }
 }, "Only HTTP(S) source URLs are allowed");
 const date = z.string().datetime({ offset: true });
 const score = z.number().min(0).max(1);
 const evidence = z.object({ sourceId: z.string(), passageId: z.string(), url: httpUrl, publisher: z.string(), excerpt: z.string().min(1) });
+
+const grounded = z.object({ text: z.string().min(1).max(2000), evidence: z.array(evidence).min(1) });
 
 export const editionResultSchema = z.object({
   edition: z.object({
@@ -19,6 +21,11 @@ export const editionResultSchema = z.object({
       whyItMatters: z.string().min(1), action: z.string().min(1), category: z.string(),
       sources: z.array(z.object({ id: z.string().optional(), title: z.string(), url: httpUrl, publisher: z.string(), publishedAt: date.nullable() })).min(1),
       verificationStatus: z.literal("verified"), confidence: score, hypeScore: score, verificationReason: z.string(),
+      media: z.array(z.object({ url: z.union([httpUrl, z.string().regex(/^\/media\/[a-zA-Z0-9_.-]+$/)]), sourceUrl: httpUrl, publisher: z.string(), type: z.literal("image"), alt: z.string(), attribution: z.string(), rights: z.enum(["unknown", "licensed"]), licenseUrl: httpUrl.optional(), retrievedAt: date })).max(3).optional(),
+      socialContext: z.object({ notice: z.string(), posts: z.array(z.object({ id: z.string(), title: z.string(), text: z.string(), url: httpUrl, publishedAt: date, platform: z.literal("Reddit"), community: z.string().nullable(), questions: z.array(z.string()) })).max(2) }).optional(),
+      experience: z.object({ quick: grounded, explanation: grounded, background: grounded, glossary: z.array(grounded.extend({ term: z.string().min(1).max(40) })).max(3) }).optional(),
+      narration: z.object({ script: z.string().min(1).max(4000), evidence: z.array(evidence), estimatedSeconds: z.number().nonnegative(),
+        origin: z.enum(["claude", "reviewed-copy"]), audioUrl: z.string().regex(/^\/demo-audio\/[a-zA-Z0-9_-]+\.mp3$/).optional(), durationSeconds: z.number().positive().optional(), provider: z.literal("Cartesia").optional() }).optional(),
       evidence: z.array(evidence).optional(),
       contentSupport: z.array(z.object({ field: z.enum(["centralClaim", "headline", "summary", "whyItMatters", "action"]), text: z.string(), evidence: z.array(evidence).min(1) })).optional(),
       sourceAssessments: z.array(z.object({ sourceId: z.string(), kind: z.enum(["primary", "reporting", "unknown"]), independenceGroup: z.string(), explanation: z.string() })).optional(),
@@ -39,7 +46,7 @@ export const editionResultSchema = z.object({
   }
   if (result.edition.mode === "demo" && !result.edition.demoInfo) ctx.addIssue({ code: "custom", message: "Demo provenance is required" });
   for (const story of result.edition.stories) {
-    for (const item of [...(story.evidence ?? []), ...(story.contentSupport ?? []).flatMap((claim) => claim.evidence)]) {
+    for (const item of [...(story.evidence ?? []), ...(story.contentSupport ?? []).flatMap((claim) => claim.evidence), ...(story.narration?.evidence ?? []), ...[story.experience?.quick, story.experience?.explanation, story.experience?.background, ...(story.experience?.glossary ?? [])].flatMap((part) => part?.evidence ?? [])]) {
       if (!story.sources.some((source) => source.url === item.url && source.id === item.sourceId)) {
         ctx.addIssue({ code: "custom", message: "Evidence must reference a listed source" });
       }

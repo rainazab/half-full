@@ -1,4 +1,7 @@
+export interface StoryMedia { url: string; sourceUrl: string; publisher: string; type: "image"; alt: string; attribution: string; rights: "unknown" | "licensed"; licenseUrl?: string; retrievedAt: string; }
+export interface SocialPost { id: string; title: string; text: string; url: string; publishedAt: string; platform: "Reddit"; community: string | null; questions: string[]; }
 export interface CandidateStory {
+  media?: StoryMedia[];
   id: string;
   title: string;
   url: string;
@@ -37,7 +40,24 @@ export interface SourceAssessment {
   explanation: string;
 }
 
+export interface Narration {
+  script: string;
+  evidence: EvidenceRecord[];
+  estimatedSeconds: number;
+  origin: "claude" | "reviewed-copy";
+  audioUrl?: string;
+  durationSeconds?: number;
+  provider?: "Cartesia";
+}
+
+export interface GroundedText { text: string; evidence: EvidenceRecord[]; }
+export interface StoryExperience { quick: GroundedText; explanation: GroundedText; background: GroundedText; glossary: (GroundedText & { term: string })[]; }
+
 export interface ApprovedStory {
+  media?: StoryMedia[];
+  socialContext?: { posts: SocialPost[]; notice: string };
+  experience?: StoryExperience;
+  narration?: Narration;
   id: string;
   headline: string;
   centralClaim: string;

@@ -199,3 +199,86 @@ The MVP intentionally has no accounts. Anyone who can reach `POST /api/run` can 
 - `.env.example`, `Dockerfile`, `.dockerignore`, `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.ts`: setup and deployment.
 
 The Claude output budget uses the documented [effort control](https://platform.claude.com/docs/en/build-with-claude/effort); its reasoning and final JSON share the output-token limit.
+
+## Visual + narrated upgrade (October 24, 2026)
+
+The existing Next.js/Claude pipeline is preserved. `LLM_PROVIDER=anthropic` remains the default; there is no automatic provider fallback. The older explicitly selectable OpenAI adapter is retained only for backward compatibility and is not used by the configured app.
+
+### Start and demonstrate
+
+```sh
+npm ci
+# Configure .env using .env.example; do not overwrite an existing .env.
+npm run dev
+```
+
+Open http://localhost:3000 for live mode or http://localhost:3000/demo for the explicitly archived demo. `/demo` needs no credentials and includes five real Cartesia MP3s, Claude explanations and definitions, a licensed contextual logo, sourced Reddit context, exclusions, receipts and a playable crossword. Its news and source dates remain October 24, 2026; it is never presented as fresh retrieval.
+
+```sh
+# Real generation (up to 295 seconds); JSON response:
+curl --max-time 295 -X POST http://localhost:3000/api/run
+# Streaming progress instead:
+curl -N --max-time 295 -X POST -H 'Accept: application/x-ndjson' http://localhost:3000/api/run
+curl http://localhost:3000/api/health
+curl http://localhost:3000/api/today
+# Replace RUN_ID with the actual response ID:
+curl http://localhost:3000/api/run/RUN_ID
+```
+
+### Narration
+
+Set `CARTESIA_API_KEY` on the server. The existing `CARTESIA` environment name is also accepted, so an existing key does not need to be copied or exposed. Optional `CARTESIA_VOICE_ID` defaults to the public voice used in Cartesia's Bytes example (`db6b0ed5-d5d3-463d-ae85-518a07d3c2b4`); `CARTESIA_MODEL_ID` defaults to `sonic-3.6`.
+
+`lib/cartesia.ts` uses official `@cartesia/cartesia-js` v4: `tts.generate`, string voice ID, MP3 container, 44.1 kHz, 128 kbps. The SDK supplies its supported API version. Credentials only travel server-to-provider. Calls have a 35-second timeout, zero automatic retries, and a 3 MB response cap. The selected Bytes API does not provide timing alignment: the UI shows actual clip time, not fabricated word or section highlighting.
+
+`POST /api/audio/:editionId/:storyId` prepares a clip from a retained story, never arbitrary client text. `GET` on the same URL serves the already prepared clip, supports HTTP byte ranges for Safari seeking, and never invokes TTS. No key appears in a URL. The in-memory cache deduplicates pending work, allows two concurrent generations, holds at most 30 clips/24 MB for two hours, and cools failed keys down for 30 seconds. Clips disappear on restart; expired or evicted live clips can be prepared again. Audio is lazy and does not consume the edition generation budget. Browser controls include pause, replay, seek, speed and opt-in listen-through. Safari may require another explicit Play tap after asynchronous generation or between clips.
+
+Claude supplies short narration, quick/default/deeper explanations and contextual glossary definitions with evidence references in the existing editorial call. Optional presentation is independently schema/reference validated; malformed extras are omitted without discarding approved stories. Legacy stories narrate only their already reviewed summary, relevance and action. Reference validation establishes traceability, not independent semantic fact-checking or a guarantee that a model understood the source correctly.
+
+### Optional Apify enrichment and visuals
+
+The original `apify/rag-web-browser` BBC/NPR discovery remains unchanged. After 3–5 stories pass the existing checks, `apify/reddit-scraper` receives one batched `searchQueries` array (at most five queries, three results each), `scrapeMode=posts`, `searchSort=relevance`, `searchTimeFilter=week`, `includeNsfw=false`. Posts must have a real Reddit ID, a valid recent timestamp and headline-level topic overlap. Duplicate, NSFW, stale and malformed records are dropped. A second, optional Claude check (at most 15 seconds within the same social budget) requires a specific topic connection and an exact quote from the retrieved post; uncertain matches or failed checks are omitted. Questions are literal excerpts; a few posts are not described as a population-wide consensus, and never contribute to confidence or verification. No comments or private/social-login data are requested.
+
+`APIFY_SOCIAL_ENABLED=false` disables enrichment. `APIFY_SOCIAL_ACTOR_ID` selects another compatible Reddit Actor; non-default Actors also require `APIFY_SOCIAL_ACTOR_INPUT_JSON`. That adapter explicitly requires batched `searchQueries` and Reddit post output (id, title, body/selftext, url/permalink, createdAt/createdUtc, optional communityName). It does not assume TikTok/Instagram share that schema. Additional platforms are not implemented.
+
+Social work has at most 50 seconds, uses only time remaining before a 285-second pipeline deadline, and aborts unfinished runs. News retrieval's 165-second budget, Claude's 105-second budget and the 300-second route allowance remain unchanged. Optional failure is logged and leaves approved stories intact. Actor and dataset IDs are logged, never tokens.
+
+Article image/Open Graph metadata is normalized with attribution, original URL, rights status and retrieval time. Scraping is not a license. Unknown-rights images are linked at their original source, never embedded or downloaded by the browser. The displayed PHP logo is an unchanged, separately reviewed CC BY-SA 4.0 contextual asset, **not an event photograph or a newly scraped image**; see `public/media/ATTRIBUTION.md`. Other stories use labeled, code-generated neutral illustrations. Broken licensed assets fall back to those illustrations.
+
+### Crossword and receipts
+
+The optional mini crossword uses the actual glossary definitions as clues. A deterministic layout builder validates letters, boundaries, crossings, connectivity, numbering and every horizontal/vertical run. It selects up to five words; if fewer than three can form a valid connected puzzle, the edition simply ends without a game. The archived demo has a validated five-word puzzle. Completion requires every letter. A live puzzle can record a UTC-day completion streak in device-local storage; archived practice never changes it. There is no account, leaderboard, penalty or extra feed.
+
+“Show me the receipts” preserves original article links/dates, exact retrieved excerpts, field references, source classifications, limitations and capped confidence. Links to official advisories/PDFs are shown only when present in retained passages. Linked documents are clearly distinguished from fully retrieved evidence; no PDF preview, extracted page references or independent document verification is claimed.
+
+### Offline and deployment
+
+Production service workers cache only an explicit local archive allowlist: offline shell, demo JSON, validated demo puzzle, five bundled MP3s, licensed image and icons. Live APIs, live audio, POST, authenticated and cross-origin requests are excluded. Archived MP3 ranges are supported from cache. First visit must be online and cache installation must complete. The offline reader has native audio controls, explanations, glossary, receipts and an optional saved crossword. An update notice allows reloading newly cached assets. HTTPS (or localhost) is required for installation; physical Safari installation/playback still needs device QA.
+
+For a demo, use one long-running Node process so edition and audio memory are shared:
+
+```sh
+npm ci
+npm test
+npm run typecheck
+npm run build
+npm start
+# Container path, on a host with Docker:
+docker build -t us-news .
+docker run --rm --env-file .env -p 3000:3000 us-news
+```
+
+Deploy the existing Dockerfile or the build/start commands to a Node host with HTTPS and a request timeout of at least 300 seconds. Set the environment values in the host's secret manager, not in the image. Vercel can build this Next.js app, but its execution allowance must support `maxDuration=300`; memory is not shared between instances/route workers, so multi-instance/serverless live audio/history is not reliable without shared storage (outside this MVP). No public deployment was performed.
+
+Rebuild the **explicit archive** only deliberately; these commands incur provider calls except finalization:
+
+```sh
+node --env-file=.env --conditions=react-server --import tsx scripts/prepare-experience.ts
+node --env-file=.env --conditions=react-server --import tsx scripts/prepare-social.ts
+node --env-file=.env --conditions=react-server --import tsx scripts/prepare-audio.ts
+node --import tsx scripts/finalize-demo.ts
+```
+
+Run these sequentially. The source snapshot must already contain actual retained evidence. Finalization validates the schema, filters social relevance, builds the crossword and versions the offline cache. Audio files are reused by script hash; no generation happens on demo Play. New files are small bundled assets, not runtime writes to `public/`.
+
+Official integration references: [Cartesia SDK](https://github.com/cartesia-ai/cartesia-js), [Bytes TTS](https://docs.cartesia.ai/api-reference/tts/bytes), [audio formats](https://docs.cartesia.ai/build-with-cartesia/capability-guides/tts-output-audio-format), [Cartesia concurrency](https://docs.cartesia.ai/use-the-api/concurrency-limits-and-timeouts), [Apify Reddit Actor and schema](https://apify.com/apify/reddit-scraper/input-schema), [PHP logo permission](https://www.php.net/download-logos.php).
