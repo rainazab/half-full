@@ -7,9 +7,9 @@ export const DEFAULT_OPENAI_MODEL = "gpt-5.4-mini";
 export function getEditorSettings(env: Record<string, string | undefined>) {
   const explicit = env.LLM_PROVIDER?.trim();
   if (explicit && explicit !== "anthropic" && explicit !== "openai") {
-    throw new PipelineError("INVALID_LLM_PROVIDER", "LLM_PROVIDER must be anthropic or openai (or unset for automatic key-based selection).", 503);
+    throw new PipelineError("INVALID_LLM_PROVIDER", "LLM_PROVIDER must be anthropic or openai (or unset to use Anthropic).", 503);
   }
-  const provider = explicit || (env.OPENAI_API_KEY?.trim() ? "openai" : env.ANTHROPIC_API_KEY?.trim() ? "anthropic" : "openai");
+  const provider = explicit || "anthropic";
   const keyEnv = provider === "openai" ? "OPENAI_API_KEY" : "ANTHROPIC_API_KEY";
   const modelEnv = provider === "openai" ? "OPENAI_MODEL" : "ANTHROPIC_MODEL";
   const model = env[modelEnv]?.trim() || (provider === "openai" ? DEFAULT_OPENAI_MODEL : DEFAULT_ANTHROPIC_MODEL);

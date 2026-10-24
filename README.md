@@ -13,27 +13,25 @@ npm ci
 # cp .env.example .env.local
 ```
 
-Edit `.env` or `.env.local` locally (do not copy a blank template over an existing file). Next.js loads both; `.env.local` takes precedence for duplicate variables. For OpenAI:
+Edit `.env` or `.env.local` locally (do not copy a blank template over an existing file). Next.js loads both; `.env.local` takes precedence for duplicate variables. For Claude:
 
 ```dotenv
-OPENAI_API_KEY=your-openai-key
+ANTHROPIC_API_KEY=your-anthropic-key
 APIFY_API_TOKEN=your-apify-token
 APIFY_ACTOR_ID=apify/rag-web-browser
 # Optional:
-OPENAI_MODEL=gpt-5.4-mini
-LLM_PROVIDER=openai
+ANTHROPIC_MODEL=claude-sonnet-5-5
+LLM_PROVIDER=anthropic
 ```
 
-Get an Apify token in [Apify Console → Settings → Integrations](https://console.apify.com/settings/integrations) and use either an OpenAI key or an Anthropic key. Apify and the selected editor both need available API credits and access to the configured Actor/model.
+Get an Apify token in [Apify Console → Settings → Integrations](https://console.apify.com/settings/integrations) and use an Anthropic API key. No OpenAI key is required. Apify and the selected editor both need available API credits and access to the configured Actor/model.
 
 Provider selection:
 
-- With only `OPENAI_API_KEY` set, OpenAI is selected automatically. `OPENAI_MODEL` defaults to `gpt-5.4-mini`, which supports [structured output](https://developers.openai.com/api/docs/models/gpt-5.4-mini).
-- OpenAI is preferred when both keys exist. With only `ANTHROPIC_API_KEY` set, the existing optional Claude integration is selected. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`.
-- Set `LLM_PROVIDER=openai` or `LLM_PROVIDER=anthropic` to choose explicitly. Only the selected provider's key is required. An API error never silently switches providers.
-- `/api/health` reports the selected provider/model and required variable names without returning keys. The frontend and run logs identify the editor used.
-
-To switch back to Claude later, add `ANTHROPIC_API_KEY` and set `LLM_PROVIDER=anthropic` (or leave it unset when only the Claude key exists). You can leave `OPENAI_API_KEY` in place. Both providers use the same cautious prompt, strict decision schema, source checks, and acceptance thresholds. OpenAI uses the official [Responses API structured-output format](https://developers.openai.com/api/docs/guides/structured-outputs?api-mode=responses), with response storage disabled and no browsing tools.
+- Claude is the default, regardless of whether an unused OpenAI key exists. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`.
+- `LLM_PROVIDER=anthropic` explicitly pins Claude. Missing or invalid Anthropic credentials fail visibly; the app never falls back to OpenAI.
+- `/api/health` reports Claude, the selected model and required variable names without returning keys. The frontend and run logs identify the editor used.
+- The earlier OpenAI adapter remains available only if deliberately configured with `LLM_PROVIDER=openai`; it is not used by the current setup.
 
 ```sh
 npm run dev
@@ -147,7 +145,7 @@ On a completed review, `candidatesFound = approved + rejected`, including normal
 ## Timeouts and storage
 
 - Actor execution timeout: 150 seconds; entire Apify retrieval deadline: 165 seconds. Individual Apify requests also have bounded timeouts. Transient GET failures get one retry within the original deadline; Actor-creation POSTs are never automatically retried, to avoid duplicate billable runs. If retrieval fails while a known Actor run is active, the server attempts to abort it within 5 seconds.
-- Editor request deadline: 105 seconds. OpenAI transient HTTP 429/502/503/504 errors get at most one retry within that same deadline. Anthropic SDK retries are disabled; its optional path uses medium effort and a 20,000-token cap to leave room for thinking and structured output. Truncated/refused output fails closed. There is no retry that silently changes models or weakens criteria.
+- Editor request deadline: 105 seconds. OpenAI transient HTTP 429/502/503/504 errors get at most one retry within that same deadline. Anthropic SDK retries are disabled; its path uses medium effort and a 20,000-token cap to leave room for thinking and structured output. Truncated/refused output fails closed. There is no retry that silently changes models or weakens criteria.
 - Route duration allowance: 300 seconds; browser timeout: 295 seconds. Your host/proxy must allow at least 300 seconds for the synchronous request. If a host kills the process, its in-memory log cannot be retained.
 - `lib/store.ts` contains the storage boundary. It keeps the latest successful result and 30 recent run records in process memory, with one active run at a time per process. Restarting clears them. A failed run preserves the previous successful result.
 - Use a single long-running Node process for this MVP. Serverless instances or multiple replicas do **not** share this memory or concurrency guard. Add a shared persistent store and a durable job runner before scaling. No scheduled generation is implemented; the button/API triggers each run.
@@ -200,4 +198,4 @@ The MVP intentionally has no accounts. Anyone who can reach `POST /api/run` can 
 - `tests/*.test.ts`: isolated normalization and validation tests.
 - `.env.example`, `Dockerfile`, `.dockerignore`, `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.ts`: setup and deployment.
 
-The optional Claude output budget uses the documented [effort control](https://platform.claude.com/docs/en/build-with-claude/effort); its reasoning and final JSON share the output-token limit.
+The Claude output budget uses the documented [effort control](https://platform.claude.com/docs/en/build-with-claude/effort); its reasoning and final JSON share the output-token limit.

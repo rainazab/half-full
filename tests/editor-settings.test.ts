@@ -4,18 +4,19 @@ import { getEditorSettings } from "../lib/editor-settings";
 import { editorialResponseSchema } from "../lib/validation";
 import { zodTextFormat } from "openai/helpers/zod";
 
-test("uses OpenAI when only its key is present, including an empty Claude key", () => {
-  const settings = getEditorSettings({ OPENAI_API_KEY: "test-key", ANTHROPIC_API_KEY: "  ", ANTHROPIC_MODEL: "claude-custom" });
-  assert.equal(settings.provider, "openai");
-  assert.equal(settings.keyEnv, "OPENAI_API_KEY");
-  assert.equal(settings.model, "gpt-5.4-mini");
+test("defaults to Anthropic even when only an OpenAI key is present", () => {
+  const settings = getEditorSettings({ OPENAI_API_KEY: "test-key", ANTHROPIC_API_KEY: "  ", ANTHROPIC_MODEL: "  " });
+  assert.equal(settings.provider, "anthropic");
+  assert.equal(settings.keyEnv, "ANTHROPIC_API_KEY");
+  assert.equal(settings.model, "claude-sonnet-5-5");
   assert.equal(settings.modelUsesDefault, true);
   assert.ok(!JSON.stringify(settings).includes("test-key"));
 });
 
-test("prefers OpenAI when both keys exist, retaining optional Claude selection", () => {
-  assert.equal(getEditorSettings({ ANTHROPIC_API_KEY: "test-key", OPENAI_API_KEY: "another-test-key" }).provider, "openai");
+test("uses Anthropic by default with both keys or no keys", () => {
+  assert.equal(getEditorSettings({ ANTHROPIC_API_KEY: "test-key", OPENAI_API_KEY: "another-test-key" }).provider, "anthropic");
   assert.equal(getEditorSettings({ ANTHROPIC_API_KEY: "test-key" }).provider, "anthropic");
+  assert.equal(getEditorSettings({}).provider, "anthropic");
 });
 
 test("explicit provider and its model override win, even without that provider's key", () => {
