@@ -1,39 +1,313 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ApprovedStory } from "@/lib/types";
-import { buildCrossword, puzzleWords, crosswordComplete, completeDay, type Entry, type Streak } from "@/lib/crossword";
-export default function Crossword({ stories, demo }: { stories: ApprovedStory[]; demo: boolean }) {
-  const puzzle = useMemo(() => buildCrossword(puzzleWords(stories)), [stories]);
-  const [open, setOpen] = useState(false), [values, setValues] = useState<Record<string, string>>({});
-  const [checked, setChecked] = useState(false), [done, setDone] = useState(false), [days, setDays] = useState(0);
-  const [selected, setSelected] = useState<Entry | null>(null);
-  if (!puzzle) return <p className="note">No mini puzzle for this edition. Your reading is complete.</p>;
-  function check() {
-    setChecked(true); if (!puzzle || !crosswordComplete(puzzle, values)) return; setDone(true);
-    if (demo) return;
-    try { const raw = localStorage.getItem("us-puzzle-days"); const previous = raw ? JSON.parse(raw) as Streak : null;
-      const next = completeDay(previous); localStorage.setItem("us-puzzle-days", JSON.stringify(next)); setDays(next.days);
-    } catch { /* A blocked device store never blocks completion. */ }
+import { crosswordComplete, type Entry } from "@/lib/crossword";
+import { dailyMini, entryCells } from "@/lib/mini";
+import { editionDay } from "@/lib/daily";
+import Charm from "./Charm";
+export default function Crossword({
+  stories,
+  demo,
+  date = editionDay(),
+  initialOpen = false,
+}: {
+  stories: ApprovedStory[];
+  demo: boolean;
+  date?: string;
+  initialOpen?: boolean;
+}) {
+  const puzzle = useMemo(() => dailyMini(stories, date), [stories, date]);
+  const [open, setOpen] = useState(initialOpen),
+    [values, setValues] = useState<Record<string, string>>({});
+  const [selected, setSelected] = useState<Entry>(puzzle.entries[0]),
+    [cell, setCell] = useState(entryCells(puzzle.entries[0])[0]);
+  const [checked, setChecked] = useState(false),
+    [done, setDone] = useState(false),
+    [assisted, setAssisted] = useState(false),
+    [ready, setReady] = useState(false);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const ordered = [
+    ...puzzle.entries.filter((e) => e.direction === "across"),
+    ...puzzle.entries.filter((e) => e.direction === "down"),
+  ];
+  const key = `us-mini-${demo ? "practice" : "live"}-${puzzle.id}`;
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(key) ?? "null");
+      if (saved?.values) {
+        setValues(saved.values);
+        setDone(crosswordComplete(puzzle, saved.values));
+        setAssisted(Boolean(saved.assisted));
+      }
+    } catch {}
+    setReady(true);
+  }, [key, puzzle]);
+  useEffect(() => {
+    if (ready)
+      try {
+        localStorage.setItem(key, JSON.stringify({ values, assisted }));
+      } catch {}
+  }, [values, assisted, ready, key]);
+  const focus = (value: string) => {
+    setCell(value);
+    gridRef.current
+      ?.querySelector<HTMLButtonElement>(`[data-cell="${value}"]`)
+      ?.focus({ preventScroll: true });
+  };
+  function choose(entry: Entry) {
+    setSelected(entry);
+    focus(entryCells(entry).find((c) => !values[c]) ?? entryCells(entry)[0]);
   }
-  function focusCell(row: number, col: number) { document.getElementById(`crossword-${row}-${col}`)?.focus(); }
-  return <section className="puzzle" aria-label="Optional news crossword"><h3>Want to see what stuck?</h3><p>A small crossword from this edition’s definitions. Entirely optional.</p>
-    {!open ? <button onClick={() => { setOpen(true); setSelected(puzzle.entries[0]); }}>Play the mini crossword</button> : <>
-      <p className="note">{demo ? "Archived edition puzzle · practice only" : "One puzzle for this edition"}. Choose a clue, then type. Arrow keys move between squares.</p>
-      {selected && <p className="selected-clue" aria-live="polite">{selected.number} {selected.direction}: {selected.clue} ({selected.answer.length})</p>}
-      <div className="crossword-scroll"><div className="crossword-grid" style={{ gridTemplateColumns: `repeat(${puzzle.grid[0].length}, minmax(28px, 40px))` }} role="group" aria-label="Crossword letter grid">
-        {puzzle.grid.flatMap((row, r) => row.map((letter, c) => {
-          const key = `${r},${c}`, start = puzzle.entries.find((e) => e.row === r && e.col === c);
-          const memberships = puzzle.entries.filter((e) => e.direction === "across" ? e.row === r && c >= e.col && c < e.col + e.answer.length : e.col === c && r >= e.row && r < e.row + e.answer.length);
-          return letter ? <label key={key} className={`crossword-cell ${checked && values[key] && values[key] !== letter ? "incorrect" : ""} ${selected && memberships.includes(selected) ? "selected" : ""}`}><span aria-hidden="true">{start?.number}</span>
-            <input id={`crossword-${r}-${c}`} aria-label={`Row ${r + 1}, column ${c + 1}; ${memberships.map((e) => `${e.number} ${e.direction}`).join(" and ")}`} aria-invalid={checked && !!values[key] && values[key] !== letter} value={values[key] ?? ""} maxLength={1} autoComplete="off" autoCapitalize="characters" spellCheck={false} inputMode="text" disabled={done}
-              onFocus={() => { if (!selected || !memberships.includes(selected)) setSelected(memberships[0]); }}
-              onKeyDown={(event) => { const direction = ({ ArrowRight: [0, 1], ArrowLeft: [0, -1], ArrowDown: [1, 0], ArrowUp: [-1, 0] } as Record<string, number[]>)[event.key]; if (direction) { event.preventDefault(); focusCell(r + direction[0], c + direction[1]); } if (event.key === "Backspace" && !values[key] && selected) focusCell(r - (selected.direction === "down" ? 1 : 0), c - (selected.direction === "across" ? 1 : 0)); }}
-              onChange={(event) => { const value = event.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(-1); setValues((current) => ({ ...current, [key]: value })); setChecked(false); if (value && selected) focusCell(r + (selected.direction === "down" ? 1 : 0), c + (selected.direction === "across" ? 1 : 0)); }} /></label> : <span key={key} className="crossword-block" aria-hidden="true" />;
-        }))}</div></div>
-      <div className="clue-columns">{(["across", "down"] as const).map((direction) => <div key={direction}><h4>{direction === "across" ? "Across" : "Down"}</h4>{puzzle.entries.filter((e) => e.direction === direction).map((entry) => <button className="clue" key={`${entry.number}-${direction}`} aria-pressed={selected === entry} onClick={() => { setSelected(entry); focusCell(entry.row, entry.col); }}>{entry.number}. {entry.clue} ({entry.answer.length})</button>)}</div>)}</div>
-      <div className="buttons"><button onClick={check} disabled={done}>Check answers</button><button onClick={() => setOpen(false)}>Close puzzle</button></div>
-      {checked && !done && <p role="status">A few letters are missing or need another look. You can revisit the definitions or leave it here.</p>}
-      {done && <p role="status" className="puzzle-success">You got it. {demo ? "Practice complete." : days > 1 ? `${days} consecutive days completed on this device.` : "Today’s puzzle is complete."} That’s the end—go enjoy your day.</p>}
-    </>}
-  </section>;
+  function nextClue(delta = 1) {
+    choose(
+      ordered[
+        (ordered.indexOf(selected) + delta + ordered.length) % ordered.length
+      ],
+    );
+  }
+  function type(letter: string) {
+    if (done) return;
+    const cells = entryCells(selected),
+      position = cells.indexOf(cell);
+    if (letter === "⌫") {
+      const target = values[cell] ? cell : cells[Math.max(0, position - 1)];
+      setValues((old) => ({ ...old, [target]: "" }));
+      focus(target);
+      setChecked(false);
+      return;
+    }
+    if (!/^[A-Z]$/.test(letter)) return;
+    const next = { ...values, [cell]: letter };
+    setValues(next);
+    setChecked(false);
+    if (crosswordComplete(puzzle, next)) {
+      setDone(true);
+      return;
+    }
+    if (position < cells.length - 1) focus(cells[position + 1]);
+    else nextClue();
+  }
+  function cellClick(value: string) {
+    const members = puzzle.entries.filter((e) => entryCells(e).includes(value));
+    setSelected(
+      members.find(
+        (e) =>
+          e.direction ===
+          (value === cell
+            ? selected.direction === "across"
+              ? "down"
+              : "across"
+            : selected.direction),
+      ) ?? members[0],
+    );
+    focus(value);
+  }
+  return (
+    <section className="puzzle" aria-label="Optional news crossword">
+      {!open ? (
+        <div className="mini-invite">
+          <div className="mini-icon" aria-hidden="true">
+            {puzzle.grid.flat().map((l, i) => (
+              <i key={i} className={!l ? "block" : ""} />
+            ))}
+          </div>
+          <div>
+            <p className="eyebrow">A little brain break</p>
+            <h3>Want to see what stuck?</h3>
+            <p>Five by five. A few minutes. Entirely optional.</p>
+            <button className="primary" onClick={() => setOpen(true)}>
+              Play the Mini <span>↗</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div className="mini-heading">
+            <div>
+              <p className="eyebrow">
+                The half full Mini · {demo ? "archive" : date}
+              </p>
+              <h2>{puzzle.title}</h2>
+            </div>
+            <span className="mini-size">5 × 5</span>
+          </div>
+          <div className="mini-toolbar">
+            <button
+              onClick={() => {
+                setChecked(true);
+                setDone(crosswordComplete(puzzle, values));
+              }}
+            >
+              Check letters
+            </button>
+            <button
+              onClick={() => {
+                setAssisted(true);
+                const next = {
+                  ...values,
+                  [cell]: puzzle.grid[Number(cell[0])][Number(cell[2])]!,
+                };
+                setValues(next);
+                setDone(crosswordComplete(puzzle, next));
+              }}
+            >
+              Reveal a letter
+            </button>
+            <button onClick={() => setOpen(false)}>Close</button>
+          </div>
+          <div className="mini-play">
+            <div>
+              <div className="selected-clue" aria-live="polite">
+                <button aria-label="Previous clue" onClick={() => nextClue(-1)}>
+                  ‹
+                </button>
+                <p>
+                  <strong>
+                    {selected.number}
+                    {selected.direction === "across" ? "A" : "D"}
+                  </strong>{" "}
+                  {selected.clue}
+                </p>
+                <button aria-label="Next clue" onClick={() => nextClue()}>
+                  ›
+                </button>
+              </div>
+              <div
+                className="crossword-grid"
+                ref={gridRef}
+                role="group"
+                aria-label="Mini crossword grid"
+                onKeyDown={(event) => {
+                  if (event.ctrlKey || event.metaKey || event.altKey) return;
+                  if (
+                    /^[a-zA-Z]$/.test(event.key) ||
+                    event.key === "Backspace"
+                  ) {
+                    event.preventDefault();
+                    type(
+                      event.key === "Backspace" ? "⌫" : event.key.toUpperCase(),
+                    );
+                  }
+                  if (event.key === " ") {
+                    event.preventDefault();
+                    cellClick(cell);
+                  }
+                  const delta = (
+                    {
+                      ArrowRight: [0, 1],
+                      ArrowLeft: [0, -1],
+                      ArrowDown: [1, 0],
+                      ArrowUp: [-1, 0],
+                    } as Record<string, number[]>
+                  )[event.key];
+                  if (delta) {
+                    event.preventDefault();
+                    const [r, c] = cell.split(",").map(Number);
+                    const target = `${r + delta[0]},${c + delta[1]}`;
+                    if (puzzle.grid[r + delta[0]]?.[c + delta[1]]) {
+                      setSelected(
+                        puzzle.entries.find(
+                          (e) =>
+                            e.direction === (delta[0] ? "down" : "across") &&
+                            entryCells(e).includes(target),
+                        )!,
+                      );
+                      focus(target);
+                    }
+                  }
+                }}
+              >
+                {puzzle.grid.flatMap((row, r) =>
+                  row.map((letter, c) => {
+                    const id = `${r},${c}`,
+                      start = puzzle.entries.find(
+                        (e) => e.row === r && e.col === c,
+                      );
+                    return letter ? (
+                      <button
+                        key={id}
+                        data-cell={id}
+                        tabIndex={cell === id ? 0 : -1}
+                        aria-label={`Row ${r + 1}, column ${c + 1}${start ? `, ${start.number}` : ""}: ${values[id] || "empty"}`}
+                        aria-pressed={cell === id}
+                        className={`crossword-cell ${entryCells(selected).includes(id) ? "selected" : ""} ${cell === id ? "current" : ""} ${checked && values[id] && values[id] !== letter ? "incorrect" : ""}`}
+                        onClick={() => cellClick(id)}
+                      >
+                        <small>{start?.number}</small>
+                        {values[id] || ""}
+                      </button>
+                    ) : (
+                      <span
+                        key={id}
+                        className="crossword-block"
+                        aria-hidden="true"
+                      />
+                    );
+                  }),
+                )}
+              </div>
+              <div className="mini-keyboard" aria-label="Letter keyboard">
+                {["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM⌫"].map((row) => (
+                  <div key={row}>
+                    {[...row].map((letter) => (
+                      <button
+                        key={letter}
+                        disabled={done}
+                        aria-label={letter === "⌫" ? "Delete letter" : letter}
+                        onClick={() => type(letter)}
+                      >
+                        {letter}
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="clue-columns">
+              {(["across", "down"] as const).map((direction) => (
+                <div key={direction}>
+                  <h3>{direction === "across" ? "Across" : "Down"}</h3>
+                  {ordered
+                    .filter((e) => e.direction === direction)
+                    .map((entry) => (
+                      <button
+                        className={`clue ${selected === entry ? "active" : ""}`}
+                        key={`${entry.number}${direction}`}
+                        aria-pressed={selected === entry}
+                        onClick={() => choose(entry)}
+                      >
+                        <strong>{entry.number}</strong>
+                        <span>{entry.clue}</span>
+                      </button>
+                    ))}
+                </div>
+              ))}
+            </div>
+          </div>
+          {checked && !done && (
+            <p role="status">
+              Red letters need another look. Empty squares are still yours to
+              solve.
+            </p>
+          )}
+          {done && (
+            <div className="mini-complete" role="status">
+              <Charm mood="mint" small />
+              <div>
+                <h3>A little win.</h3>
+                <p>
+                  Mini complete{assisted ? ", with a little help" : ""}. Your
+                  day is yours again.
+                </p>
+              </div>
+            </div>
+          )}
+          <details className="note">
+            <summary>About this puzzle</summary>
+            <p>{puzzle.notice} Progress is saved on this device only.</p>
+          </details>
+        </>
+      )}
+    </section>
+  );
 }

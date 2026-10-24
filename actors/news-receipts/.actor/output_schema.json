@@ -1,0 +1,1 @@
+{"actorOutputSchemaVersion":1,"title":"News Receipts output","properties":{"evidencePackets":{"type":"string","title":"Evidence packets","template":"{{links.apiDefaultDatasetUrl}}/items"},"summary":{"type":"string","title":"Retrieval summary","template":"{{links.apiDefaultKeyValueStoreUrl}}/records/OUTPUT"}}}

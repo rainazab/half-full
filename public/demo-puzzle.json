@@ -1,181 +1,135 @@
 {
   "grid": [
     [
-      "T",
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    ],
-    [
-      "R",
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    ],
-    [
-      "A",
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null
-    ],
-    [
-      "D",
-      null,
-      null,
-      "P",
-      "H",
-      "P",
-      null,
-      null
-    ],
-    [
-      "E",
-      null,
-      null,
-      "H",
-      null,
-      "H",
-      null,
-      null
-    ],
-    [
-      "S",
-      null,
-      null,
-      "Y",
-      null,
-      "I",
-      null,
-      null
-    ],
-    [
-      "U",
-      null,
-      null,
-      "S",
-      null,
-      "S",
-      null,
-      null
-    ],
-    [
-      "R",
-      null,
-      null,
-      "I",
-      null,
-      "H",
-      null,
-      null
-    ],
-    [
-      "P",
-      "A",
-      "T",
-      "C",
-      "H",
-      "I",
-      "N",
-      "G"
-    ],
-    [
-      "L",
       null,
       null,
       "A",
-      null,
-      "N",
-      null,
-      null
+      "G",
+      "E"
     ],
     [
-      "U",
-      null,
-      null,
-      "L",
       null,
       "G",
-      null,
-      null
-    ],
-    [
-      "S",
-      null,
-      null,
+      "R",
       "A",
-      null,
-      null,
-      null,
+      "Y"
+    ],
+    [
+      "P",
+      "R",
+      "I",
+      "M",
+      "E"
+    ],
+    [
+      "R",
+      "O",
+      "S",
+      "E",
       null
     ],
     [
-      null,
-      null,
-      null,
-      "I",
-      null,
-      null,
+      "O",
+      "W",
+      "E",
       null,
       null
     ]
   ],
   "entries": [
     {
-      "answer": "TRADESURPLUS",
-      "clue": "The amount of goods and services a country sells abroad compared with what it buys from other countries.",
-      "storyId": "candidate-c92051d0483d11bb",
-      "direction": "down",
+      "answer": "AGE",
+      "clue": "Number of birthdays you’ve had",
       "row": 0,
-      "col": 0,
-      "number": 1
-    },
-    {
-      "answer": "PHYSICALAI",
-      "clue": "A type of artificial intelligence that can control robots in the real world.",
-      "storyId": "candidate-065e5e8e5204e896",
-      "direction": "down",
-      "row": 3,
-      "col": 3,
-      "number": 2
-    },
-    {
-      "answer": "PHP",
-      "clue": "A popular server-side programming language used in web development for decades.",
-      "storyId": "candidate-2c4b87c1d1d96844",
+      "col": 2,
       "direction": "across",
-      "row": 3,
-      "col": 3,
-      "number": 2
+      "number": 1,
+      "storyId": ""
     },
     {
-      "answer": "PHISHING",
-      "clue": "Messages that may exploit publicity around the incident; users are warned to be alert to them.",
-      "storyId": "candidate-2c4b87c1d1d96844",
+      "answer": "ARISE",
+      "clue": "Come into being",
+      "row": 0,
+      "col": 2,
       "direction": "down",
-      "row": 3,
-      "col": 5,
-      "number": 3
+      "number": 1,
+      "storyId": ""
     },
     {
-      "answer": "PATCHING",
-      "clue": "Installing security fixes, which one ethical hacker likened to running a Windows update.",
-      "storyId": "candidate-2c4b87c1d1d96844",
-      "row": 8,
+      "answer": "GAME",
+      "clue": "Something you play",
+      "row": 0,
+      "col": 3,
+      "direction": "down",
+      "number": 2,
+      "storyId": ""
+    },
+    {
+      "answer": "EYE",
+      "clue": "The iris is part of it",
+      "row": 0,
+      "col": 4,
+      "direction": "down",
+      "number": 3,
+      "storyId": ""
+    },
+    {
+      "answer": "GRAY",
+      "clue": "Between black and white",
+      "row": 1,
+      "col": 1,
+      "direction": "across",
+      "number": 4,
+      "storyId": ""
+    },
+    {
+      "answer": "GROW",
+      "clue": "Become larger",
+      "row": 1,
+      "col": 1,
+      "direction": "down",
+      "number": 4,
+      "storyId": ""
+    },
+    {
+      "answer": "PRIME",
+      "clue": "A number with exactly two positive divisors",
+      "row": 2,
       "col": 0,
       "direction": "across",
-      "number": 4
+      "number": 5,
+      "storyId": ""
+    },
+    {
+      "answer": "PRO",
+      "clue": "Opposite of con",
+      "row": 2,
+      "col": 0,
+      "direction": "down",
+      "number": 5,
+      "storyId": ""
+    },
+    {
+      "answer": "ROSE",
+      "clue": "A flower, or the past tense of rise",
+      "row": 3,
+      "col": 0,
+      "direction": "across",
+      "number": 6,
+      "storyId": ""
+    },
+    {
+      "answer": "OWE",
+      "clue": "Have a debt to repay",
+      "row": 4,
+      "col": 0,
+      "direction": "across",
+      "number": 7,
+      "storyId": ""
     }
-  ]
+  ],
+  "id": "mini-v1-2026-10-24-perspective",
+  "title": "A little perspective",
+  "themeStoryId": "candidate-c92051d0483d11bb",
+  "notice": "An original US mini, selected from our small collection to match the edition’s themes. Clues mix everyday vocabulary with a news-related term. No new reporting is implied."
 }

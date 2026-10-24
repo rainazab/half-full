@@ -1,0 +1,1 @@
+{"name":"us-news-receipts","version":"1.0.0","private":true,"type":"module","description":"Trace reporting to original retrieved evidence with run/dataset provenance.","scripts":{"start":"node main.mjs"},"dependencies":{"apify":"^3.7.0"},"engines":{"node":">=22"}}

@@ -1,5 +1,5 @@
 {
-  "name": "us-news",
+  "name": "half-full",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -23,6 +23,7 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "prettier": "^3.9.10",
     "tsx": "latest",
     "typescript": "^5.9.0"
   },

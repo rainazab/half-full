@@ -55,5 +55,5 @@
     audit.append(el('h3','Recorded generation log'));
     for (const entry of result.runLog) audit.append(el('p',`${entry.timestamp} · ${entry.step} (${entry.status}) — ${entry.message}`));
     render(false);
-  } catch { document.getElementById('error').textContent = 'The saved demo was not downloaded. Reconnect once and open US to enable offline reading.'; }
+  } catch { document.getElementById('error').textContent = 'The saved demo was not downloaded. Reconnect once and open half full to enable offline reading.'; }
 })();

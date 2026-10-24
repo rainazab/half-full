@@ -1,6 +1,27 @@
-export interface StoryMedia { url: string; sourceUrl: string; publisher: string; type: "image"; alt: string; attribution: string; rights: "unknown" | "licensed" | "publisher-preview"; licenseUrl?: string; retrievedAt: string; }
-export interface SocialPost { id: string; title: string; text: string; url: string; publishedAt: string; platform: "Reddit"; community: string | null; questions: string[]; }
+import type { Provenance } from "./provenance";
+export interface StoryMedia {
+  url: string;
+  sourceUrl: string;
+  publisher: string;
+  type: "image";
+  alt: string;
+  attribution: string;
+  rights: "unknown" | "licensed" | "publisher-preview";
+  licenseUrl?: string;
+  retrievedAt: string;
+}
+export interface SocialPost {
+  id: string;
+  title: string;
+  text: string;
+  url: string;
+  publishedAt: string;
+  platform: "Reddit";
+  community: string | null;
+  questions: string[];
+}
 export interface CandidateStory {
+  provenance?: Provenance;
   media?: StoryMedia[];
   id: string;
   title: string;
@@ -12,6 +33,7 @@ export interface CandidateStory {
 }
 
 export interface Source {
+  provenance?: Provenance;
   id?: string;
   title: string;
   url: string;
@@ -50,8 +72,16 @@ export interface Narration {
   provider?: "Cartesia";
 }
 
-export interface GroundedText { text: string; evidence: EvidenceRecord[]; }
-export interface StoryExperience { quick: GroundedText; explanation: GroundedText; background: GroundedText; glossary: (GroundedText & { term: string })[]; }
+export interface GroundedText {
+  text: string;
+  evidence: EvidenceRecord[];
+}
+export interface StoryExperience {
+  quick: GroundedText;
+  explanation: GroundedText;
+  background: GroundedText;
+  glossary: (GroundedText & { term: string })[];
+}
 
 export interface ApprovedStory {
   media?: StoryMedia[];
@@ -97,9 +127,15 @@ export interface EditionResult {
   edition: {
     id: string;
     createdAt: string;
+    date?: string;
     stories: ApprovedStory[];
     mode?: "live" | "demo";
-    demoInfo?: { label: string; recordedAt: string; originRunId: string; notice: string };
+    demoInfo?: {
+      label: string;
+      recordedAt: string;
+      originRunId: string;
+      notice: string;
+    };
   };
   rejectedStories: RejectedStory[];
   stats: { candidatesFound: number; approved: number; rejected: number };

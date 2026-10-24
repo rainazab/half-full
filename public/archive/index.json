@@ -1,0 +1,34 @@
+[
+  {
+    "date": "2026-10-21",
+    "id": "retrospective-2026-10-21",
+    "count": 4,
+    "mode": "demo",
+    "url": "/archive/2026-10-21.json",
+    "label": "The retrospective collection"
+  },
+  {
+    "date": "2026-10-22",
+    "id": "retrospective-2026-10-22",
+    "count": 5,
+    "mode": "demo",
+    "url": "/archive/2026-10-22.json",
+    "label": "The retrospective collection"
+  },
+  {
+    "date": "2026-10-23",
+    "id": "retrospective-2026-10-23",
+    "count": 5,
+    "mode": "demo",
+    "url": "/archive/2026-10-23.json",
+    "label": "The retrospective collection"
+  },
+  {
+    "date": "2026-10-24",
+    "id": "3eb186ff-3454-443b-8b16-9fb4f1173be5",
+    "count": 5,
+    "mode": "demo",
+    "url": "/demo-edition.json",
+    "label": "The saved CalHacks edition"
+  }
+]

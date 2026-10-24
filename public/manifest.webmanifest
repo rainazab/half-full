@@ -1,11 +1,32 @@
 {
-  "id": "/", "name": "US — a finite news edition", "short_name": "US",
+  "id": "/",
+  "name": "half full — a little news, a little perspective",
+  "short_name": "half full",
   "description": "A finite edition of evidence-aware news. Read, then get on with your day.",
-  "lang": "en", "start_url": "/", "scope": "/", "display": "standalone",
-  "background_color": "#fafbf9", "theme_color": "#183f35",
+  "lang": "en",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fa",
+  "theme_color": "#f6f8fa",
   "icons": [
-    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

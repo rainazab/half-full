@@ -1,6 +1,18 @@
-# US
+# half full
 
-A CalHacks MVP for a finite daily news edition: **3–5 evidence-reviewed stories, an explanation of why each matters, and one realistic action**. The existing app uses Next.js App Router, TypeScript, the official Anthropic and OpenAI SDKs, and the official Apify REST API. There is no authentication or database.
+A CalHacks MVP for a finite daily news edition: **3–5 evidence-reviewed stories, an explanation of why each matters, and one realistic action**. The existing app uses Next.js App Router, TypeScript, the official Anthropic and OpenAI SDKs, and the official Apify REST API. There is no authentication; published editions use Apify key-value storage.
+
+## Daily edition and demo
+
+**half full** opens on a responsive daily cover with a focused visual reader, optional Cartesia narration, an archive calendar, a device-local reading jar, and an original 5×5 Mini with Across/Down clues, crossing letters, hardware/on-screen keyboards, letter checking, reveal, and saved progress.
+
+- `/` opens the published edition for the current Los Angeles calendar day. Generate only if that day is unpublished. Successful editions are reused; failed attempts remain retryable without lowering evidence standards.
+- With `APIFY_API_TOKEN` configured, `lib/daily-store.ts` saves published editions in Apify key-value storage and serializes publishers with an Apify request-queue lock. The existing `us-daily-editions` storage name is preserved across the rename. `EDITION_STORAGE=memory` is an explicit local-only override.
+- `/api/editions` lists published dates; `/api/editions/YYYY-MM-DD` retrieves a saved date. Run logs and generated live audio remain in process memory; published story/evidence records survive restarts.
+- `/demo` works without keys and includes saved reporting, five audio clips, receipts, and the Mini. The calendar includes three clearly labeled retrospective sample collections with original reporting dates.
+- News Receipts retrieves topic searches and original-document leads with run/dataset/item provenance. Claude reviews the retrieved material; social discussion remains context. See [Actor source and deployment instructions](actors/news-receipts/README.md).
+- The reusable Actor has been built privately. Public Actor Store publication and public app deployment are separate steps.
+
 
 ## Install and run
 
@@ -47,7 +59,7 @@ API keys stay in server-only modules. Do not prefix them with `NEXT_PUBLIC_`. `.
 curl --max-time 300 -sS -X POST http://localhost:3000/api/run
 ```
 
-This starts a **real, billable Apify Actor run**, fetches its dataset, and sends the retrieved evidence to **the selected editor (OpenAI or Anthropic Claude)**. Live generation never substitutes mock data. The separate `/demo` route loads the clearly labeled fixed edition without external API calls. Missing the Apify token or the selected editor key prevents generation before paid work begins.
+If the current day is already published, this returns that same edition. Otherwise it starts a **real, billable Apify Actor run**, fetches its dataset, and sends the retrieved evidence to **the selected editor (OpenAI or Anthropic Claude)**. Live generation never substitutes mock data. The separate `/demo` route loads the clearly labeled fixed edition without external API calls. Missing the Apify token or the selected editor key prevents generation before paid work begins.
 
 Inspect configuration and the most recent edition:
 
@@ -70,7 +82,7 @@ The browser requests `Accept: application/x-ndjson` to receive `run`, `log`, and
 
 The production app registers `/sw.js` on a secure origin (HTTPS, or localhost). It precaches only the manifest, icons, offline HTML/CSS/JS and **fixed demo JSON**. Navigation tries the network for up to four seconds, then displays the explicitly labeled offline/server-unavailable shell. API requests, POSTs, Authorization-bearing requests, external URLs, and live editions are never cached. A fresh offline installation without a previous successful online visit cannot download its shell.
 
-Use `npm run build && npm start` to test installation/offline behavior. Service-worker registration is disabled under `npm run dev`. On iPhone use Safari → Share → Add to Home Screen where available; an ordinary HTTP LAN address is suitable for testing the reader but not production PWA installation. Chrome may show **Install US** when its browser criteria are met. No automatic installation or notification permission is requested. When changing the fixed demo/static shell, bump the cache version in `public/sw.js` so existing installations refresh their saved copy. Old US cache versions are removed on activation. To intentionally refresh the checked-in snapshot after a successful real run, save the JSON response and run `node --import tsx scripts/snapshot-demo.ts generated/debug/successful-edition.json`; this validates complete evidence records and updates the cache version automatically. Never pass a failure response or fabricate passages.
+Use `npm run build && npm start` to test installation/offline behavior. Service-worker registration is disabled under `npm run dev`. On iPhone use Safari → Share → Add to Home Screen where available; an ordinary HTTP LAN address is suitable for testing the reader but not production PWA installation. Chrome may show **Install half full** when its browser criteria are met. No automatic installation or notification permission is requested. When changing the fixed demo/static shell, bump the cache version in `public/sw.js` so existing installations refresh their saved copy. Old app cache versions are removed on activation. To intentionally refresh the checked-in snapshot after a successful real run, save the JSON response and run `node --import tsx scripts/snapshot-demo.ts generated/debug/successful-edition.json`; this validates complete evidence records and updates the cache version automatically. Never pass a failure response or fabricate passages.
 
 The offline reader is intentionally a small standalone shell rather than a cached live Next.js page. It supports the fixed edition, source/evidence details, exclusions, audit, bounded navigation and ending screen even when the Node server is stopped.
 
@@ -147,8 +159,8 @@ On a completed review, `candidatesFound = approved + rejected`, including normal
 - Actor execution timeout: 150 seconds; entire Apify retrieval deadline: 165 seconds. Individual Apify requests also have bounded timeouts. Transient GET failures get one retry within the original deadline; Actor-creation POSTs are never automatically retried, to avoid duplicate billable runs. If retrieval fails while a known Actor run is active, the server attempts to abort it within 5 seconds.
 - Editor request deadline: 105 seconds. OpenAI transient HTTP 429/502/503/504 errors get at most one retry within that same deadline. Anthropic SDK retries are disabled; its path uses medium effort and a 20,000-token cap to leave room for thinking and structured output. Truncated/refused output fails closed. There is no retry that silently changes models or weakens criteria.
 - Route duration allowance: 300 seconds; browser timeout: 295 seconds. Your host/proxy must allow at least 300 seconds for the synchronous request. If a host kills the process, its in-memory log cannot be retained.
-- `lib/store.ts` contains the storage boundary. It keeps the latest successful result and 30 recent run records in process memory, with one active run at a time per process. Restarting clears them. A failed run preserves the previous successful result.
-- Use a single long-running Node process for this MVP. Serverless instances or multiple replicas do **not** share this memory or concurrency guard. Add a shared persistent store and a durable job runner before scaling. No scheduled generation is implemented; the button/API triggers each run.
+- `lib/store.ts` retains up to 30 recent run records in memory. `lib/daily-store.ts` persists published editions in Apify and prevents overlapping publishers across instances. A failed generation does not publish a date.
+- Use a long-running Node process for reliable live audio and streamed generation. Published editions and the publisher lock are shared through Apify. No scheduled generation is implemented; the button/API publishes an unpublished day.
 
 ## Tests and production build
 
@@ -237,7 +249,7 @@ Claude supplies short narration, quick/default/deeper explanations and contextua
 
 ### Optional Apify enrichment and visuals
 
-The original `apify/rag-web-browser` BBC/NPR discovery remains unchanged. After 3–5 stories pass the existing checks, `apify/reddit-scraper` receives one batched `searchQueries` array (at most five queries, three results each), `scrapeMode=posts`, `searchSort=relevance`, `searchTimeFilter=week`, `includeNsfw=false`. Posts must have a real Reddit ID, a valid recent timestamp and headline-level topic overlap. Duplicate, NSFW, stale and malformed records are dropped. A second, optional Claude check (at most 15 seconds within the same social budget) requires a specific topic connection and an exact quote from the retrieved post; uncertain matches or failed checks are omitted. Questions are literal excerpts; a few posts are not described as a population-wide consensus, and never contribute to confidence or verification. No comments or private/social-login data are requested.
+News Receipts now orchestrates topic discovery and original-document investigation through `apify/rag-web-browser`; the original single-search adapter remains available by configuration. After 3–5 stories pass the existing checks, `apify/reddit-scraper` receives one batched `searchQueries` array (at most five queries, three results each), `scrapeMode=posts`, `searchSort=relevance`, `searchTimeFilter=week`, `includeNsfw=false`. Posts must have a real Reddit ID, a valid recent timestamp and headline-level topic overlap. Duplicate, NSFW, stale and malformed records are dropped. A second, optional Claude check (at most 15 seconds within the same social budget) requires a specific topic connection and an exact quote from the retrieved post; uncertain matches or failed checks are omitted. Questions are literal excerpts; a few posts are not described as a population-wide consensus, and never contribute to confidence or verification. No comments or private/social-login data are requested.
 
 `APIFY_SOCIAL_ENABLED=false` disables enrichment. `APIFY_SOCIAL_ACTOR_ID` selects another compatible Reddit Actor; non-default Actors also require `APIFY_SOCIAL_ACTOR_INPUT_JSON`. That adapter explicitly requires batched `searchQueries` and Reddit post output (id, title, body/selftext, url/permalink, createdAt/createdUtc, optional communityName). It does not assume TikTok/Instagram share that schema. Additional platforms are not implemented.
 
@@ -249,7 +261,7 @@ Other article image/Open Graph metadata is normalized with attribution, original
 
 ### Crossword and receipts
 
-The optional mini crossword uses the actual glossary definitions as clues. A deterministic layout builder validates letters, boundaries, crossings, connectivity, numbering and every horizontal/vertical run. It selects up to five words; if fewer than three can form a valid connected puzzle, the edition simply ends without a game. The archived demo has a validated five-word puzzle. Completion requires every letter. A live puzzle can record a UTC-day completion streak in device-local storage; archived practice never changes it. There is no account, leaderboard, penalty or extra feed.
+The optional Mini uses original, validated 5×5 grids selected deterministically by edition date, with every letter crossed and numbered Across/Down clues. When a grid answer matches an edition glossary term, its clue uses that definition. Check and reveal controls, hardware and on-screen keyboards, and device-local saved progress are supported. The puzzle notice distinguishes general wordplay from story-specific recall.
 
 “Show me the receipts” preserves original article links/dates, exact retrieved excerpts, field references, source classifications, limitations and capped confidence. Links to official advisories/PDFs are shown only when present in retained passages. Linked documents are clearly distinguished from fully retrieved evidence; no PDF preview, extracted page references or independent document verification is claimed.
 
@@ -270,7 +282,7 @@ docker build -t us-news .
 docker run --rm --env-file .env -p 3000:3000 us-news
 ```
 
-Deploy the existing Dockerfile or the build/start commands to a Node host with HTTPS and a request timeout of at least 300 seconds. Set the environment values in the host's secret manager, not in the image. Vercel can build this Next.js app, but its execution allowance must support `maxDuration=300`; memory is not shared between instances/route workers, so multi-instance/serverless live audio/history is not reliable without shared storage (outside this MVP). No public deployment was performed.
+Deploy the existing Dockerfile or the build/start commands to a Node host with HTTPS and a request timeout of at least 300 seconds. Set the environment values in the host's secret manager, not in the image. Vercel can build this Next.js app, but its execution allowance must support `maxDuration=300`; memory is not shared between instances/route workers, so multi-instance/serverless live audio is not reliable without shared audio storage. Published history uses Apify storage. No public deployment was performed.
 
 Rebuild the **explicit archive** only deliberately; these commands incur provider calls except finalization:
 
