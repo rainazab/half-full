@@ -1,5 +1,6 @@
 import "server-only";
 import { enrichStories } from "./enrichment";
+import { attachArticleImages } from "./article-image";
 import { getConfig } from "./config";
 import { retrieveNews } from "./apify";
 import { reviewCandidates } from "./editor";
@@ -9,7 +10,7 @@ import { PipelineError, publicError } from "./errors";
 import { finishRun } from "./store";
 import type { CandidateStory, EditionResult, RunLogEntry, RunRecord } from "./types";
 
-export const pipelineDependencies = { getConfig, retrieveNews, reviewCandidates, finishRun, enrichStories };
+export const pipelineDependencies = { getConfig, retrieveNews, reviewCandidates, finishRun, enrichStories, attachArticleImages };
 export async function generateEdition(run: RunRecord, onLog?: (entry: RunLogEntry) => void,
   dependencies = pipelineDependencies): Promise<EditionResult> {
   const deadline = Date.now() + 285000;
@@ -74,8 +75,13 @@ export async function generateEdition(run: RunRecord, onLog?: (entry: RunLogEntr
       throw new PipelineError("INSUFFICIENT_VERIFIED_STORIES", `Only ${reviewed.stories.length} stories passed verification; at least three are required. Inspect rejectedStories. Use an Actor/query that returns substantive, recent article text; standards were not lowered.`, 422);
     }
     log("validate", "completed", `${reviewed.stories.length} verified stories selected; ${rejectedStories.length} stories excluded with reasons.`);
-    try { await dependencies.enrichStories(reviewed.stories, config, deadline, log); }
-    catch { log("enrichment", "failed", "Optional enrichment was unavailable; publishing the validated text edition."); }
+    // Both enrichments are optional and independent, so they share the remaining time in parallel.
+    await Promise.all([
+      dependencies.enrichStories(reviewed.stories, config, deadline, log)
+        .catch(() => log("enrichment", "failed", "Optional enrichment was unavailable; publishing the validated text edition.")),
+      dependencies.attachArticleImages(reviewed.stories, config.articleImages, deadline, log)
+        .catch(() => log("images", "failed", "Optional article images were unavailable; illustrations are shown instead.")),
+    ]);
     log("edition", "started", "Publishing this finite edition to the latest-edition store.");
     const result: EditionResult = {
       edition: { mode: "live", id: run.id, createdAt: new Date().toISOString(), stories: reviewed.stories },

@@ -15,9 +15,11 @@ export function normalizeMedia(row: Record<string, unknown>, sourceUrl: string, 
   }).slice(0, 3);
 }
 export function displayableMedia(media: StoryMedia) {
-  // Only local assets reviewed and bundled by the project are displayed. No arbitrary remote pixel requests.
+  // Publisher share images are shown as attributed link previews; scraped unknown-rights images never are.
+  if (media.rights === "publisher-preview") return isPublicHttps(media.url);
   return media.rights === "licensed" && /^\/media\/[a-zA-Z0-9_.-]+$/.test(media.url) && !!media.licenseUrl;
 }
+function isPublicHttps(value: string) { try { const u = new URL(value); return u.protocol === "https:" && !u.username && !u.password; } catch { return false; } }
 /** Reviewed contextual asset, explicitly separate from an article/event photograph. */
 export function contextualMedia(headline: string): StoryMedia[] {
   return /\bPHP\b/.test(headline) ? [{ url: "/media/php-logo.png", sourceUrl: "https://www.php.net/download-logos.php", publisher: "PHP Group", type: "image", alt: "PHP programming language logo; contextual illustration, not an event photograph", attribution: "PHP logo by Colin Viebrock · unchanged · CC BY-SA 4.0 · contextual illustration", rights: "licensed", licenseUrl: "https://creativecommons.org/licenses/by-sa/4.0/", retrievedAt: "2026-10-24T21:44:00.000Z" }] : [];
