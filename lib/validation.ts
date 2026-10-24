@@ -2,6 +2,8 @@ import { z } from "zod";
 import type { ApprovedStory, CandidateStory, RejectedStory } from "./types";
 import { evidencePassages } from "./evidence";
 
+const reference = z.object({ sourceId: z.string(), passageId: z.string().min(1).max(20) }).strict();
+const refs = z.array(reference).max(5);
 const shortText = z.string().trim().min(1).max(2000);
 export const editorialResponseSchema = z.object({
   decisions: z.array(z.object({
@@ -19,10 +21,14 @@ export const editorialResponseSchema = z.object({
     action: z.string().max(700),
     category: z.string().max(100),
     sourceIds: z.array(z.string()).max(5),
-    evidence: z.array(z.object({
-      sourceId: z.string(),
-      passageId: z.string().min(1).max(20),
+    evidence: refs,
+    contentEvidence: z.object({ headline: refs, summary: refs, whyItMatters: refs, action: refs }).strict(),
+    sourceAssessments: z.array(z.object({
+      sourceId: z.string(), kind: z.enum(["primary", "reporting", "unknown"]),
+      independenceGroup: z.string().min(1).max(100), explanation: shortText,
     }).strict()).max(5),
+    conflictingSourceIds: z.array(z.string()).max(5),
+    contradictionReason: z.string().max(2000),
   }).strict()).max(20),
 }).strict();
 
@@ -50,16 +56,28 @@ function validateDecision(decision: EditorialResponse["decisions"][number], byId
     for (const id of decision.sourceIds) {
       if (!byId.has(id)) throw new EditorialValidationError("The editor referenced a source outside the Apify candidates.");
     }
-    for (const evidence of decision.evidence) {
+    for (const evidence of [...decision.evidence, ...Object.values(decision.contentEvidence).flat()]) {
       const source = byId.get(evidence.sourceId);
       if (!source || !decision.sourceIds.includes(evidence.sourceId)) throw new EditorialValidationError("The editor evidence references an unlisted source.");
       if (!evidencePassages(source.text).some((passage) => passage.id === evidence.passageId)) {
         throw new EditorialValidationError("The editor referenced an evidence passage absent from the retrieved article text.");
       }
     }
+    for (const id of decision.conflictingSourceIds) {
+      if (!byId.has(id)) throw new EditorialValidationError("The editor referenced an unknown conflicting source.");
+    }
+    const assessmentIds = decision.sourceAssessments.map((source) => source.sourceId);
+    if (new Set(assessmentIds).size !== assessmentIds.length || assessmentIds.some((id) => !decision.sourceIds.includes(id))) {
+      throw new EditorialValidationError("Source assessments must uniquely reference listed sources.");
+    }
+    if (decision.verificationStatus === "verified" && (decision.sourceIds.some((id) => !assessmentIds.includes(id)) ||
+      Object.values(decision.contentEvidence).some((references) => references.length === 0) ||
+      decision.sourceIds.some((id) => ![...decision.evidence, ...Object.values(decision.contentEvidence).flat()].some((ref) => ref.sourceId === id)))) {
+      throw new EditorialValidationError("Approved copy requires evidence references for every field and assessments of every source.");
+    }
     // URLs in generated prose could smuggle in invented sources or actions.
     const prose = [decision.centralClaim, decision.reason, decision.headline, decision.summary,
-      decision.whyItMatters, decision.action, decision.category].join(" ");
+      decision.whyItMatters, decision.action, decision.category, decision.contradictionReason, ...decision.sourceAssessments.map((source) => source.explanation)].join(" ");
     if (/(?:https?:\/\/|www\.)/i.test(prose)) throw new EditorialValidationError("The editor must reference source IDs, not generate URLs.");
     if (decision.verificationStatus === "verified" && [decision.headline, decision.summary, decision.whyItMatters, decision.action, decision.category]
       .some((value) => !value.trim())) throw new EditorialValidationError("The editor omitted required approved-story copy.");
@@ -102,9 +120,17 @@ export function assembleEditorialResult(raw: unknown, candidates: CandidateStory
       status = "uncertain";
       reason = "Insufficient retrieved article text or no supporting evidence passage from this article.";
     }
+    if (eligible && (decision.conflictingSourceIds.length || decision.contradictionReason.trim())) {
+      eligible = false; status = "uncertain";
+      reason = `Unresolved disagreement in the retrieved evidence. ${decision.contradictionReason}`;
+    }
+    if (eligible && !candidate.publishedAt) {
+      eligible = false; status = "uncertain";
+      reason = "A reliable publication date was unavailable; this article cannot be established as current news.";
+    }
     if (eligible && candidate.publishedAt) {
       const age = now.getTime() - Date.parse(candidate.publishedAt);
-      if (age > 7 * 86400000 || age < -86400000) {
+      if (!Number.isFinite(age) || age > 7 * 86400000 || age < -300000) {
         eligible = false;
         reason = "Publication date is outside the current seven-day news window or is in the future.";
       }
@@ -118,15 +144,36 @@ export function assembleEditorialResult(raw: unknown, candidates: CandidateStory
         confidence: decision.confidence, verificationStatus: status, centralClaim: decision.centralClaim });
       continue;
     }
+    const evidenceRecord = (ref: { sourceId: string; passageId: string }) => {
+      const source = byId.get(ref.sourceId)!;
+      return { ...ref, url: source.url, publisher: source.source,
+        excerpt: evidencePassages(source.text).find((passage) => passage.id === ref.passageId)!.text };
+    };
+    // Publishers and syndicated reporting groups both bound independent corroboration.
+    const publisherCount = new Set(decision.sourceIds.map((id) => byId.get(id)!.source.toLowerCase())).size;
+    const groupCount = new Set(decision.sourceAssessments.map((source) => source.independenceGroup.toLowerCase())).size;
+    const independentCount = Math.min(publisherCount, groupCount);
+    const cap = independentCount < 2 ? 0.85 : decision.sourceAssessments.some((source) => source.kind === "primary") ? 0.95 : 0.9;
+    const allReferences = [...decision.evidence, ...Object.values(decision.contentEvidence).flat()];
+    const uniqueReferences = [...new Map(allReferences.map((ref) => [`${ref.sourceId}/${ref.passageId}`, ref])).values()];
     stories.push({
       id: candidate.id, headline: decision.headline, centralClaim: decision.centralClaim,
       summary: decision.summary, whyItMatters: decision.whyItMatters, action: decision.action,
-      category: decision.category, verificationStatus: "verified", confidence: decision.confidence,
+      category: decision.category, verificationStatus: "verified", confidence: Math.min(decision.confidence, cap),
       hypeScore: decision.hypeScore, verificationReason: decision.reason,
+      evidence: uniqueReferences.map(evidenceRecord),
+      contentSupport: [
+        { field: "centralClaim", text: decision.centralClaim, evidence: decision.evidence.map(evidenceRecord) },
+        ...(["headline", "summary", "whyItMatters", "action"] as const).map((field) => ({ field, text: decision[field], evidence: decision.contentEvidence[field].map(evidenceRecord) })),
+      ],
+      sourceAssessments: decision.sourceAssessments,
+      limitations: ["The editor evaluated only the material retrieved for this run. Source classification and relevance are model judgments, not independent fact-checking.",
+        independentCount < 2 ? "No independent corroboration was established from the supplied sources. Confidence is capped at 85%." : "Syndicated reports and same-publisher sources are not counted as independent corroboration.",
+        ...(!decision.sourceAssessments.some((source) => source.kind === "primary") ? ["No primary source was identified in the retrieved evidence; this story relies on attributed reporting."] : [])],
       // All source metadata comes from Apify; the editor can only select existing IDs.
       sources: decision.sourceIds.map((id) => {
         const source = byId.get(id)!;
-        return { title: source.title, url: source.url, publisher: source.source, publishedAt: source.publishedAt };
+        return { id: source.id, title: source.title, url: source.url, publisher: source.source, publishedAt: source.publishedAt };
       }),
     });
   }

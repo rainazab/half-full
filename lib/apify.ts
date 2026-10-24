@@ -1,4 +1,5 @@
 import "server-only";
+import { boundedRetry } from "./retry";
 import type { AppConfig } from "./config";
 import { PipelineError } from "./errors";
 import type { RunLogEntry } from "./types";
@@ -17,12 +18,13 @@ export async function retrieveNews(config: AppConfig, log: Log,
   async function request(path: string, options: RequestInit = {}, timeout = 20000) {
     const remaining = deadline - Date.now();
     if (remaining <= 0) throw new PipelineError("APIFY_TIMEOUT", "Apify exceeded the 165-second retrieval deadline.", 504);
+    return boundedRetry(async (remainingMs) => {
     let response: Response;
     try {
       response = await fetch(`${API}${path}`, {
         ...options,
         headers: { Authorization: `Bearer ${config.apifyToken}`, "Content-Type": "application/json" },
-        signal: AbortSignal.timeout(Math.min(timeout, remaining)),
+        signal: AbortSignal.timeout(Math.min(timeout, remainingMs)),
         cache: "no-store",
       });
     } catch {
@@ -33,11 +35,16 @@ export async function retrieveNews(config: AppConfig, log: Log,
     }
     try { return await response.json(); }
     catch { throw new PipelineError("APIFY_INVALID_RESPONSE", "Apify returned an unreadable JSON response."); }
+    }, { budgetMs: remaining,
+      retryable: (error) => (!options.method || options.method === "GET") && error instanceof PipelineError &&
+        (error.code === "APIFY_UNREACHABLE" || /HTTP (429|502|503|504)\b/.test(error.message)),
+      onRetry: () => log("apify.retry", "started", "Retrying one transient Apify read failure within the existing deadline."),
+    });
   }
 
   function readRun(body: unknown): ActorRun {
     const data = (body as { data?: Partial<ActorRun> } | null)?.data;
-    if (!data?.id || !data.defaultDatasetId || !data.status) {
+    if (!data || typeof data.id !== "string" || !data.id || typeof data.defaultDatasetId !== "string" || !data.defaultDatasetId || typeof data.status !== "string" || !data.status) {
       throw new PipelineError("APIFY_INVALID_RUN", "Apify did not return a run ID, dataset ID, and status.");
     }
     return data as ActorRun;

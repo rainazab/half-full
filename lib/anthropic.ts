@@ -13,16 +13,16 @@ export async function reviewWithAnthropic(config: EditorConfig, candidates: Cand
   try {
     const message = await client.messages.create({
       model: config.model,
-      max_tokens: 14000,
+      max_tokens: 20000,
       system: EDITOR_SYSTEM_PROMPT,
       messages: [{ role: "user", content: JSON.stringify({
         currentUtcTime: new Date().toISOString(), candidates: editorialCandidates(candidates),
         instruction: "Return one decision for every candidate using the required JSON schema.",
       }) }],
-      output_config: { format: zodOutputFormat(editorialResponseSchema) },
+      output_config: { effort: "medium", format: zodOutputFormat(editorialResponseSchema) },
     });
     if (message.stop_reason !== "end_turn") {
-      throw new PipelineError("CLAUDE_INCOMPLETE", "Claude did not finish a complete editorial response (possibly output limit or refusal). No edition was published.");
+      throw new PipelineError("CLAUDE_INCOMPLETE", `Claude stopped before completing the editorial response (${message.stop_reason === "max_tokens" ? "output token limit" : "incomplete or refused output"}). No edition was published.`);
     }
     const text = message.content.filter((block) => block.type === "text").map((block) => block.text).join("");
     try { return JSON.parse(text) as unknown; }

@@ -9,10 +9,32 @@ export interface CandidateStory {
 }
 
 export interface Source {
+  id?: string;
   title: string;
   url: string;
   publisher: string;
   publishedAt: string | null;
+}
+
+export interface EvidenceRecord {
+  sourceId: string;
+  passageId: string;
+  url: string;
+  publisher: string;
+  excerpt: string;
+}
+
+export interface ContentSupport {
+  field: "centralClaim" | "headline" | "summary" | "whyItMatters" | "action";
+  text: string;
+  evidence: EvidenceRecord[];
+}
+
+export interface SourceAssessment {
+  sourceId: string;
+  kind: "primary" | "reporting" | "unknown";
+  independenceGroup: string;
+  explanation: string;
 }
 
 export interface ApprovedStory {
@@ -28,6 +50,10 @@ export interface ApprovedStory {
   confidence: number;
   hypeScore: number;
   verificationReason: string;
+  evidence?: EvidenceRecord[];
+  contentSupport?: ContentSupport[];
+  sourceAssessments?: SourceAssessment[];
+  limitations?: string[];
 }
 
 export interface RejectedStory {
@@ -37,6 +63,7 @@ export interface RejectedStory {
   confidence: number;
   verificationStatus: "uncertain" | "rejected";
   centralClaim?: string;
+  reasonCode?: string;
 }
 
 export interface RunLogEntry {
@@ -51,6 +78,8 @@ export interface EditionResult {
     id: string;
     createdAt: string;
     stories: ApprovedStory[];
+    mode?: "live" | "demo";
+    demoInfo?: { label: string; recordedAt: string; originRunId: string; notice: string };
   };
   rejectedStories: RejectedStory[];
   stats: { candidatesFound: number; approved: number; rejected: number };

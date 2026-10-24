@@ -13,8 +13,9 @@ test("uses OpenAI when only its key is present, including an empty Claude key", 
   assert.ok(!JSON.stringify(settings).includes("test-key"));
 });
 
-test("retains Claude selection when its key is supplied", () => {
-  assert.equal(getEditorSettings({ ANTHROPIC_API_KEY: "test-key", OPENAI_API_KEY: "another-test-key" }).provider, "anthropic");
+test("prefers OpenAI when both keys exist, retaining optional Claude selection", () => {
+  assert.equal(getEditorSettings({ ANTHROPIC_API_KEY: "test-key", OPENAI_API_KEY: "another-test-key" }).provider, "openai");
+  assert.equal(getEditorSettings({ ANTHROPIC_API_KEY: "test-key" }).provider, "anthropic");
 });
 
 test("explicit provider and its model override win, even without that provider's key", () => {

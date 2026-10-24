@@ -1,4 +1,5 @@
 import "server-only";
+import { boundedRetry } from "./retry";
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import type { EditorConfig } from "./config";
@@ -11,7 +12,7 @@ import { editorialCandidates } from "./evidence";
 export async function reviewWithOpenAI(config: EditorConfig, candidates: CandidateStory[]) {
   const client = new OpenAI({ apiKey: config.apiKey, timeout: 105000, maxRetries: 0 });
   try {
-    const response = await client.responses.create({
+    const response = await boundedRetry((remainingMs) => client.responses.create({
       model: config.model,
       store: false,
       max_output_tokens: 14000,
@@ -21,6 +22,8 @@ export async function reviewWithOpenAI(config: EditorConfig, candidates: Candida
         instruction: "Return one decision for every candidate using the required JSON schema.",
       }),
       text: { format: zodTextFormat(editorialResponseSchema, "news_editorial_review") },
+    }, { timeout: remainingMs }), { budgetMs: 105000,
+      retryable: (error) => error instanceof OpenAI.APIError && [429, 502, 503, 504].includes(error.status ?? 0),
     });
     if (response.status !== "completed") {
       throw new PipelineError("OPENAI_INCOMPLETE", "OpenAI did not finish a complete editorial response (possibly output limit). No edition was published.");

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { normalizeStories, safeUrl } from "../lib/normalize";
 
-// Synthetic fixtures are confined to tests. Production has no fixture/fallback data.
+// Synthetic fixtures stay in tests. Live generation never imports the fixed demo.
 test("normalizes nested news results, publisher objects, dates, and duplicate URLs", () => {
   const result = normalizeStories([{ newsResults: [
     { title: "First", link: "https://example.org/one?utm_source=search#top", source: { name: "Example" }, description: "A snippet", publishedDate: "2026-10-23" },
@@ -82,4 +82,22 @@ test("excludes weather/service pages while retaining reported weather articles",
   assert.match(result.candidates[0].url, /news\/articles/);
   assert.equal(result.rejectedStories.length, 1);
   assert.match(result.rejectedStories[0].reason, /service page/);
+});
+
+test("invalid and relative dates fall through to valid publication metadata", () => {
+  const result = normalizeStories([{title:"Article",url:"https://example.org/date",text:"Text",publishedAt:"2 hours ago",publishedDate:"2026-02-30",metadata:{datePublished:"2026-10-23T12:00:00Z"}}]);
+  assert.equal(result.candidates[0].publishedAt,"2026-10-23T12:00:00.000Z");
+  const invalid = normalizeStories([{title:"Article",url:"https://example.org/invalid",text:"Text",publishedAt:"2026-02-30"}]);
+  assert.equal(invalid.candidates[0].publishedAt,null);
+});
+test("deduplicates query-order variations and substantive identical syndicated text", () => {
+  const text="This synthetic article reports a measurement collected by a research team using instruments during a documented experiment with carefully described methods and limitations. ".repeat(5);
+  const result=normalizeStories([
+    {title:"First",url:"https://example.org/story?b=2&a=1",text},
+    {title:"Copy URL",url:"https://example.org/story/?a=1&b=2",text:"Other text"},
+    {title:"Syndicated",url:"https://second.example/story",text},
+  ]);
+  assert.equal(result.candidates.length,1);
+  assert.match(result.rejectedStories[0].reason,/Duplicate source URL/);
+  assert.match(result.rejectedStories[1].reason,/syndicated/);
 });

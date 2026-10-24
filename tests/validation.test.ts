@@ -18,6 +18,9 @@ function decision(): EditorialResponse["decisions"][number] {
     reason: "The supplied text directly attributes the measurement to the observatory.",
     headline: "A test measurement was published", summary: "A measurement was published; it is preliminary.",
     whyItMatters: "It illustrates how preliminary findings are reported.", action: "Read the measurement's stated limitations.",
+    contentEvidence: Object.fromEntries(["headline", "summary", "whyItMatters", "action"].map((field) => [field, [{ sourceId: candidate.id, passageId: "p1" }]])) as EditorialResponse["decisions"][number]["contentEvidence"],
+    sourceAssessments: [{ sourceId: candidate.id, kind: "reporting", independenceGroup: "test", explanation: "Attributed reporting." }],
+    conflictingSourceIds: [], contradictionReason: "",
     category: "Science", sourceIds: [candidate.id], evidence: [{ sourceId: candidate.id, passageId: "p1" }],
   };
 }
@@ -82,7 +85,7 @@ test("rejects stale and future publication dates", () => {
 
 test("caps editions at five and records excluded candidates", () => {
   const candidates = Array.from({ length: 6 }, (_, i) => ({ ...candidate, id: `test-${i}`, url: `https://example.org/${i}` }));
-  const decisions = candidates.map((item) => ({ ...decision(), candidateId: item.id, sourceIds: [item.id], evidence: [{ sourceId: item.id, passageId: "p1" }] }));
+  const decisions = candidates.map((item) => ({ ...decision(), ...referencesFor(item.id), candidateId: item.id, sourceIds: [item.id], evidence: [{ sourceId: item.id, passageId: "p1" }] }));
   const result = assembleEditorialResult({ decisions }, candidates, now);
   assert.equal(result.stories.length, 5);
   assert.equal(result.rejectedStories.length, 1);
@@ -91,7 +94,7 @@ test("caps editions at five and records excluded candidates", () => {
 
 test("one invalid evidence decision is audited without discarding valid stories", () => {
   const candidates = Array.from({ length: 4 }, (_, i) => ({ ...candidate, id: `test-${i}`, url: `https://example.org/${i}` }));
-  const decisions = candidates.map((item, i) => ({ ...decision(), candidateId: item.id, sourceIds: [item.id],
+  const decisions = candidates.map((item, i) => ({ ...decision(), ...referencesFor(item.id), candidateId: item.id, sourceIds: [item.id],
     evidence: [{ sourceId: item.id, passageId: i === 0 ? "invented" : "p1" }] }));
   const result = assembleEditorialResult({ decisions }, candidates, now);
   assert.equal(result.stories.length, 3);
@@ -111,4 +114,29 @@ test("evidence IDs reference deterministic original text including Markdown link
   assert.deepEqual(supplied[0].passages, passages);
   assert.ok(!("text" in supplied[0]));
   assert.equal(supplied[0].url, candidate.url);
+});
+
+function referencesFor(id: string) {
+  const original = decision();
+  return { contentEvidence: Object.fromEntries(Object.entries(original.contentEvidence).map(([field, refs]) => [field, refs.map((ref) => ({ ...ref, sourceId: id }))])), sourceAssessments: original.sourceAssessments.map((source) => ({ ...source, sourceId: id })) };
+}
+test("retains exact passages and caps single-source confidence", () => {
+  const story = assembleEditorialResult({ decisions: [decision()] }, [candidate], now).stories[0];
+  assert.equal(story.confidence, 0.85);
+  assert.equal(story.evidence?.[0].excerpt, evidencePassages(candidate.text)[0].text);
+  assert.equal(story.contentSupport?.length, 5);
+  assert.match(story.limitations!.join(" "), /No independent corroboration/);
+});
+test("missing field references and unresolved contradictions cannot be approved", () => {
+  for (const change of [{ contentEvidence: { ...decision().contentEvidence, summary: [] } },
+    { conflictingSourceIds: [candidate.id], contradictionReason: "Sources disagree on the measurement." },
+    { sourceAssessments: [] }]) {
+    assert.equal(assembleEditorialResult({ decisions: [{ ...decision(), ...change }] }, [candidate], now).stories.length, 0);
+  }
+  assert.throws(() => validateEditorialResponse({ decisions: [{ ...decision(), conflictingSourceIds: ["invented"] }] }, [candidate]), /unknown conflicting/);
+});
+test("unknown publication dates cannot be asserted as current", () => {
+  const result = assembleEditorialResult({ decisions: [decision()] }, [{ ...candidate, publishedAt: null }], now);
+  assert.equal(result.stories.length, 0);
+  assert.equal(result.rejectedStories[0].verificationStatus, "uncertain");
 });

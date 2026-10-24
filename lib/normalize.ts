@@ -23,6 +23,7 @@ export function safeUrl(value: string): string | null {
     for (const key of [...url.searchParams.keys()]) {
       if (key.startsWith("utm_") || ["fbclid", "gclid"].includes(key)) url.searchParams.delete(key);
     }
+    url.searchParams.sort();
     return url.href;
   } catch { return null; }
 }
@@ -48,15 +49,27 @@ function articleMetadata(metadata: Row, url: string | null): Row {
 
 function publishedDate(row: Row, metadata: Row, article: Row): string | null {
   const openGraph = Array.isArray(metadata.openGraph) ? metadata.openGraph.map(object) : [];
-  const raw = first(row.publishedAt, row.publishedDate, row.publishedTime, row.publicationDate,
+  const values = [row.publishedAt, row.publishedDate, row.publishedTime, row.publicationDate,
     row.datePublished, row.pubDate, row.date, metadata.publishedAt, metadata.datePublished,
     metadata.publishedTime, row["metadata.publishedAt"], row["metadata.datePublished"],
     openGraph.find((entry) => entry.property === "article:published_time")?.content,
-    article.datePublished);
+    article.datePublished];
   // Relative strings like "2 hours ago" are left unknown; crawl times are never publication dates.
-  if (!raw || !/\d{4}/.test(raw)) return null;
-  const timestamp = Date.parse(raw);
-  return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : null;
+  for (const value of values) {
+    if (typeof value !== "string" || !/\d{4}/.test(value)) continue;
+    const raw = value.trim();
+    const calendar = /^(\d{4})-(\d{2})-(\d{2})(?:T|$)/.exec(raw);
+    if (calendar) {
+      const [year, month, day] = calendar.slice(1).map(Number);
+      const check = new Date(Date.UTC(year, month - 1, day));
+      if (check.getUTCFullYear() !== year || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== day) continue;
+    }
+    // Offset-less timestamps otherwise depend on the server's time zone.
+    if (/^\d{4}-\d{2}-\d{2}T/.test(raw) && !/(?:Z|[+-]\d{2}:?\d{2})$/i.test(raw)) continue;
+    const timestamp = Date.parse(raw);
+    if (Number.isFinite(timestamp)) return new Date(timestamp).toISOString();
+  }
+  return null;
 }
 
 function flatten(items: unknown[], depth = 0): Row[] {
@@ -74,6 +87,7 @@ export function normalizeStories(items: unknown[], limit = 20) {
   const candidates: CandidateStory[] = [];
   const rejectedStories: RejectedStory[] = [];
   const seen = new Set<string>();
+  const seenContent = new Set<string>();
 
   for (const row of flatten(items)) {
     const metadata = object(row.metadata);
@@ -87,6 +101,10 @@ export function normalizeStories(items: unknown[], limit = 20) {
     const description = first(row.description, row.snippet, row.summary, metadata.description,
       row["metadata.description"], search.description).slice(0, 3000);
     const text = first(row.text, row.markdown, row.content, row.articleText, row.body, row.extractedText).slice(0, 18000);
+    const urlKey = url ? url.replace(/\/(?=\?|$)/, "") : "";
+    const normalizedText = text.toLowerCase().replace(/\s+/g, " ").trim();
+    const contentKey = normalizedText.length >= 300 && new Set(normalizedText.split(" ")).size >= 15
+      ? createHash("sha256").update(normalizedText).digest("hex") : null;
     let reason: string | undefined;
     if (!title || !url) reason = "Missing a title or a valid HTTP(S) article URL.";
     else if (isServicePage(url)) reason = "This is a weather, schedule, or media service page rather than a reported news article.";
@@ -95,7 +113,8 @@ export function normalizeStories(items: unknown[], limit = 20) {
         ? `The Actor could not retrieve the article (HTTP ${crawl.httpStatusCode}); no article evidence was available.`
         : "The Actor reported an article retrieval error.";
     } else if (!description && !text) reason = "No description or article text was retrieved.";
-    else if (seen.has(url)) reason = "Duplicate source URL in the Actor dataset.";
+    else if (seen.has(urlKey)) reason = "Duplicate source URL in the Actor dataset.";
+    else if (contentKey && seenContent.has(contentKey)) reason = "Duplicate retrieved article text; copied or syndicated material is not independent evidence.";
     else if (candidates.length >= limit) reason = `Not evaluated: the bounded candidate limit is ${limit}.`;
 
     if (reason) {
@@ -103,7 +122,8 @@ export function normalizeStories(items: unknown[], limit = 20) {
         confidence: 0, verificationStatus: "rejected" });
       continue;
     }
-    seen.add(url!);
+    seen.add(urlKey);
+    if (contentKey) seenContent.add(contentKey);
     const publisher = first(typeof row.source === "string" ? row.source : "", source.name,
       source.title, row.publisher, object(row.publisher).name, metadata.siteName,
       row["metadata.siteName"], object(article.publisher).name) || new URL(url!).hostname;
