@@ -1,4 +1,4 @@
-export interface StoryMedia { url: string; sourceUrl: string; publisher: string; type: "image"; alt: string; attribution: string; rights: "unknown" | "licensed"; licenseUrl?: string; retrievedAt: string; }
+export interface StoryMedia { url: string; sourceUrl: string; publisher: string; type: "image"; alt: string; attribution: string; rights: "unknown" | "licensed" | "publisher-preview"; licenseUrl?: string; retrievedAt: string; }
 export interface SocialPost { id: string; title: string; text: string; url: string; publishedAt: string; platform: "Reddit"; community: string | null; questions: string[]; }
 export interface CandidateStory {
   media?: StoryMedia[];

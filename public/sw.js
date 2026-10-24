@@ -1,5 +1,5 @@
 /* Only the explicitly fixed demo and static assets are cached. Never cache live API data. */
-const CACHE = 'us-shell-db24d4eb9403';
+const CACHE = 'us-shell-ffd79ff9f121';
 const DEMO_ASSETS = ["/demo-audio/d3c87bb89b92038f1477.mp3","/demo-audio/bedb88c23577eab0fcdf.mp3","/demo-audio/08e027eed04a10891fd2.mp3","/demo-audio/b60866b12eacc3f70676.mp3","/demo-audio/ed73d8e3e8b80f303630.mp3","/media/php-logo.png"];
 const SHELL = ['/offline.html', '/offline-puzzle.js', '/demo-puzzle.json', '/offline.js', '/offline.css', '/demo-edition.json', '/manifest.webmanifest', '/icons/icon-192.png', '/icons/icon-512.png', '/icons/maskable-512.png', '/icons/apple-touch-icon.png', ...DEMO_ASSETS];
 self.addEventListener('install', (event) => {

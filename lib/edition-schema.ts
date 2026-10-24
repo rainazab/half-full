@@ -21,7 +21,7 @@ export const editionResultSchema = z.object({
       whyItMatters: z.string().min(1), action: z.string().min(1), category: z.string(),
       sources: z.array(z.object({ id: z.string().optional(), title: z.string(), url: httpUrl, publisher: z.string(), publishedAt: date.nullable() })).min(1),
       verificationStatus: z.literal("verified"), confidence: score, hypeScore: score, verificationReason: z.string(),
-      media: z.array(z.object({ url: z.union([httpUrl, z.string().regex(/^\/media\/[a-zA-Z0-9_.-]+$/)]), sourceUrl: httpUrl, publisher: z.string(), type: z.literal("image"), alt: z.string(), attribution: z.string(), rights: z.enum(["unknown", "licensed"]), licenseUrl: httpUrl.optional(), retrievedAt: date })).max(3).optional(),
+      media: z.array(z.object({ url: z.union([httpUrl, z.string().regex(/^\/media\/[a-zA-Z0-9_.-]+$/)]), sourceUrl: httpUrl, publisher: z.string(), type: z.literal("image"), alt: z.string(), attribution: z.string(), rights: z.enum(["unknown", "licensed", "publisher-preview"]), licenseUrl: httpUrl.optional(), retrievedAt: date })).max(3).optional(),
       socialContext: z.object({ notice: z.string(), posts: z.array(z.object({ id: z.string(), title: z.string(), text: z.string(), url: httpUrl, publishedAt: date, platform: z.literal("Reddit"), community: z.string().nullable(), questions: z.array(z.string()) })).max(2) }).optional(),
       experience: z.object({ quick: grounded, explanation: grounded, background: grounded, glossary: z.array(grounded.extend({ term: z.string().min(1).max(40) })).max(3) }).optional(),
       narration: z.object({ script: z.string().min(1).max(4000), evidence: z.array(evidence), estimatedSeconds: z.number().nonnegative(),

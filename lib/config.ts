@@ -16,7 +16,7 @@ export function getEditorConfig() {
   return { ...settings, apiKey };
 }
 
-export type AppConfig = { editor: EditorConfig; apifyToken: string; actorId: string; actorInput: Record<string, unknown>; social?: { enabled: boolean; actorId: string; input?: Record<string, unknown> } };
+export type AppConfig = { editor: EditorConfig; apifyToken: string; actorId: string; actorInput: Record<string, unknown>; social?: { enabled: boolean; actorId: string; input?: Record<string, unknown> }; articleImages?: boolean };
 
 export function getConfig(): AppConfig {
   const settings = getEditorSettings(process.env);
@@ -54,6 +54,7 @@ export function getConfig(): AppConfig {
     apifyToken: process.env.APIFY_API_TOKEN!.trim(),
     actorId, actorInput,
     social: socialConfig(),
+    articleImages: process.env.ARTICLE_IMAGES_ENABLED !== "false",
   };
 }
 

@@ -42,6 +42,16 @@
             "rights": "licensed",
             "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0/",
             "retrievedAt": "2026-10-24T21:44:00.000Z"
+          },
+          {
+            "url": "https://ichef.bbci.co.uk/news/1024/branded_news/fccd/live/bf4a03d0-ce15-11f1-9a39-31b474234113.jpg",
+            "sourceUrl": "https://www.bbc.com/news/articles/c3qjnwye0ep5o",
+            "publisher": "BBC News",
+            "type": "image",
+            "alt": "A stock picture showing a laptop with some hands tapping keys with neon lighting",
+            "attribution": "Image: BBC News",
+            "rights": "publisher-preview",
+            "retrievedAt": "2026-10-24T22:30:06.711Z"
           }
         ],
         "socialContext": {
@@ -432,7 +442,18 @@
         "confidence": 0.8,
         "hypeScore": 0.2,
         "verificationReason": "BBC reporting cites official Chinese statistics and named economists, and includes caveats about weak domestic demand, trade tensions and AI investment doubts.",
-        "media": [],
+        "media": [
+          {
+            "url": "https://ichef.bbci.co.uk/news/1024/branded_news/7328/live/2759f110-cb64-11f1-a812-d3be2dbc962d.jpg",
+            "sourceUrl": "https://www.bbc.com/news/articles/cm5yn098xz8lo",
+            "publisher": "BBC News",
+            "type": "image",
+            "alt": "Workers produce export orders at the workshop of Dongfang Jiule Automotive Electronics (Shanghai) Co., Ltd. Xinle Branch on September 15, 2026 in Xinle, Hebei Province of China.",
+            "attribution": "Image: BBC News",
+            "rights": "publisher-preview",
+            "retrievedAt": "2026-10-24T22:30:06.714Z"
+          }
+        ],
         "experience": {
           "quick": {
             "text": "China's economy grew 4.5% in the third quarter, per official data. AI-linked exports helped offset weak domestic demand.",
@@ -724,7 +745,18 @@
         "confidence": 0.8,
         "hypeScore": 0.15,
         "verificationReason": "BBC feature attributes the advice to a named clinical psychologist and the experience to the named person; claims are attributed, not independently studied.",
-        "media": [],
+        "media": [
+          {
+            "url": "https://ichef.bbci.co.uk/news/1024/branded_news/d7da/live/16aa3610-bc08-11f1-90b9-913e4354ed35.jpg",
+            "sourceUrl": "https://www.bbc.com/news/articles/cm5yez87qwvdo",
+            "publisher": "BBC News",
+            "type": "image",
+            "alt": "A woman with long blonde hair, she is wearing a beige cardigan, black top and a gold necklace. The background is trees and an apartment complex.",
+            "attribution": "Image: BBC News",
+            "rights": "publisher-preview",
+            "retrievedAt": "2026-10-24T22:30:06.714Z"
+          }
+        ],
         "experience": {
           "quick": {
             "text": "Hollie Sharman describes living with health anxiety. A psychologist explains signs and coping tips.",
@@ -1044,7 +1076,18 @@
         "confidence": 0.8,
         "hypeScore": 0.3,
         "verificationReason": "BBC reporting with named workers, company founders and an academic; the uncertainty about job impact is attributed to an academic.",
-        "media": [],
+        "media": [
+          {
+            "url": "https://ichef.bbci.co.uk/news/1024/branded_news/c6fc/live/3dab9740-bbe0-11f1-bd21-bdf910f2cec6.jpg",
+            "sourceUrl": "https://www.bbc.com/news/articles/ckvgyml6pdm9o",
+            "publisher": "BBC News",
+            "type": "image",
+            "alt": "Jolly Arifur in her kitchen",
+            "attribution": "Image: BBC News",
+            "rights": "publisher-preview",
+            "retrievedAt": "2026-10-24T22:30:06.716Z"
+          }
+        ],
         "experience": {
           "quick": {
             "text": "Workers in India film their work with head cameras. The footage is sold to train AI for robots.",
@@ -1316,7 +1359,18 @@
         "confidence": 0.8,
         "hypeScore": 0.3,
         "verificationReason": "BBC reporting accurately frames the work as preliminary, cites the Lancet Digital Health publication and includes an independent expert's caution.",
-        "media": [],
+        "media": [
+          {
+            "url": "https://ichef.bbci.co.uk/news/1024/branded_news/56c3/live/041be760-c945-11f1-9357-bdb8a3cad3e4.jpg",
+            "sourceUrl": "https://www.bbc.com/news/articles/c6lyexv93pkdo",
+            "publisher": "BBC News",
+            "type": "image",
+            "alt": "A tired woman wearing a pink dressing gown looks at herself in the mirror, with her hand touching the side of her forehead",
+            "attribution": "Image: BBC News",
+            "rights": "publisher-preview",
+            "retrievedAt": "2026-10-24T22:30:06.714Z"
+          }
+        ],
         "experience": {
           "quick": {
             "text": "US researchers report early work on an AI tool that estimates cancer survival from a face photo. It is far from hospital use.",
@@ -1833,6 +1887,18 @@
       "status": "completed",
       "message": "Additional title-level relevance check removed 3 unrelated public posts; these were never used as evidence.",
       "timestamp": "2026-10-24T21:44:40.791Z"
+    },
+    {
+      "step": "archive.enrichment.images",
+      "status": "started",
+      "message": "Looking up each approved article's publisher share image (Open Graph). Illustrations remain the fallback.",
+      "timestamp": "2026-10-24T22:30:06.537Z"
+    },
+    {
+      "step": "archive.enrichment.images",
+      "status": "completed",
+      "message": "5 of 5 stories have a publisher share image, attributed and linked to the original article.",
+      "timestamp": "2026-10-24T22:30:06.717Z"
     }
   ]
 }
