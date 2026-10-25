@@ -216,7 +216,7 @@ select {
 .story-visual {
   margin: 0;
   min-width: 0;
-  background: #e8f0e7;
+  background: transparent;
 }
 .story-visual .visual-photo img {
   display: block;
