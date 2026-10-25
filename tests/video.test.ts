@@ -173,6 +173,25 @@ test("Runway uses the verified five-second contract and never retries a task POS
   );
   assert.equal(calls, 1);
 });
+test("Runway supports the configurable Gen-4.5 editorial format", () => {
+  const config = runwayConfig({
+    RUNWAY_API_KEY: "test-key",
+    RUNWAY_VIDEO_MODEL: "gen4.5",
+    RUNWAY_VIDEO_DURATION_SECONDS: "8",
+  });
+  assert.equal(config.model, "gen4.5");
+  assert.equal(config.durationSeconds, 8);
+  const body = runwayBody({
+    image: new Uint8Array([1, 2]),
+    contentType: "image/webp",
+    prompt: "The existing water visibly flows along its current channel.",
+    ratio: request.ratio,
+    model: config.model,
+    durationSeconds: config.durationSeconds,
+  });
+  assert.equal(body.model, "gen4.5");
+  assert.equal(body.duration, 8);
+});
 test("automatic video requests use the first ready approved illustration and stay bounded", () => {
   const f = fixture();
   const generated = automaticVideoRequest(request.date, story, f.storyboard);
@@ -335,6 +354,7 @@ test("video manifest requires a real task and cached MP4 before ready, and serve
   broken.clips[0].status = "ready";
   assert.equal(parseVideoManifest(broken), null);
   assert.equal(videoTimeForNarration(13.5), 4.96);
+  assert.equal(videoTimeForNarration(13.5, 8, true), 5.5);
   assert.equal(videoTimeForNarration(NaN), 0);
   const response = videoResponse(mp4, "bytes=0-3");
   assert.equal(response.status, 206);

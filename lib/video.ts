@@ -13,7 +13,7 @@ export const videoManifestSchema = z
     provider: z
       .object({
         name: z.literal("Runway"),
-        model: z.literal("gen4_turbo"),
+        model: z.enum(["gen4.5", "gen4_turbo"]),
         apiVersion: z.literal("2024-11-06"),
       })
       .strict(),
@@ -84,7 +84,7 @@ export const videoManifestSchema = z
             attempt: z.number().int().min(1).max(2),
             submittedAt: z.string().datetime({ offset: true }).optional(),
             checkedAt: z.string().datetime({ offset: true }).optional(),
-            durationSeconds: z.literal(5),
+            durationSeconds: z.number().int().min(4).max(10),
             ratio: z.enum([
               "1280:720",
               "720:1280",
@@ -237,7 +237,7 @@ export const videoMotionPlanSchema = z
           .max(4),
       })
       .strict(),
-    durationSeconds: z.literal(5),
+    durationSeconds: z.number().int().min(4).max(10),
     motions: z
       .array(
         z
@@ -271,9 +271,14 @@ export const videoPath = (date: string, storyId: string, clipId: string) =>
   `/api/videos/${encodeURIComponent(date)}/${encodeURIComponent(storyId)}/${encodeURIComponent(clipId)}`;
 
 /** Cartesia is the clock: play the short scene once, then hold its final frame. */
-export function videoTimeForNarration(seconds: number, durationSeconds = 5) {
+export function videoTimeForNarration(
+  seconds: number,
+  durationSeconds = 5,
+  loop = false,
+) {
   if (!Number.isFinite(seconds) || seconds < 0 || durationSeconds <= 0)
     return 0;
+  if (loop) return seconds % durationSeconds;
   return Math.min(seconds, Math.max(0, durationSeconds - 0.04));
 }
 

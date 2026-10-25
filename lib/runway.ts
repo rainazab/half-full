@@ -6,7 +6,16 @@ import type { VideoClip } from "./video";
 /** Official API/version and list pricing checked 2026-10-24. */
 export const RUNWAY_API = "https://api.dev.runwayml.com/v1";
 export const RUNWAY_VERSION = "2024-11-06";
-export type RunwayConfig = { apiKey: string };
+export type RunwayModel = "gen4.5" | "gen4_turbo";
+export type RunwayConfig = {
+  apiKey: string;
+  model?: RunwayModel;
+  durationSeconds?: number;
+};
+export const RUNWAY_CREDITS_PER_SECOND: Record<RunwayModel, number> = {
+  "gen4.5": 12,
+  gen4_turbo: 5,
+};
 export function runwayConfig(
   env: Record<string, string | undefined> = process.env,
 ): RunwayConfig {
@@ -17,7 +26,21 @@ export function runwayConfig(
       "Video generation is unavailable. The illustrated and written story remain available.",
       503,
     );
-  return { apiKey };
+  const model = (env.RUNWAY_VIDEO_MODEL?.trim() || "gen4.5") as RunwayModel;
+  if (!(model in RUNWAY_CREDITS_PER_SECOND))
+    throw new PipelineError(
+      "VIDEO_MODEL_INVALID",
+      "RUNWAY_VIDEO_MODEL must be gen4.5 or gen4_turbo.",
+      503,
+    );
+  const durationSeconds = Number(env.RUNWAY_VIDEO_DURATION_SECONDS ?? 8);
+  if (!Number.isInteger(durationSeconds) || durationSeconds < 4 || durationSeconds > 10)
+    throw new PipelineError(
+      "VIDEO_DURATION_INVALID",
+      "RUNWAY_VIDEO_DURATION_SECONDS must be an integer from 4 to 10.",
+      503,
+    );
+  return { apiKey, model, durationSeconds };
 }
 async function call(
   config: RunwayConfig,
@@ -66,6 +89,8 @@ export function runwayBody(request: {
   contentType: string;
   prompt: string;
   ratio: VideoClip["ratio"];
+  model?: RunwayModel;
+  durationSeconds?: number;
   seed?: number;
 }) {
   if (
@@ -90,12 +115,20 @@ export function runwayBody(request: {
       "The motion prompt must contain 20–1,000 characters.",
       422,
     );
+  const model = request.model ?? "gen4_turbo";
+  const durationSeconds = request.durationSeconds ?? 5;
+  if (!(model in RUNWAY_CREDITS_PER_SECOND) || !Number.isInteger(durationSeconds) || durationSeconds < 4 || durationSeconds > 10)
+    throw new PipelineError(
+      "VIDEO_REQUEST_INVALID",
+      "Runway video requests require a supported model and a 4–10 second duration.",
+      422,
+    );
   return {
-    model: "gen4_turbo",
+    model,
     promptImage,
     promptText: request.prompt,
     ratio: request.ratio,
-    duration: 5,
+    duration: durationSeconds,
     ...(request.seed !== undefined ? { seed: request.seed } : {}),
   };
 }
@@ -110,7 +143,13 @@ export async function submitRunway(
     {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(runwayBody(request)),
+      body: JSON.stringify(
+        runwayBody({
+          ...request,
+          model: config.model,
+          durationSeconds: config.durationSeconds,
+        }),
+      ),
     },
     fetcher,
   );

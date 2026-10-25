@@ -4,7 +4,8 @@ import type { VideoManifest } from "@/lib/video";
 import { videoTimeForNarration } from "@/lib/video";
 import type { PlaybackController, PlaybackState } from "./AudioPlayer";
 
-/** A real cached MP4. The audio clock drives a short scene that plays once and holds. */
+/** A real cached MP4. The narration clock drives the scene and loops the
+ * completed shot rather than freezing on an unexplained final frame. */
 export default function StoryVideoStage({
   manifest,
   active,
@@ -29,8 +30,6 @@ export default function StoryVideoStage({
   const clip = manifest.clips.find(
     (item) => item.status === "ready" && item.asset,
   );
-  const withinScene =
-    (playback?.time ?? 0) < (clip?.durationSeconds ?? 5) - 0.04;
   useEffect(() => {
     const media = video.current;
     if (!media) return;
@@ -45,8 +44,8 @@ export default function StoryVideoStage({
       const time = clock?.currentTime() ?? playback?.time ?? 0;
       const playing = clock?.isPlaying() ?? playback?.playing ?? false;
       const duration = clip?.durationSeconds ?? 5;
-      const target = videoTimeForNarration(time, duration);
-      const scenePlaying = playing && time < duration - 0.04;
+      const target = videoTimeForNarration(time, duration, true);
+      const scenePlaying = playing;
       media.playbackRate = clock?.playbackRate?.() ?? 1;
       if (media.readyState >= 1 && Math.abs(media.currentTime - target) > 0.2)
         media.currentTime = target;
@@ -60,7 +59,7 @@ export default function StoryVideoStage({
       cancelAnimationFrame(frame);
       media.pause();
     };
-  }, [active, silent, playback?.playing, withinScene, clip?.durationSeconds]);
+  }, [active, silent, playback?.playing, clip?.durationSeconds]);
   useEffect(() => {
     if (
       !silent &&
@@ -72,6 +71,7 @@ export default function StoryVideoStage({
       video.current.currentTime = videoTimeForNarration(
         playback?.time ?? 0,
         clip?.durationSeconds ?? 5,
+        true,
       );
   }, [
     silent,
@@ -120,7 +120,9 @@ export default function StoryVideoStage({
           aria-label={clip.alt}
         />
         {!silent && !playback?.playing && (
-          <span className="video-ready-label">Illustrated video · 0:05</span>
+          <span className="video-ready-label">
+            Illustrated video · 0:{String(Math.round(clip.durationSeconds)).padStart(2, "0")}
+          </span>
         )}
       </div>
       <figcaption>

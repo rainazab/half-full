@@ -7,6 +7,7 @@ import { illustrationStore } from "./illustration-store";
 import { narrationFor } from "./narration";
 import {
   runwayConfig,
+  RUNWAY_CREDITS_PER_SECOND,
   submitRunway,
   getRunwayTask,
   downloadRunwayVideo,
@@ -63,11 +64,19 @@ export function automaticVideoRequest(
     (item) => item.status === "ready" && item.asset,
   );
   if (!scene?.asset) return null;
+  const subjectMotion = /water|river|lake|stream|runoff|rain|wave/i.test(scene.objects.join(" "))
+    ? "Show the existing water or flow visibly moving along its current path."
+    : /train|car|vehicle|bus|bicycle|boat/i.test(scene.objects.join(" "))
+      ? "Show the existing vehicle moving through the scene while the surrounding setting stays grounded."
+      : /tree|leaf|grass|plant|cloud|smoke|steam/i.test(scene.objects.join(" "))
+        ? "Show the existing natural element visibly swaying or drifting in place."
+        : `Show the existing ${scene.objects.slice(0, 2).join(" and ")} visibly changing position or state while remaining recognizable.`;
   const prompt = [
     "Preserve this original Half Full editorial illustration, its palette, grain and composition.",
-    `Animate the existing subject ${scene.subject} with calm, intentional motion that explains: ${scene.purpose}`,
+    `Animate the existing subject ${scene.subject} with one coherent, story-specific physical action that explains: ${scene.purpose}`,
+    subjectMotion,
     `Keep the existing ${scene.objects.slice(0, 3).join(", ")} recognizable and grounded in the existing ${scene.setting}.`,
-    "Use a gentle explanatory camera move. Do not add people, logos, labels, numbers, captions, signs, text, new objects or documentary detail.",
+    "Keep the viewpoint stable; do not substitute zooming, panning or drifting for subject motion. Do not add people, logos, labels, numbers, captions, signs, text, new objects or documentary detail.",
   ].join(" ");
   return {
     date,
@@ -99,7 +108,13 @@ export async function enqueueAutomaticVideo(
     if (!request) return { status: "no-artwork" as const };
     const existing = await deps.store.getManifest(date, storyId);
     if (existing) return { status: "reused" as const, manifest: existing };
-    const budget = Number(process.env.RUNWAY_AUTO_GENERATION_CREDITS ?? 25);
+    const config = deps.config();
+    const model = config.model ?? "gen4_turbo";
+    const durationSeconds = config.durationSeconds ?? 5;
+    const budget = Number(
+      process.env.RUNWAY_AUTO_GENERATION_CREDITS ??
+        RUNWAY_CREDITS_PER_SECOND[model] * durationSeconds,
+    );
     const manifest = await submitVideo(
       request,
       { maxCredits: Number.isFinite(budget) ? budget : 25 },
@@ -223,7 +238,7 @@ export async function prepareVideo(
       scriptHash,
       mapping: "authored-once",
       description:
-        "A five-second illustrated visual loop follows the narration clock. Pause and seek follow audio; this is not word-level synchronization.",
+        "A bounded Runway-generated illustrated scene follows the narration clock and loops only while narration continues; this is not word-level synchronization.",
     },
     clips: [clip],
   };
@@ -235,14 +250,10 @@ export async function submitVideo(
   options: { maxCredits: number; retry?: boolean },
   deps = videoDependencies,
 ) {
-  if (
-    !Number.isFinite(options.maxCredits) ||
-    options.maxCredits < 25 ||
-    options.maxCredits > 50
-  )
+  if (!Number.isFinite(options.maxCredits) || options.maxCredits < 20 || options.maxCredits > 200)
     throw new PipelineError(
       "VIDEO_BUDGET_REQUIRED",
-      "Explicitly authorize between 25 and 50 credits before submitting a five-second clip.",
+      "Explicitly authorize between 20 and 200 credits before submitting a bounded clip.",
       422,
     );
   if (deps.store.mode !== "apify" && process.env.NODE_ENV !== "test")
@@ -252,7 +263,31 @@ export async function submitVideo(
       503,
     );
   const config = deps.config();
+  const model = config.model ?? "gen4_turbo";
+  const durationSeconds = config.durationSeconds ?? 5;
   const prepared = await prepareVideo(request, deps);
+  const estimatedCredits = RUNWAY_CREDITS_PER_SECOND[model] * durationSeconds;
+  if (options.maxCredits < estimatedCredits)
+    throw new PipelineError(
+      "VIDEO_BUDGET_REQUIRED",
+      `The authorized budget must cover this ${model} clip (${estimatedCredits} credits).`,
+      422,
+    );
+  prepared.manifest.provider.model = model;
+  prepared.manifest.clips[0].durationSeconds = durationSeconds;
+  prepared.manifest.clips[0].cost.estimatedCredits =
+    estimatedCredits;
+  prepared.manifest.clips[0].cost.estimatedUsd =
+    prepared.manifest.clips[0].cost.estimatedCredits * 0.01;
+  prepared.manifest.clips[0].promptHash = hash(
+    JSON.stringify({
+      prompt: request.prompt,
+      source: prepared.manifest.clips[0].source.promptHash,
+      model,
+      duration: durationSeconds,
+      ratio: request.ratio,
+    }),
+  );
   const release = await deps.store.lock();
   try {
     const existing = await deps.store.getManifest(
@@ -287,11 +322,12 @@ export async function submitVideo(
       ];
       await deps.store.saveManifest(existing);
     }
-    const budgetValue = Number(process.env.RUNWAY_DAILY_CREDIT_BUDGET ?? 50);
+    const budgetValue = Number(process.env.RUNWAY_DAILY_CREDIT_BUDGET ?? 384);
     const dailyBudget = Number.isFinite(budgetValue)
-      ? Math.max(0, Math.min(100, budgetValue))
-      : 50;
-    await deps.store.reserve(editionDay(deps.now()), 25, dailyBudget);
+      ? Math.max(0, Math.min(500, budgetValue))
+      : 384;
+    const requestedCredits = prepared.manifest.clips[0].cost.estimatedCredits;
+    await deps.store.reserve(editionDay(deps.now()), requestedCredits, dailyBudget);
     // Reservation and manifest are durable before the non-idempotent provider POST.
     await deps.store.saveManifest(manifest);
     release.assertOwned?.();
