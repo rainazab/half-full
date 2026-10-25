@@ -1274,3 +1274,264 @@ html.overlay-open body {
     will-change: auto;
   }
 }
+
+/* ---------- Story deck (portrait-first horizontal navigation) ---------- */
+html.deck-open,
+html.deck-open body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+.story-deck-reader {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+.deck-header {
+  position: static;
+  flex: none;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: calc(8px + env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) 8px
+    max(16px, env(safe-area-inset-left));
+  min-height: 52px;
+  border-bottom: 1px solid var(--line);
+}
+.deck-header .reader-exit {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px 6px 8px 0;
+  gap: 6px;
+  font-size: 0.82rem;
+}
+.deck-header .reader-progress {
+  margin: 0;
+  justify-content: center;
+  gap: 10px;
+}
+.deck-header .reader-progress > span {
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+.deck-header .reader-progress i {
+  width: 16px;
+}
+.deck-arrows {
+  display: flex;
+  gap: 2px;
+}
+.deck-arrows button {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+}
+.deck-arrows button:disabled {
+  opacity: 0.25;
+}
+.story-deck {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.deck-track {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  will-change: transform;
+}
+.deck-page {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  padding: 14px max(18px, env(safe-area-inset-right))
+    calc(28px + env(safe-area-inset-bottom))
+    max(18px, env(safe-area-inset-left));
+  transform-origin: 50% 40%;
+  border-radius: 0;
+}
+.deck-page > .story-copy,
+.deck-page > .ending {
+  max-width: 640px;
+  margin: 0 auto;
+}
+.deck-page .story-copy > .eyebrow {
+  margin: 4px 0 8px;
+  font-size: 0.74rem;
+}
+.deck-page .story-copy > h2 {
+  font-size: clamp(1.7rem, 6.2vw, 2.3rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 14px;
+}
+.deck-page .story-intro {
+  font-size: 1.04rem;
+  line-height: 1.6;
+  margin: 16px 0 14px;
+}
+.deck-page .illustrated-story,
+.deck-page .story-copy > .story-visual {
+  margin: 6px 0 14px;
+}
+.deck-page .scene-stage {
+  max-height: min(40dvh, 520px);
+  aspect-ratio: 4 / 3;
+  width: 100%;
+}
+.deck-page .story-copy .visual-photo img {
+  max-height: min(40dvh, 320px);
+}
+.deck-page .audio-player {
+  margin: 14px 0 20px;
+}
+.deck-page .audio-controls .primary {
+  min-height: 46px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+}
+.deck-page .why-card {
+  margin: 22px 0;
+}
+.page-hint {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin: 28px 0 0;
+}
+.deck-page > .ending {
+  margin-top: 40px;
+  text-align: center;
+}
+.deck-page > .ending .puzzle {
+  text-align: left;
+}
+/* Authored scene compositions */
+.authored-scene,
+.authored-scene-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.authored-scene-frame > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.authored-scene.overlay {
+  pointer-events: none;
+}
+.scene.settling > img:first-child {
+  animation: scene-settle 6s ease-out both;
+}
+@keyframes scene-settle {
+  from {
+    transform: scale(1.06);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .scene.settling > img:first-child {
+    animation: none;
+  }
+}
+/* Phones: arrows are for keyboards and tablets; the page is for thumbs. */
+@media (max-width: 767px) {
+  .deck-arrows {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+  .deck-header {
+    grid-template-columns: auto 1fr;
+  }
+  .deck-page .scene-controls > button {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .deck-page .story-reactions button {
+    min-height: 84px;
+  }
+}
+@media (max-width: 380px) {
+  .deck-page .story-copy > h2 {
+    font-size: 1.55rem;
+  }
+  .deck-page .scene-stage {
+    max-height: 36dvh;
+  }
+  .deck-page .story-intro {
+    font-size: 0.98rem;
+  }
+}
+/* iPad portrait: a centred illustrated-magazine page with larger artwork. */
+@media (min-width: 768px) and (max-width: 1100px) and (orientation: portrait) {
+  .deck-header {
+    padding-left: 40px;
+    padding-right: 40px;
+    min-height: 60px;
+  }
+  .deck-page {
+    padding: 28px 48px calc(40px + env(safe-area-inset-bottom));
+  }
+  .deck-page > .story-copy,
+  .deck-page > .ending {
+    max-width: 700px;
+  }
+  .deck-page .story-copy > h2 {
+    font-size: 2.6rem;
+  }
+  .deck-page .scene-stage {
+    max-height: min(46dvh, 560px);
+    border-radius: 16px;
+  }
+  .deck-page .story-intro {
+    font-size: 1.14rem;
+    line-height: 1.65;
+  }
+  .deck-page .why-card p,
+  .deck-page .bright-side p,
+  .deck-page .reader-context p {
+    font-size: 1.08rem;
+  }
+}
+/* Desktop and landscape remain functional: a centred column with arrows. */
+@media (min-width: 1101px) {
+  .deck-page {
+    padding: 28px 60px 48px;
+  }
+  .deck-page > .story-copy,
+  .deck-page > .ending {
+    max-width: 760px;
+  }
+  .deck-page .story-copy > h2 {
+    font-size: 2.7rem;
+  }
+  .deck-page .scene-stage {
+    max-height: min(52dvh, 600px);
+    border-radius: 16px;
+  }
+}

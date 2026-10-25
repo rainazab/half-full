@@ -2,12 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import {
-  activeStory,
-  audioMayContinue,
-  shouldComplete,
-  storyAnchor,
-} from "../lib/feed";
-import {
   layerFrame,
   motionProgress,
   sceneProgressFromAudio,
@@ -22,28 +16,6 @@ import {
 import { parseEdition } from "../lib/edition-schema";
 import { validateMotionPlan } from "../lib/motion-plan";
 
-test("the reading band picks the lowest intersecting story and holds steady otherwise", () => {
-  assert.equal(activeStory(0, new Set([0]), 4), 0);
-  assert.equal(activeStory(0, new Set([0, 1]), 4), 1);
-  // Nothing crossing the band keeps the current story: no flicker between stories.
-  assert.equal(activeStory(2, new Set(), 4), 2);
-  assert.equal(activeStory(3, new Set([4]), 4), 4);
-  assert.equal(activeStory(9, new Set(), 4), 4);
-  assert.equal(storyAnchor(0), "story-1");
-});
-test("completion fires only when the ending is genuinely on screen, and only once", () => {
-  assert.equal(shouldComplete(false, 0, 4), false);
-  assert.equal(shouldComplete(false, 0.3, 4), false);
-  assert.equal(shouldComplete(false, 0.6, 4), true);
-  assert.equal(shouldComplete(true, 1, 4), false);
-  assert.equal(shouldComplete(false, 1, 0), false);
-});
-test("narration keeps playing one story away and pauses further down the feed", () => {
-  assert.ok(audioMayContinue(1, 1));
-  assert.ok(audioMayContinue(1, 2));
-  assert.ok(!audioMayContinue(1, 3));
-  assert.ok(!audioMayContinue(4, 1));
-});
 const animation: SceneMotion = {
   version: "scene-motion/1",
   durationSeconds: 8,
