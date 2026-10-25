@@ -266,7 +266,10 @@ export default function Crossword({
     else setValues(next);
   }
   function cellClick(value: string) {
+    const [row, column] = value.split(",").map(Number);
+    if (!puzzle.grid[row]?.[column]) return;
     const members = puzzle.entries.filter((e) => entryCells(e).includes(value));
+    if (!members.length) return;
     setSelected(
       members.find(
         (e) =>

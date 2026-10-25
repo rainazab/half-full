@@ -2857,6 +2857,97 @@ body:has(.intro-mode) {
   text-align: center;
   margin: 10px 0;
 }
+
+/* iPad Brain Break: let the puzzle be the focal point and use the second
+   column for clues instead of leaving a tiny board in the corner. */
+@media (min-width: 768px) {
+  .mini-experience {
+    padding: 44px clamp(40px, 7vw, 96px) 58px;
+  }
+  .mini-game-header,
+  .mini-play,
+  .mini-experience > .note {
+    width: min(100%, 1080px);
+  }
+  .mini-game-header {
+    margin-bottom: 34px;
+  }
+  .mini-game-header h2 {
+    font-size: clamp(38px, 5vw, 58px);
+  }
+  .mini-play {
+    grid-template-columns: minmax(0, 1.15fr) minmax(280px, .85fr);
+    gap: clamp(40px, 7vw, 96px);
+    align-items: start;
+  }
+  .mini-board {
+    width: min(100%, 560px);
+    margin-inline: auto;
+  }
+  .selected-clue {
+    min-height: 68px;
+    padding: 8px 10px;
+    border-radius: 18px;
+    margin-bottom: 18px;
+  }
+  .selected-clue p {
+    font-size: 15px;
+  }
+  .selected-clue p strong {
+    font-size: 13px;
+  }
+  .selected-clue button {
+    width: 42px;
+    min-width: 42px;
+    min-height: 46px;
+  }
+  .crossword-grid {
+    width: min(100%, 560px);
+    border-width: 4px;
+    border-radius: 12px;
+    gap: 3px;
+  }
+  .crossword-cell {
+    font-size: clamp(30px, 4.3vw, 54px);
+    padding-top: 14px;
+  }
+  .crossword-cell small {
+    top: 8px;
+    left: 8px;
+    font-size: 12px;
+  }
+  .mini-input-help {
+    margin: 15px 0 11px;
+    font-size: 12px;
+  }
+  .mini-assists {
+    justify-content: flex-start;
+    gap: 10px;
+  }
+  .mini-assists button {
+    min-height: 40px;
+    padding: 8px 15px;
+    background: #f7f5e9aa;
+    font-size: 11px;
+  }
+  .mini-clue-library {
+    border: 1px solid #314d362b;
+    border-radius: 18px;
+    padding: 18px 20px;
+    background: #f7f5e955;
+  }
+  .mini-clue-library > summary {
+    font-size: 14px;
+  }
+  .clue-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+  .clue {
+    padding: 12px 9px;
+    font-size: 12px;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .intro-step-indicator i {
     transition: none;
