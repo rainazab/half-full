@@ -24,6 +24,7 @@ import { anthropicPlanner, type Planner } from "./storyboard-plan";
 import { anthropicMotionPlanner, type MotionPlanner } from "./motion-plan";
 import { composeArtPrompt } from "./storyboard-prompt";
 import type { ApprovedStory, EditionResult } from "./types";
+import { enqueueAutomaticVideo } from "./video-generation";
 
 export type IllustrateOptions = {
   storyIds?: string[];
@@ -210,6 +211,11 @@ export type IllustrateSummary = {
   creditsUsed: number;
   storyboards: Record<string, StoryboardManifest>;
   skipped: { storyId: string; reason: string }[];
+  videos: {
+    queued: string[];
+    reused: string[];
+    skipped: { storyId: string; reason: string }[];
+  };
 };
 /**
  * Illustrates approved stories of an already published edition. Reuses existing
@@ -249,6 +255,7 @@ export async function illustrateEdition(
     creditsUsed: 0,
     storyboards: {},
     skipped: [],
+    videos: { queued: [], reused: [], skipped: [] },
   };
   try {
     const config = deps.recraft();
@@ -280,6 +287,10 @@ export async function illustrateEdition(
           storyId: story.id,
           reason: "Illustrations already exist; reused.",
         });
+        const video = await enqueueAutomaticVideo(date, story.id);
+        if (video.status === "queued") summary.videos.queued.push(story.id);
+        else if (video.status === "reused") summary.videos.reused.push(story.id);
+        else summary.videos.skipped.push({ storyId: story.id, reason: video.status });
         continue;
       }
       if (existing && existing.styleVersion !== ILLUSTRATION_STYLE.version) {
@@ -319,6 +330,10 @@ export async function illustrateEdition(
           manifest.status = "ready";
           summary.storyboards[story.id] =
             await deps.store.saveManifest(manifest);
+          const video = await enqueueAutomaticVideo(date, story.id);
+          if (video.status === "queued") summary.videos.queued.push(story.id);
+          else if (video.status === "reused") summary.videos.reused.push(story.id);
+          else summary.videos.skipped.push({ storyId: story.id, reason: video.status });
           continue;
         }
         manifest.status = "generating";
@@ -404,6 +419,12 @@ export async function illustrateEdition(
               : "failed";
         manifest.updatedAt = deps.now().toISOString();
         summary.storyboards[story.id] = await deps.store.saveManifest(manifest);
+        if (manifest.scenes.some((scene) => scene.status === "ready" && scene.asset)) {
+          const video = await enqueueAutomaticVideo(date, story.id);
+          if (video.status === "queued") summary.videos.queued.push(story.id);
+          else if (video.status === "reused") summary.videos.reused.push(story.id);
+          else summary.videos.skipped.push({ storyId: story.id, reason: video.status === "failed" ? `${video.code}: ${video.message}` : video.status });
+        }
       } catch (error) {
         const safe = publicError(error);
         summary.skipped.push({

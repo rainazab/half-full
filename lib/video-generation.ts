@@ -50,6 +50,67 @@ export type VideoRequest = {
   prompt: string;
   ratio: VideoClip["ratio"];
 };
+
+/** Build the bounded first-scene request used when an approved illustration finishes.
+ * The prompt is derived only from the approved storyboard; it never contains
+ * provider URLs or reader input. */
+export function automaticVideoRequest(
+  date: string,
+  story: NonNullable<EditionResult["edition"]["stories"]>[number],
+  storyboard: StoryboardManifest,
+): VideoRequest | null {
+  const scene = storyboard.scenes.find(
+    (item) => item.status === "ready" && item.asset,
+  );
+  if (!scene?.asset) return null;
+  const prompt = [
+    "Preserve this original Half Full editorial illustration, its palette, grain and composition.",
+    `Animate the existing subject ${scene.subject} with calm, intentional motion that explains: ${scene.purpose}`,
+    `Keep the existing ${scene.objects.slice(0, 3).join(", ")} recognizable and grounded in the existing ${scene.setting}.`,
+    "Use a gentle explanatory camera move. Do not add people, logos, labels, numbers, captions, signs, text, new objects or documentary detail.",
+  ].join(" ");
+  return {
+    date,
+    storyId: story.id,
+    sceneId: scene.id,
+    prompt: prompt.slice(0, 1000),
+    ratio: "1104:832",
+  };
+}
+
+/** Queue one first-scene clip after Recraft is ready. This is deliberately
+ * fire-and-forget from the illustration request: Runway processing is polled
+ * later by the worker and never tied to reader page loads. */
+export async function enqueueAutomaticVideo(
+  date: string,
+  storyId: string,
+  deps = videoDependencies,
+) {
+  if (process.env.RUNWAY_AUTO_GENERATION_ENABLED === "false")
+    return { status: "disabled" as const };
+  if (!process.env.RUNWAY_API_KEY?.trim())
+    return { status: "not-configured" as const };
+  try {
+    const edition = await deps.getEdition(date);
+    const story = edition?.edition.stories.find((item) => item.id === storyId);
+    const storyboard = await deps.getStoryboard(date, storyId);
+    if (!story || !storyboard) return { status: "missing" as const };
+    const request = automaticVideoRequest(date, story, storyboard);
+    if (!request) return { status: "no-artwork" as const };
+    const existing = await deps.store.getManifest(date, storyId);
+    if (existing) return { status: "reused" as const, manifest: existing };
+    const budget = Number(process.env.RUNWAY_AUTO_GENERATION_CREDITS ?? 25);
+    const manifest = await submitVideo(
+      request,
+      { maxCredits: Number.isFinite(budget) ? budget : 25 },
+      deps,
+    );
+    return { status: "queued" as const, manifest };
+  } catch (error) {
+    const safe = publicError(error);
+    return { status: "failed" as const, code: safe.code, message: safe.message };
+  }
+}
 /** Operator-only preparation. Reads approved copy/evidence and existing images; never bills. */
 export async function prepareVideo(
   request: VideoRequest,

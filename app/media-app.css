@@ -1601,6 +1601,105 @@ html.deck-open body {
   }
 }
 
+/* Audio UX: transport is a distinct, roomy group; voice and read-along are
+   direct secondary actions rather than hidden in overflow. */
+.player-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+.player-track { flex: 1 0 100%; order: 1; }
+.player-transport {
+  order: 2;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-inline: auto;
+}
+.player-jump,
+.player-voice-control > summary,
+.player-read-along,
+.player-story-nav .player-skip {
+  min-width: 44px;
+  min-height: 44px;
+}
+.player-jump {
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff12;
+  color: #fff;
+  padding: 0 9px;
+  font-size: 11px;
+}
+.player-secondary {
+  order: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-inline: auto;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.player-voice-control { position: relative; z-index: 6; }
+.player-voice-control > summary,
+.player-read-along {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 12px;
+  background: #ffffff12;
+  color: #fff;
+  font-size: 11px;
+  list-style: none;
+  cursor: pointer;
+}
+.player-voice-control > summary::-webkit-details-marker { display: none; }
+.player-voice-control[open] {
+  position: relative;
+}
+.player-voice-control[open] .narrator-picker {
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 230px;
+  padding: 10px;
+  background: #f9f7f2;
+  color: #20241f;
+  border-radius: 18px;
+  box-shadow: 0 10px 40px #071c2d26;
+}
+.player-story-nav {
+  order: 4;
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.audio-options { order: 5; margin-left: 0; }
+.player-transcript {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid #ffffff24;
+}
+.player-transcript .follow-along {
+  margin: 0;
+  font-size: 14px;
+}
+.follow-along .follow-phrase {
+  transition: color 0.18s, text-decoration-color 0.18s;
+}
+.follow-along.live .follow-phrase { cursor: pointer; color: #596159; }
+.follow-along.live .follow-phrase.now {
+  color: #193b31;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+.follow-along.live .follow-phrase.done,
+.follow-along.live .follow-phrase.soon { color: #596159; }
+
 /* Compact visuals retain comfortable touch targets. */
 .feature-date,
 .media-mode button,

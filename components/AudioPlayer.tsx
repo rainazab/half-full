@@ -9,6 +9,7 @@ import {
   type ListeningPreferences,
 } from "@/lib/preferences";
 import NarratorPicker from "./NarratorPicker";
+import FollowAlong from "./FollowAlong";
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
 export type PlaybackState = {
@@ -67,6 +68,7 @@ export default function AudioPlayer({
   const [busy, setBusy] = useState(false),
     [playing, setPlaying] = useState(false);
   const [error, setError] = useState("");
+  const [transcriptOpen, setTranscriptOpen] = useState(false);
   const [time, setTime] = useState(0),
     [duration, setDuration] = useState(0);
   const narration = narrationFor(story);
@@ -228,65 +230,22 @@ export default function AudioPlayer({
       <div
         className={`player-row${onPrevious || onNext ? " with-transport" : ""}`}
       >
-        {(onPrevious || onNext) && (
-          <button
-            type="button"
-            className="player-skip"
-            aria-label="Previous story"
-            disabled={!onPrevious}
-            onClick={onPrevious}
-          >
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-              <path d="M6 5h2v14H6zM18 5.5v13L9 12z" fill="currentColor" />
-            </svg>
+        <div className="player-transport" aria-label="Narration controls">
+          <button type="button" className="player-jump" aria-label="Rewind 10 seconds" onClick={() => seek(time - 10)}>
+            −10
           </button>
-        )}
-        <button
-          className="player-play"
-          disabled={busy}
-          onClick={() => void play()}
-          aria-label={playing ? "Pause narration" : "Play narration"}
-        >
-          {busy ? (
-            <span className="player-spinner" aria-hidden="true" />
-          ) : playing ? (
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-              <rect
-                x="6"
-                y="5"
-                width="4"
-                height="14"
-                rx="1.2"
-                fill="currentColor"
-              />
-              <rect
-                x="14"
-                y="5"
-                width="4"
-                height="14"
-                rx="1.2"
-                fill="currentColor"
-              />
-            </svg>
-          ) : (
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-              <path d="M8 5.5v13l11-6.5z" fill="currentColor" />
-            </svg>
-          )}
-        </button>
-        {(onPrevious || onNext) && (
           <button
-            type="button"
-            className="player-skip"
-            aria-label={transportLabel ?? "Next story"}
-            disabled={!onNext}
-            onClick={onNext}
+            className="player-play"
+            disabled={busy}
+            onClick={() => void play()}
+            aria-label={playing ? "Pause narration" : "Play narration"}
           >
-            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
-              <path d="M16 5h2v14h-2zM6 5.5v13l9-6.5z" fill="currentColor" />
-            </svg>
+            {busy ? <span className="player-spinner" aria-hidden="true" /> : playing ? <span aria-hidden="true">Ⅱ</span> : <span aria-hidden="true">▶</span>}
           </button>
-        )}
+          <button type="button" className="player-jump" aria-label="Forward 10 seconds" onClick={() => seek(time + 10)}>
+            +10
+          </button>
+        </div>
         <div className="player-track">
           <div className="player-meta">
             <span className="player-voice">
@@ -335,6 +294,7 @@ export default function AudioPlayer({
             ↺
           </button>
         )}
+        <div className="player-secondary">
         <label className="player-speed">
           <select
             aria-label="Playback speed"
@@ -352,10 +312,22 @@ export default function AudioPlayer({
             ))}
           </select>
         </label>
+        <details className="player-voice-control">
+          <summary aria-label="Choose narrator">Voice · {narratorById(narrator).name}</summary>
+          <NarratorPicker compact value={narrator} onChange={(next) => onPreferences({ narrator: next })} />
+        </details>
+        <button type="button" className="player-read-along" onClick={() => setTranscriptOpen((value) => !value)} aria-expanded={transcriptOpen}>
+          {transcriptOpen ? "Hide read along" : "Read along"}
+        </button>
+        </div>
+        {(onPrevious || onNext) && (
+          <div className="player-story-nav" aria-label="Story navigation">
+            <button type="button" className="player-skip" aria-label="Previous story" disabled={!onPrevious} onClick={onPrevious}>←</button>
+            <button type="button" className="player-skip" aria-label={transportLabel ?? "Next story"} disabled={!onNext} onClick={onNext}>→</button>
+          </div>
+        )}
         <details className="audio-options">
-          <summary aria-label="Playback options" title="Playback options">
-            •••
-          </summary>
+          <summary aria-label="Playback options" title="Playback options">•••</summary>
           <label className="listen-through">
             <input
               type="checkbox"
@@ -367,20 +339,17 @@ export default function AudioPlayer({
             />
             Autoplay next
           </label>
-          <div className="audio-narrator">
-            <span>Narrator</span>
-            <NarratorPicker
-              compact
-              value={narrator}
-              onChange={(next) => onPreferences({ narrator: next })}
-            />
-          </div>
-          <details>
-            <summary>Transcript</summary>
-            <p>{narration.script}</p>
-          </details>
         </details>
       </div>
+      {transcriptOpen && (
+        <div className="player-transcript">
+          <FollowAlong
+            script={narration.script}
+            playback={{ playing, time, duration, ready: duration > 0 }}
+            onSeekFraction={(fraction) => seek((duration || narration.estimatedSeconds) * fraction)}
+          />
+        </div>
+      )}
       {error && (
         <p role="status" className="note">
           {error}

@@ -11,6 +11,7 @@ import {
   downloadRunwayVideo,
 } from "../lib/runway";
 import {
+  automaticVideoRequest,
   prepareVideo,
   submitVideo,
   pollVideo,
@@ -171,6 +172,15 @@ test("Runway uses the verified five-second contract and never retries a task POS
       /No automatic retry/.test(error.message),
   );
   assert.equal(calls, 1);
+});
+test("automatic video requests use the first ready approved illustration and stay bounded", () => {
+  const f = fixture();
+  const generated = automaticVideoRequest(request.date, story, f.storyboard);
+  assert.equal(generated?.storyId, story.id);
+  assert.equal(generated?.sceneId, "scene-1");
+  assert.equal(generated?.ratio, "1104:832");
+  assert.ok(generated && generated.prompt.length <= 1000);
+  assert.match(generated!.prompt, /existing subject/);
 });
 test("video preparation requires an approved story and exact retained keyframe references", async () => {
   const f = fixture();

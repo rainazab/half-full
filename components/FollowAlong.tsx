@@ -24,10 +24,32 @@ export function activeSentence(sentences: string[], fraction: number) {
   }
   return sentences.length - 1;
 }
+/** Stable 3–7 word thought groups for lighter read-along emphasis. */
+export function splitPhrases(text: string) {
+  const words = text.replace(/\s+/g, " ").trim().split(" ").filter(Boolean);
+  const phrases: string[] = [];
+  for (let i = 0; i < words.length; ) {
+    const remaining = words.length - i;
+    const size = remaining <= 7 ? remaining : remaining <= 10 ? 5 : 4;
+    phrases.push(words.slice(i, i + size).join(" "));
+    i += size;
+  }
+  return phrases;
+}
+export function activePhrase(phrases: string[], fraction: number) {
+  const total = phrases.reduce((sum, phrase) => sum + phrase.length + 1, 0);
+  if (!total || !Number.isFinite(fraction)) return 0;
+  const target = Math.max(0, Math.min(1, fraction)) * total;
+  let seen = 0;
+  for (let i = 0; i < phrases.length; i++) {
+    seen += phrases[i].length + 1;
+    if (target < seen) return i;
+  }
+  return Math.max(0, phrases.length - 1);
+}
 /**
- * The story's words, sentence by sentence. While narration plays the current
- * sentence is lit and the rest recede, like a lyrics panel; silent readers
- * see the full text at once.
+ * The story's words in short thought groups. While narration plays only the
+ * current group is emphasized; silent readers see the full text at once.
  */
 export default function FollowAlong({
   script,
@@ -38,30 +60,27 @@ export default function FollowAlong({
   playback?: PlaybackState;
   onSeekFraction?: (fraction: number) => void;
 }) {
-  const sentences = useMemo(() => splitSentences(script), [script]);
+  const phrases = useMemo(() => splitPhrases(script), [script]);
   const live =
     !!playback && playback.ready && (playback.playing || playback.time > 0);
   const current = live
-    ? activeSentence(
-        sentences,
-        playback!.time / Math.max(1e-6, playback!.duration),
-      )
+    ? activePhrase(phrases, playback!.time / Math.max(1e-6, playback!.duration))
     : -1;
-  const total = sentences.reduce((sum, s) => sum + s.length + 1, 0);
+  const total = phrases.reduce((sum, s) => sum + s.length + 1, 0);
   let offset = 0;
   return (
     <p
       className={`follow-along${live ? " live" : ""}`}
       aria-live={live ? "off" : undefined}
     >
-      {sentences.map((sentence, i) => {
+      {phrases.map((phrase, i) => {
         const start = offset / Math.max(1, total);
-        offset += sentence.length + 1;
+        offset += phrase.length + 1;
         const state = i === current ? "now" : i < current ? "done" : "soon";
         return (
           <span
             key={i}
-            className={`follow-sentence ${live ? state : ""}`}
+            className={`follow-phrase ${live ? state : ""}`}
             onClick={
               live && onSeekFraction ? () => onSeekFraction(start) : undefined
             }
@@ -78,7 +97,7 @@ export default function FollowAlong({
                 : undefined
             }
           >
-            {sentence}{" "}
+            {phrase}{i < phrases.length - 1 ? " " : ""}
           </span>
         );
       })}
