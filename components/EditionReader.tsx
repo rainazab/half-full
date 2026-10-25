@@ -111,6 +111,7 @@ export default function EditionReader({
     initialListen ? initialIndex : null,
   );
   const [playback, setPlayback] = useState<Record<number, PlaybackState>>({});
+  const [videoPlayRequests, setVideoPlayRequests] = useState<Record<string, number>>({});
   const controllers = useRef<Record<number, PlaybackController | null>>({});
   const controllerRefs = useRef<
     Record<number, { current: PlaybackController | null }>
@@ -378,6 +379,7 @@ export default function EditionReader({
                         setBrokenVideos((previous) => [...previous, story.id])
                       }
                       thumbnail={newsThumbnail ? { src: newsThumbnail.url, alt: newsThumbnail.alt } : undefined}
+                      playRequest={videoPlayRequests[story.id]}
                     />
                   ) : illustrated ? (
                     <IllustratedStoryPlayer
@@ -410,6 +412,12 @@ export default function EditionReader({
                       preferences={preferences}
                       onPreferences={onPreferences}
                       onPlayback={playbackHandler(i)}
+                      onPlayRequest={() =>
+                        setVideoPlayRequests((previous) => ({
+                          ...previous,
+                          [story.id]: (previous[story.id] ?? 0) + 1,
+                        }))
+                      }
                       controller={controllerRef(i)}
                       onPrevious={i > 0 ? () => goTo(i - 1) : undefined}
                       onNext={() => goTo(i + 1)}

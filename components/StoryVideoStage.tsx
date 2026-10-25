@@ -15,6 +15,7 @@ export default function StoryVideoStage({
   onSilentChange,
   onUnavailable,
   thumbnail,
+  playRequest,
 }: {
   manifest: VideoManifest;
   active: boolean;
@@ -24,6 +25,7 @@ export default function StoryVideoStage({
   onSilentChange: (silent: boolean) => void;
   onUnavailable: () => void;
   thumbnail?: { src: string; alt: string };
+  playRequest?: number;
 }) {
   const video = useRef<HTMLVideoElement>(null);
   const clockRef = useRef(getController);
@@ -63,6 +65,12 @@ export default function StoryVideoStage({
       media.pause();
     };
   }, [active, silent, playback?.playing, clip?.durationSeconds]);
+  useEffect(() => {
+    const media = video.current;
+    if (!media || !active || silent || !playRequest) return;
+    setStarted(true);
+    void media.play().catch(() => setBlocked(true));
+  }, [active, silent, playRequest]);
   useEffect(() => {
     if (
       !silent &&

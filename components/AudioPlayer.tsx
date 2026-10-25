@@ -38,6 +38,7 @@ export default function AudioPlayer({
   preferences,
   onPreferences,
   onPlayback,
+  onPlayRequest,
   controller,
   onPrevious,
   onNext,
@@ -55,6 +56,8 @@ export default function AudioPlayer({
   onPreferences: (patch: Partial<ListeningPreferences>) => void;
   /** Lets illustrated scenes follow the same clock as the narration. */
   onPlayback?: (state: PlaybackState) => void;
+  /** Starts a paired visual even if the narration provider is unavailable. */
+  onPlayRequest?: () => void;
   /** Filled in so scene navigation can seek the same clip. */
   controller?: React.RefObject<PlaybackController | null>;
   /** Story transport: previous/next page, rendered beside the play button. */
@@ -116,6 +119,7 @@ export default function AudioPlayer({
       element.pause();
       return;
     }
+    onPlayRequest?.();
     setError("");
     try {
       if (!element.getAttribute("src")) {
