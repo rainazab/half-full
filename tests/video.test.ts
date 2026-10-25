@@ -192,19 +192,42 @@ test("Runway supports the configurable Gen-4.5 editorial format", () => {
   assert.equal(body.model, "gen4.5");
   assert.equal(body.duration, 8);
 });
-test("automatic video requests use the first ready approved illustration and stay bounded", () => {
+test("automatic video requests prefer animatable scenes and prohibit camera-only motion", () => {
   const f = fixture();
+  f.storyboard.scenes[0].objects = ["building", "street"];
+  const moving = structuredClone(f.storyboard.scenes[0]);
+  moving.id = "scene-2";
+  moving.objects = ["train", "street"];
+  f.storyboard.scenes.push(moving);
   const generated = automaticVideoRequest(request.date, story, f.storyboard);
   assert.equal(generated?.storyId, story.id);
-  assert.equal(generated?.sceneId, "scene-1");
+  assert.equal(generated?.sceneId, "scene-2");
   assert.equal(generated?.ratio, "1104:832");
   assert.ok(generated && generated.prompt.length <= 1000);
-  assert.match(generated!.prompt, /existing subject/);
+  assert.match(generated!.prompt, /LOCKED CAMERA/);
+  assert.match(generated!.prompt, /real moving SUBJECT/);
+  assert.match(generated!.prompt, /No zoom, pan, dolly, parallax/);
   const trainStoryboard = structuredClone(f.storyboard);
   trainStoryboard.scenes[0].objects = ["train", "street"];
   const trainPrompt = automaticVideoRequest(request.date, story, trainStoryboard)!.prompt;
   assert.match(trainPrompt, /vehicle moving/);
   assert.doesNotMatch(trainPrompt, /water or flow/);
+});
+test("RUNWAY_AUTO_APPROVE publishes a durably cached clip with an explicit automation note", async () => {
+  const f = fixture();
+  const previous = process.env.RUNWAY_AUTO_APPROVE;
+  process.env.RUNWAY_AUTO_APPROVE = "true";
+  try {
+    await submitVideo(request, { maxCredits: 25 }, f.deps);
+    await pollVideo(request.date, story.id, f.deps);
+    const result = await pollVideo(request.date, story.id, f.deps);
+    assert.equal(result.status, "ready");
+    assert.equal(result.review?.status, "approved");
+    assert.match(result.review?.notes ?? "", /not an independent visual quality review/);
+  } finally {
+    if (previous === undefined) delete process.env.RUNWAY_AUTO_APPROVE;
+    else process.env.RUNWAY_AUTO_APPROVE = previous;
+  }
 });
 test("video preparation requires an approved story and exact retained keyframe references", async () => {
   const f = fixture();

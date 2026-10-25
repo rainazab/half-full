@@ -193,6 +193,36 @@ export default function USApp() {
       clearInterval(timer);
     };
   }, [busy, selectedDate]);
+  useEffect(() => {
+    const date = edition?.edition.date;
+    if (!date) return;
+    let active = true;
+    const refreshVideos = () => {
+      if (!active || !navigator.onLine || document.visibilityState !== "visible") return;
+      fetch(`/api/videos?date=${date}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(10000),
+      })
+        .then((response) => (response.ok ? response.json() : null))
+        .then((value) => {
+          if (active && value?.date === date && value.videos) setVideos(value.videos);
+        })
+        .catch(() => {});
+    };
+    const timer = window.setInterval(refreshVideos, 15000);
+    const onReturn = () => refreshVideos();
+    window.addEventListener("focus", onReturn);
+    document.addEventListener("visibilitychange", onReturn);
+    const stop = window.setTimeout(() => window.clearInterval(timer), 600000);
+    refreshVideos();
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.clearTimeout(stop);
+      window.removeEventListener("focus", onReturn);
+      document.removeEventListener("visibilitychange", onReturn);
+    };
+  }, [edition?.edition.date]);
   async function openDate(day: string) {
     if (!selectableDay(day)) return;
     const version = ++generation.current;

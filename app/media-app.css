@@ -1214,7 +1214,7 @@ html.deck-open body {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   border-radius: inherit;
 }
 .video-thumbnail {
@@ -1223,9 +1223,14 @@ html.deck-open body {
   z-index: 1;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  background: var(--story-tint);
   border-radius: inherit;
 }
+.story-artwork-stage { margin: 0 0 12px; }
+.artwork-stage-frame { height: 280px; overflow: hidden; border-radius: 28px; background: var(--story-tint); }
+.artwork-stage-frame img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.story-artwork-stage figcaption { color: #ffffffbf; font-size: 10px; padding-top: 6px; }
 .video-play-note {
   color: #ffffffc7;
   font-size: 9px;
@@ -1349,6 +1354,7 @@ html.deck-open body {
   }
   .scene-stage,
   .video-stage,
+  .artwork-stage-frame,
   .story-hero .visual-photo,
   .story-hero .visual-image,
   .story-hero .neutral-visual {
@@ -1484,6 +1490,7 @@ html.deck-open body {
   }
   .scene-stage,
   .video-stage,
+  .artwork-stage-frame,
   .story-hero .visual-photo,
   .story-hero .visual-image,
   .story-hero .neutral-visual {

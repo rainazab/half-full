@@ -60,9 +60,16 @@ export function automaticVideoRequest(
   story: NonNullable<EditionResult["edition"]["stories"]>[number],
   storyboard: StoryboardManifest,
 ): VideoRequest | null {
-  const scene = storyboard.scenes.find(
+  const readyScenes = storyboard.scenes.filter(
     (item) => item.status === "ready" && item.asset,
   );
+  const motionWords = /\b(train|car|vehicle|bus|bicycle|boat|water|river|lake|stream|runoff|rain|wave|plant|tree|leaf|grass|cloud|smoke|steam|machinery|machine|conveyor|engine)\b/i;
+  const scene = readyScenes
+    .map((item, index) => ({
+      item,
+      score: (motionWords.test(`${item.subject} ${item.objects.join(" ")} ${item.motion}`) ? 10 : 0) + (item.motion !== "still" ? 2 : 0) - index / 100,
+    }))
+    .sort((a, b) => b.score - a.score)[0]?.item;
   if (!scene?.asset) return null;
   const objectText = scene.objects.join(" ");
   const subjectMotion = /\b(water|river|lake|stream|runoff|rain|wave)s?\b/i.test(objectText)
@@ -77,7 +84,7 @@ export function automaticVideoRequest(
     `Animate the existing subject ${scene.subject} with one coherent, story-specific physical action that explains: ${scene.purpose}`,
     subjectMotion,
     `Keep the existing ${scene.objects.slice(0, 3).join(", ")} recognizable and grounded in the existing ${scene.setting}.`,
-    "Keep the viewpoint stable; do not substitute zooming, panning or drifting for subject motion. Do not add people, logos, labels, numbers, captions, signs, text, new objects or documentary detail.",
+    "LOCKED CAMERA. A real moving SUBJECT, not a moving still. No zoom, pan, dolly, parallax, reframing or slideshow. Do not add people, logos, labels, numbers, captions, signs, text, new objects or documentary detail.",
   ].join(" ");
   return {
     date,
@@ -388,7 +395,7 @@ export async function pollVideo(
     // publish footage without an operator/frame review. This is intentionally
     // conservative: the MP4 remains durably cached and the still illustration
     // remains the reader fallback while review is pending.
-    const autoApprove = false;
+    const autoApprove = process.env.RUNWAY_AUTO_APPROVE === "true";
     if (
       manifest.status === "ready" ||
       manifest.status === "failed" ||
@@ -399,7 +406,7 @@ export async function pollVideo(
     if (clip.asset && manifest.review?.status === "pending" && autoApprove) {
       manifest.review = {
         status: "approved",
-        notes: "Automatically approved after successful bounded Runway generation.",
+        notes: "Automatically published after bounded Runway generation; automated publication is not an independent visual quality review.",
         reviewedAt: deps.now().toISOString(),
       };
       manifest.status = "ready";

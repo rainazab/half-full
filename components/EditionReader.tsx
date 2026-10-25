@@ -27,7 +27,7 @@ import AudioPlayer, {
   type PlaybackController,
   type PlaybackState,
 } from "./AudioPlayer";
-import IllustratedStoryPlayer from "./IllustratedStoryPlayer";
+import StoryArtworkStage from "./StoryArtworkStage";
 import {
   editionProgress,
   DECK_ELASTIC,
@@ -382,17 +382,7 @@ export default function EditionReader({
                       playRequest={videoPlayRequests[story.id]}
                     />
                   ) : illustrated ? (
-                    <IllustratedStoryPlayer
-                      key={`illustrated-${story.id}`}
-                      manifest={storyboard!}
-                      date={date!}
-                      playback={playback[i]}
-                      getController={() => controllers.current[i] ?? null}
-                      active={i === index}
-                      onUnavailable={() =>
-                        setUnavailable((list) => [...list, story.id])
-                      }
-                    />
+                    <StoryArtworkStage manifest={storyboard!} date={date!} />
                   ) : (
                     <StoryVisual story={story} />
                   )}

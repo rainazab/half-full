@@ -52,7 +52,7 @@ export default function StoryVideoStage({
       const target = videoTimeForNarration(time, duration, true);
       const scenePlaying = playing;
       media.playbackRate = clock?.playbackRate?.() ?? 1;
-      if (media.readyState >= 1 && Math.abs(media.currentTime - target) > 0.2)
+      if (media.readyState >= 1 && Math.abs(media.currentTime - target) > 0.65)
         media.currentTime = target;
       if (scenePlaying && media.paused)
         void media.play().catch(() => setBlocked(true));
@@ -135,6 +135,7 @@ export default function StoryVideoStage({
           preload={active ? "metadata" : "none"}
           muted
           playsInline
+          loop
           controls={silent}
           onPlay={() => setStarted(true)}
           onError={onUnavailable}
