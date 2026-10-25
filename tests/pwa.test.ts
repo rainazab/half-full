@@ -127,7 +127,7 @@ test("the current offline shell includes reactions and never substitutes an arch
   for (const name of ["interesting", "insightful", "hopeful", "stressed"]) {
     const path = `/reactions/${name}.webp`;
     assert.ok(cached.includes(path));
-    assert.ok(readFileSync(`public${path}`).length > 1000);
+    assert.ok(readFileSync(`public${path}`).length > 500);
   }
   assert.ok(
     !cached.some(

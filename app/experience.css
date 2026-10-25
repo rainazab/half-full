@@ -1,101 +1,162 @@
-/* Original reaction microinteractions and authored SVG positioning. All page and player compositions are defined once in media-app.css / library.css. */
-.story-reactions {
-  border-top: 1px solid var(--line);
-  padding-top: 22px;
-  margin-top: 26px;
-}
-.story-reactions > p {
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-.story-reactions > p > span {
-  display: block;
-  font-size: 0.66rem;
-  font-weight: 400;
-  color: var(--muted);
-}
-.story-reactions > div {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
-  max-width: 440px;
-}
-.story-reactions button {
+/* One-button reaction picker: hold and slide, or tap and choose. The burst keyframes below are the original per-character microinteractions. */
+.reaction-picker {
   position: relative;
-  border: 1px solid transparent;
-  border-radius: 18px;
-  background: transparent;
+  margin-top: 24px;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 7px;
-  font-size: 0.72rem;
-  padding: 10px 4px 12px;
-  min-width: 0;
+  min-height: 48px;
+}
+.reaction-trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 7px 18px 7px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffffa6;
+  color: #20241f;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  box-shadow: inset 0 0 0 1px #20241f1a;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
   transition:
     background 160ms ease,
-    border-color 160ms ease;
+    transform 160ms cubic-bezier(0.3, 1.4, 0.5, 1);
 }
-.story-reactions button img {
+.reaction-trigger:active,
+.reaction-picker.is-open .reaction-trigger {
+  background: #fff;
+  transform: scale(0.97);
+}
+.reaction-trigger:focus-visible,
+.reaction-choice:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.reaction-trigger img {
   display: block;
-  width: 64px;
-  height: 64px;
+  width: 32px;
+  height: 32px;
   object-fit: contain;
   pointer-events: none;
-  transition: transform 180ms ease;
+  transform-origin: 50% 90%;
 }
-.story-reactions button:hover:not(:disabled) {
-  background: #f1f5f8;
-  border-color: var(--line);
+.reaction-trigger.has-reaction {
+  padding-left: 9px;
 }
-.story-reactions button:hover img {
-  transform: translateY(-3px) rotate(-4deg);
+.reaction-stack {
+  display: inline-flex;
+  padding-left: 4px;
 }
-.story-reactions button[aria-pressed="true"] {
-  border-color: #7298b5;
-  background: #e8f1f7;
+.reaction-stack img {
+  width: 22px;
+  height: 22px;
+  margin-left: -7px;
 }
-.story-reactions button[aria-pressed="true"] img {
-  transform: translateY(-3px);
-}
-.reaction-check {
+.reaction-tray {
   position: absolute;
-  right: 5px;
-  top: 5px;
-  width: 17px;
-  height: 17px;
+  left: 0;
+  bottom: calc(100% + 12px);
+  z-index: 5;
+  display: flex;
+  gap: 2px;
+  padding: 8px 10px 6px;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow:
+    0 12px 32px #20241f2e,
+    0 0 0 1px #20241f14;
+  max-width: calc(100vw - 24px);
+  transform-origin: 20px 100%;
+  animation: reaction-tray-in 260ms cubic-bezier(0.2, 1.3, 0.4, 1) both;
+  touch-action: none;
+}
+.reaction-choice {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  width: 54px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  touch-action: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.reaction-choice img {
+  display: block;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  pointer-events: none;
+  transform-origin: 50% 100%;
+  transition: transform 220ms cubic-bezier(0.3, 1.5, 0.5, 1);
+}
+.reaction-choice.is-active img {
+  transform: translateY(-8px) scale(1.4);
+}
+.reaction-choice.is-selected:not(.is-active)::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
-  font-size: 10px;
-  line-height: 17px;
+}
+.reaction-name {
+  position: absolute;
+  bottom: calc(100% + 14px);
+  left: 50%;
+  translate: -50% 4px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #20241f;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.2;
+  white-space: nowrap;
   opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 120ms ease,
+    translate 180ms ease;
 }
-.story-reactions button[aria-pressed="true"] .reaction-check {
+.reaction-choice.is-active .reaction-name {
   opacity: 1;
+  translate: -50% 0;
 }
-@media (max-width: 760px) {
-  .story-reactions > div {
-    gap: 4px;
-  }
-  .story-reactions button {
-    padding: 8px 2px;
-    font-size: 0.62rem;
-  }
-  .story-reactions button img {
-    width: 54px;
-    height: 54px;
-  }
-  .story-reactions {
-    margin-top: 20px;
-    padding-top: 15px;
+@keyframes reaction-tray-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.85);
   }
 }
-.story-reactions button.reaction {
-  overflow: visible;
-}
-.story-reactions button img {
-  transform-origin: 50% 90%;
+@media (prefers-reduced-motion: reduce) {
+  .reaction-tray {
+    animation: none;
+  }
+  .reaction-choice img,
+  .reaction-trigger {
+    transition: none;
+  }
+  .reaction-choice.is-active img {
+    transform: scale(1.25);
+  }
 }
 .reaction-fx {
   position: absolute;

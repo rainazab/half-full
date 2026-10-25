@@ -1142,40 +1142,6 @@ html.deck-open body {
   min-height: 54px;
   padding: 15px 0;
 }
-.story-sheet .story-reactions {
-  margin-top: 24px;
-  padding-top: 0;
-  border: 0;
-}
-.story-reactions > p {
-  font-size: 12px;
-  font-weight: 650;
-  margin-bottom: 10px;
-}
-.story-sheet .reaction-options {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 4px;
-}
-.story-sheet .story-reactions button {
-  border: 0;
-  background: none;
-  padding: 8px 1px 5px;
-  border-radius: 15px;
-  min-width: 0;
-  color: #20241f;
-}
-.story-sheet .story-reactions button[aria-pressed="true"] {
-  background: #ffffff8a;
-}
-.story-sheet .story-reactions button img {
-  width: 48px;
-  height: 48px;
-  object-fit: contain;
-}
-.story-sheet .story-reactions button > span {
-  font-size: 9px;
-}
 .page-hint {
   text-align: center;
   color: #20241f78;
