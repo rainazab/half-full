@@ -1,14 +1,12 @@
 # Story reaction artwork
 
-Generated with the built-in imagegen tool for half full. Transparent originals are optimized to WebP for the reader. The four options are Interesting, Insightful, Hopeful, and Stressed. Reaction choices are stored only on the reader’s device.
+The four characters are the team's original hand-drawn artwork (drawn in Illustrator, see `originals/`). They are used as drawn: nothing is regenerated, restyled or recolored. `originals/` holds the source PNGs; the reader uses lossless WebP copies padded to a square canvas.
 
-## Shared generation prompt
+| Reaction id | Character | Source file |
+|-------------|-----------|-------------|
+| `interesting` | purple, curious | `originals/interesting reaction.png` |
+| `insightful` | green, glasses | `originals/insightful reaction.png` |
+| `hopeful` | yellow, smiling | `originals/hopefull.png` |
+| `stressed` | blue, overwhelmed | `originals/helpless reaction.png` |
 
-Use case: stylized-concept. Asset type: one tiny reaction sticker for the half full news app. Create ONE original expressive character: [description below]. Cohesive sticker family: minimal softly hand-painted flat gouache, organic slightly imperfect silhouette, matte pastel fill with very subtle grain, simple deep navy facial features readable at 48 pixels. Centered full character occupying 75% of a square canvas, generous transparent padding, front view. Truly transparent background, no white rectangle, no ground, no cast shadow, no border, no text, no letters, no labels, no props beyond the specified small emotion mark. Friendly restrained editorial mood, inspired by soft pastel emotion blobs. This is an actual production image asset, not a UI mockup.
-
-## Character descriptions
-
-- `interesting.webp`: pastel butter yellow, rounded curious blob leaning slightly to one side, big curious dark dot eyes looking up, tiny open o mouth, a tiny matching detached rounded exclamation stroke above its head.
-- `insightful.webp`: pastel sky blue, softly rounded squircle blob, attentive bright dark dot eyes and tiny pleased smile, one small four-point sparkle beside its head suggesting an aha moment.
-- `hopeful.webp`: pastel sage mint green, gently rounded little cloud blob, closed happy crescent eyes, small warm smile, rosy cheeks, subtly uplifted posture.
-- `stressed.webp`: pastel lilac lavender, softly wobbly rounded blob, worried gently sloping eyebrows, small dot eyes, tiny wavy mouth, one small sweat drop beside its head; sympathetic and cute, never scary.
+Reaction choices are stored only on the reader's device (and in the signed-in profile). Hold the reaction button and slide to choose, or tap to open the tray.
