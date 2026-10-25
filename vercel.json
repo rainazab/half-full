@@ -15,8 +15,5 @@
         "service": "app"
       }
     }
-  ],
-  "crons": [
-    { "path": "/api/videos/worker", "schedule": "*/5 * * * *" }
   ]
 }
