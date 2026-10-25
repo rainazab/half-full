@@ -383,7 +383,12 @@ export async function pollVideo(
       );
     const manifest = structuredClone(stored),
       clip = manifest.clips[0];
-    const autoApprove = process.env.RUNWAY_AUTO_APPROVE === "true";
+    // A successful provider response is not a visual quality check. Keep the
+    // old flag readable for backwards-compatible deployments, but never let it
+    // publish footage without an operator/frame review. This is intentionally
+    // conservative: the MP4 remains durably cached and the still illustration
+    // remains the reader fallback while review is pending.
+    const autoApprove = false;
     if (
       manifest.status === "ready" ||
       manifest.status === "failed" ||
@@ -437,26 +442,17 @@ export async function pollVideo(
         sha256,
         cachedAt: deps.now().toISOString(),
       };
-      if (autoApprove) {
-        clip.status = "ready";
-        manifest.review = {
-          status: "approved",
-          notes: "Automatically approved after successful bounded Runway generation.",
-          reviewedAt: deps.now().toISOString(),
-        };
-      } else {
-        clip.status = "processing";
-        clip.error = {
-          code: "VIDEO_REVIEW_REQUIRED",
-          message:
-            "The generated clip is cached and awaiting a visual review. The still illustration remains available.",
-        };
-        manifest.review = {
-          status: "pending",
-          notes:
-            "Provider output is cached. An operator must inspect actual frames before readers can play it.",
-        };
-      }
+      clip.status = "processing";
+      clip.error = {
+        code: "VIDEO_REVIEW_REQUIRED",
+        message:
+          "The generated clip is cached and awaiting a visual review. The still illustration remains available.",
+      };
+      manifest.review = {
+        status: "pending",
+        notes:
+          "Provider output is cached. An operator must inspect beginning, middle and end frames before readers can play it.",
+      };
     } else clip.status = task.status === "RUNNING" ? "processing" : "pending";
     manifest.status = clip.status;
     manifest.updatedAt = deps.now().toISOString();
