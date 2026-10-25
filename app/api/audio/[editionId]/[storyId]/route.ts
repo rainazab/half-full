@@ -5,12 +5,25 @@ import { cartesiaConfig, synthesize } from "@/lib/cartesia";
 import { narrationFor, hasNarrationEvidence } from "@/lib/narration";
 import { PipelineError, publicError } from "@/lib/errors";
 import { json } from "@/lib/http";
+import { isNarratorId } from "@/lib/narrators";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 40;
 type Context = { params: Promise<{ editionId: string; storyId: string }> };
-async function resolve(context: Context) {
+function requestedNarrator(request: Request) {
+  const value = new URL(request.url).searchParams.get("narrator");
+  if (value === null) return undefined;
+  if (!isNarratorId(value))
+    throw new PipelineError(
+      "AUDIO_NARRATOR_UNKNOWN",
+      "That narrator isn’t available. Choose Skylar, Daniel or Rowan in Profile.",
+      400,
+    );
+  return value;
+}
+async function resolve(request: Request, context: Context) {
   const { editionId, storyId } = await context.params;
+  const narrator = requestedNarrator(request);
   const latest = getLatestEdition();
   const edition =
     latest?.edition.id === editionId
@@ -29,14 +42,16 @@ async function resolve(context: Context) {
       "This older story has no retained narration evidence. Its written version remains available.",
       422,
     );
-  const config = cartesiaConfig();
+  const config = cartesiaConfig(process.env, narrator);
   const narration = narrationFor(story);
   return {
     config,
     narration,
+    // Voice and model are part of the key, so narrators never share cached bytes.
     key: audioKey(narration.script, config.voice, config.model),
     editionId,
     storyId,
+    narrator,
   };
 }
 export async function POST(request: Request, context: Context) {
@@ -61,14 +76,16 @@ export async function POST(request: Request, context: Context) {
     }
   }
   try {
-    const { config, narration, key, editionId, storyId } =
-      await resolve(context);
+    const { config, narration, key, editionId, storyId, narrator } =
+      await resolve(request, context);
     const cached = !!audioCache.get(key);
     await audioCache.prepare(key, () => synthesize(narration.script, config));
     return json({
-      url: `/api/audio/${encodeURIComponent(editionId)}/${encodeURIComponent(storyId)}`,
+      url: `/api/audio/${encodeURIComponent(editionId)}/${encodeURIComponent(storyId)}${narrator ? `?narrator=${encodeURIComponent(narrator)}` : ""}`,
       cached,
       provider: "Cartesia",
+      narrator: narrator ?? null,
+      voice: config.voice,
       script: narration.script,
     });
   } catch (error) {
@@ -81,7 +98,7 @@ export async function POST(request: Request, context: Context) {
 }
 export async function GET(request: Request, context: Context) {
   try {
-    const { key } = await resolve(context);
+    const { key } = await resolve(request, context);
     const entry = audioCache.get(key);
     if (!entry)
       throw new PipelineError(

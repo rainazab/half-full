@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import "./editorial.css";
+import "./experience.css";
 export const metadata: Metadata = {
   title: "half full",
   description: "Your daily news, in perspective.",

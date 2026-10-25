@@ -738,13 +738,6 @@
   .story-receipts > summary > span {
     font-size: 0.72rem;
   }
-  .profile-trigger {
-    min-width: 44px;
-    min-height: 44px;
-  }
-  .topbar-account .mode-pill {
-    display: none;
-  }
 }
 @media (prefers-reduced-motion: no-preference) {
   .story-navigation button,
@@ -867,17 +860,6 @@
   max-height: 210px;
   object-fit: contain;
 }
-/* Crossword controls stay tactile without pushing the whole keyboard below the dock. */
-.mini-toolbar button {
-  font-size: 13px;
-  min-height: 44px;
-}
-.selected-clue {
-  scroll-margin-top: 80px;
-}
-.puzzle:has(.mini-complete) .mini-keyboard {
-  display: none;
-}
 .selected-clue button {
   min-width: 44px;
   min-height: 44px;
@@ -892,44 +874,11 @@
   .selected-clue {
     min-height: 56px;
   }
-  .mini-toolbar {
-    margin: 12px 0 18px;
-    padding-bottom: 10px;
-  }
   .mini-keyboard {
     margin-top: 16px;
   }
   .mini-keyboard button {
     min-height: 44px;
   }
-  .mini-page > .puzzle {
-    padding: 18px 14px;
-    border-radius: 16px;
-  }
 }
 
-/* Keep completion feedback beside the board without another large panel. */
-.mini-complete {
-  align-items: center;
-  padding: 12px 16px;
-  gap: 12px;
-  border-radius: 12px;
-  margin: 12px 0 18px;
-}
-.mini-complete .charm {
-  width: 36px;
-  height: 36px;
-}
-.mini-complete > div {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-.mini-complete h3 {
-  font-size: 17px;
-}
-.mini-complete p {
-  font-size: 14px;
-  margin: 0;
-}

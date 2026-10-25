@@ -18,7 +18,9 @@ import StoryVisual from "./StoryVisual";
 import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
 import useProfile from "@/hooks/useProfile";
-import ProfileCard, { ProfileAvatar } from "./ProfileCard";
+import usePreferences from "@/hooks/usePreferences";
+import { ProfileAvatar } from "./ProfileCard";
+import ProfilePage from "./ProfilePage";
 import Icon, { type IconName } from "./Icon";
 import {
   positionKey,
@@ -27,8 +29,16 @@ import {
 } from "@/lib/reading-position";
 import GenerationProgress from "./GenerationProgress";
 import { mergeRunLogs } from "@/lib/generation-progress";
-type View = "today" | "reader" | "archive" | "mini" | "you";
+type View = "today" | "reader" | "archive" | "mini" | "you" | "profile";
 const moods = ["blue", "pink", "mint", "yellow", "blue"] as const;
+const reactionArt = [
+  { label: "Interesting", image: "interesting" },
+  { label: "Insightful", image: "insightful" },
+  { label: "Hopeful", image: "hopeful" },
+  { label: "Stressed", image: "stressed" },
+] as const;
+const normalizeMood = (mood: string) =>
+  mood === "Clearer" ? "Insightful" : mood === "A lot" ? "Stressed" : mood;
 export default function USApp() {
   const [edition, setEdition] = useState<EditionResult | null>(null);
   const [runLogs, setRunLogs] = useState<RunLogEntry[]>([]);
@@ -42,13 +52,14 @@ export default function USApp() {
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
   const profile = useProfile();
+  const settings = usePreferences();
   const { progress, saveProgress } = profile;
   const [today, setToday] = useState(editionDay);
   const [selectedDate, setSelectedDate] = useState(editionDay);
   const [pickerOpen, setPickerOpen] = useState(false);
   const selectedDateRef = useRef(selectedDate);
   const generation = useRef(0);
-  const heading = useRef<HTMLDivElement>(null);
+  const heading = useRef<HTMLElement>(null);
   function display(result: EditionResult) {
     setEdition(result);
 
@@ -335,7 +346,7 @@ export default function USApp() {
           onClick={() => tab("today")}
           aria-label="half full home"
         >
-          half full<span aria-hidden="true">◒</span>
+          half full
         </button>
 
         <nav aria-label="Main navigation">
@@ -362,50 +373,24 @@ export default function USApp() {
           Studio ↗
         </a>
       </aside>
-      <main id="main" className="app-main">
+      <main id="main" className="app-main" ref={heading} tabIndex={-1}>
         <header className="app-topbar">
           <button
             className="mobile-wordmark wordmark"
             onClick={() => tab("today")}
             aria-label="half full home"
           >
-            half full<span aria-hidden="true">◒</span>
+            half full
           </button>
-          <div ref={heading} tabIndex={-1} className="date-picker-anchor">
-            <button
-              className="topbar-date date-trigger"
-              onClick={() => setPickerOpen(true)}
-              aria-haspopup="dialog"
-              aria-expanded={pickerOpen}
-            >
-              {dateLabel(date, {
-                weekday: "long",
-                month: "short",
-                day: "numeric",
-                ...(date !== today ? { year: "numeric" } : {}),
-              })}
-              <span>
-                {date === today
-                  ? "Your daily edition"
-                  : "Your edition, on this day"}{" "}
-                <i aria-hidden="true">⌄</i>
-              </span>
-            </button>
-          </div>
-          <div className="topbar-account">
-            <span className="mode-pill">
-              <i />
-              Live edition
-            </span>
-            <button
-              className="profile-trigger"
-              onClick={() => tab("you")}
-              aria-label={profile.user ? "Your profile" : "Sign in"}
-              title={profile.user?.displayName || "Your profile"}
-            >
-              <ProfileAvatar profile={profile} />
-            </button>
-          </div>
+          <button
+            className="profile-trigger"
+            onClick={() => tab("profile")}
+            aria-label="Profile"
+            aria-current={view === "profile" ? "page" : undefined}
+            title={profile.user?.displayName || "Profile"}
+          >
+            <ProfileAvatar profile={profile} />
+          </button>
           <DatePicker
             open={pickerOpen}
             date={date}
@@ -455,6 +440,7 @@ export default function USApp() {
                   day: "numeric",
                   year: "numeric",
                 })}
+                {date !== today && <span> · On this day</span>}
               </p>
               <h1>
                 {complete ? "An edition, well read." : "Your daily edition."}
@@ -556,6 +542,8 @@ export default function USApp() {
                 }))
               }
               reactions={progress.reactions}
+              preferences={settings.preferences}
+              onPreferences={settings.update}
             />
           </>
         )}
@@ -582,12 +570,23 @@ export default function USApp() {
             )}
           </section>
         )}
+        {view === "profile" && (
+          <ProfilePage
+            profile={profile}
+            settings={settings}
+            onOpenJar={() => tab("you")}
+          />
+        )}
         {view === "you" && (
           <section className="you-page">
             <div className="page-heading">
               <h1>Your jar</h1>
+              <p className="page-intro">
+                {profile.user
+                  ? "Your reading, kept across devices."
+                  : "Your reading, kept on this device."}
+              </p>
             </div>
-            <ProfileCard profile={profile} />
             <div className="you-layout">
               <div className="jar-card">
                 <div className="glass-jar">
@@ -626,6 +625,70 @@ export default function USApp() {
                 </button>
               </div>
             </div>
+            <section className="jar-section" aria-labelledby="jar-reactions">
+              <h2 id="jar-reactions">Your reactions</h2>
+              {Object.values(progress.reactions).some(Boolean) ? (
+                <div className="reaction-tallies">
+                  {reactionArt.map((item) => {
+                    const count = Object.values(progress.reactions).filter(
+                      (mood) => normalizeMood(mood) === item.label,
+                    ).length;
+                    return (
+                      <div key={item.label} className={count ? "" : "empty"}>
+                        <img
+                          src={`/reactions/${item.image}.webp`}
+                          width={48}
+                          height={48}
+                          alt=""
+                        />
+                        <strong>{count}</strong>
+                        <span>{item.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="jar-empty">
+                  Reactions you leave on stories collect here. They stay
+                  private.
+                </p>
+              )}
+            </section>
+            <section className="jar-section" aria-labelledby="jar-history">
+              <h2 id="jar-history">Editions you’ve finished</h2>
+              {progress.days.length ? (
+                <ul className="reading-history">
+                  {[...progress.days]
+                    .reverse()
+                    .slice(0, 30)
+                    .map((day) => (
+                      <li key={day}>
+                        <button
+                          onClick={() =>
+                            day === selectedDate ? tab("today") : openDate(day)
+                          }
+                        >
+                          <span>
+                            {dateLabel(day, {
+                              weekday: "short",
+                              month: "long",
+                              day: "numeric",
+                              ...(day.slice(0, 4) !== today.slice(0, 4)
+                                ? { year: "numeric" }
+                                : {}),
+                            })}
+                          </span>
+                          <Icon name="check" size={16} />
+                        </button>
+                      </li>
+                    ))}
+                </ul>
+              ) : (
+                <p className="jar-empty">
+                  Finish an edition and it lands in the jar.
+                </p>
+              )}
+            </section>
           </section>
         )}
         <PWAStatus />

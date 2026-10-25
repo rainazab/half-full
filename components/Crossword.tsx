@@ -1,10 +1,46 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ApprovedStory } from "@/lib/types";
 import { crosswordComplete, type Entry } from "@/lib/crossword";
 import { dailyMini, entryCells } from "@/lib/mini";
 import { editionDay } from "@/lib/daily";
-import Charm from "./Charm";
+import {
+  cleanTimer,
+  elapsedMs,
+  formatClock,
+  idleTimer,
+  pauseTimer,
+  startTimer,
+  type TimerState,
+} from "@/lib/mini-timer";
+import {
+  cleanRecords,
+  emptyRecords,
+  recordSolve,
+  RECORDS_KEY,
+} from "@/lib/mini-records";
+import MiniCelebration from "./MiniCelebration";
+
+type Completed = {
+  ms: number | null;
+  message: string;
+  personalBest: boolean;
+  first: boolean;
+  completedAt: string;
+};
+function readRecords() {
+  try {
+    return cleanRecords(
+      JSON.parse(localStorage.getItem(RECORDS_KEY) ?? "null"),
+    );
+  } catch {
+    return emptyRecords();
+  }
+}
+const reducedMotion = () =>
+  typeof window !== "undefined" &&
+  window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+
 export default function Crossword({
   stories,
   demo,
@@ -25,10 +61,22 @@ export default function Crossword({
     [done, setDone] = useState(false),
     [assisted, setAssisted] = useState(false),
     [ready, setReady] = useState(false);
+  const [completed, setCompleted] = useState<Completed | null>(null);
+  const [timer, setTimer] = useState<TimerState>(idleTimer);
+  const timerRef = useRef(timer);
+  const [, tick] = useState(0);
+  const [finalCell, setFinalCell] = useState<string | null>(null);
+  const [flash, setFlash] = useState(false);
+  const [celebrate, setCelebrate] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const inviteRef = useRef<HTMLButtonElement>(null);
+  const started = timer.elapsedMs > 0 || timer.runningSince !== null;
+  const commitTimer = useCallback((next: TimerState) => {
+    timerRef.current = next;
+    setTimer(next);
+  }, []);
   useEffect(() => {
     if (open) {
       titleRef.current?.focus({ preventScroll: true });
@@ -48,18 +96,73 @@ export default function Crossword({
       const saved = JSON.parse(localStorage.getItem(key) ?? "null");
       if (saved?.values) {
         setValues(saved.values);
-        setDone(crosswordComplete(puzzle, saved.values));
+        const solved = crosswordComplete(puzzle, saved.values);
+        setDone(solved);
         setAssisted(Boolean(saved.assisted));
+        const restoredTimer = cleanTimer(saved.timer);
+        commitTimer(restoredTimer);
+        if (solved)
+          setCompleted(
+            saved.completed && typeof saved.completed === "object"
+              ? {
+                  ms:
+                    typeof saved.completed.ms === "number"
+                      ? saved.completed.ms
+                      : null,
+                  message:
+                    typeof saved.completed.message === "string"
+                      ? saved.completed.message
+                      : "Solved.",
+                  personalBest: saved.completed.personalBest === true,
+                  first: saved.completed.first === true,
+                  completedAt: String(saved.completed.completedAt ?? ""),
+                }
+              : // Solved before times were recorded: never invent one.
+                {
+                  ms: null,
+                  message: saved.assisted
+                    ? "Solved with a little help."
+                    : "Solved.",
+                  personalBest: false,
+                  first: false,
+                  completedAt: "",
+                },
+          );
       }
     } catch {}
     setReady(true);
-  }, [key, puzzle]);
+  }, [key, puzzle, commitTimer]);
   useEffect(() => {
     if (ready)
       try {
-        localStorage.setItem(key, JSON.stringify({ values, assisted }));
+        localStorage.setItem(
+          key,
+          JSON.stringify({
+            values,
+            assisted,
+            timer: { elapsedMs: pauseTimer(timer, Date.now()).elapsedMs },
+            completed,
+          }),
+        );
       } catch {}
-  }, [values, assisted, ready, key]);
+  }, [values, assisted, ready, key, timer, completed]);
+  // The clock runs only while the puzzle is open, unfinished, started and visible.
+  useEffect(() => {
+    if (!open || done || !started) return;
+    const resume = () => {
+      if (document.visibilityState === "visible")
+        commitTimer(startTimer(timerRef.current, Date.now()));
+      else commitTimer(pauseTimer(timerRef.current, Date.now()));
+    };
+    resume();
+    document.addEventListener("visibilitychange", resume);
+    const interval = window.setInterval(() => tick((n) => n + 1), 500);
+    return () => {
+      document.removeEventListener("visibilitychange", resume);
+      window.clearInterval(interval);
+      commitTimer(pauseTimer(timerRef.current, Date.now()));
+    };
+  }, [open, done, started, commitTimer]);
   const focus = (value: string) => {
     setCell(value);
     gridRef.current
@@ -86,6 +189,44 @@ export default function Crossword({
       ],
     );
   }
+  function beginIfNeeded() {
+    if (timerRef.current.runningSince === null && !done)
+      commitTimer(startTimer(timerRef.current, Date.now()));
+  }
+  /** Runs exactly once per puzzle: the done flag and the records both guard repeats. */
+  function finish(
+    next: Record<string, string>,
+    via: string,
+    wasAssisted: boolean,
+  ) {
+    if (done) return;
+    const now = Date.now();
+    const paused = pauseTimer(timerRef.current, now);
+    commitTimer(paused);
+    const outcome = recordSolve(readRecords(), {
+      puzzleId: `${demo ? "practice" : "live"}:${puzzle.id}`,
+      date,
+      ms: paused.elapsedMs,
+      assisted: wasAssisted,
+      completedAt: new Date(now).toISOString(),
+    });
+    try {
+      localStorage.setItem(RECORDS_KEY, JSON.stringify(outcome.records));
+    } catch {}
+    setCompleted({
+      ms: paused.elapsedMs,
+      message: outcome.message,
+      personalBest: outcome.personalBest,
+      first: outcome.first,
+      completedAt: new Date(now).toISOString(),
+    });
+    setValues(next);
+    setDone(true);
+    setChecked(false);
+    setFinalCell(via);
+    setFlash(true);
+    window.setTimeout(() => setCelebrate(true), reducedMotion() ? 0 : 720);
+  }
   function type(letter: string) {
     if (done) return;
     const cells = entryCells(selected),
@@ -98,15 +239,27 @@ export default function Crossword({
       return;
     }
     if (!/^[A-Z]$/.test(letter)) return;
+    beginIfNeeded();
     const next = { ...values, [cell]: letter };
-    setValues(next);
     setChecked(false);
     if (crosswordComplete(puzzle, next)) {
-      setDone(true);
+      finish(next, cell, assisted);
       return;
     }
+    setValues(next);
     if (position < cells.length - 1) focus(cells[position + 1]);
     else nextClue();
+  }
+  function reveal() {
+    if (done) return;
+    beginIfNeeded();
+    setAssisted(true);
+    const next = {
+      ...values,
+      [cell]: puzzle.grid[Number(cell[0])][Number(cell[2])]!,
+    };
+    if (crosswordComplete(puzzle, next)) finish(next, cell, true);
+    else setValues(next);
   }
   function cellClick(value: string) {
     const members = puzzle.entries.filter((e) => entryCells(e).includes(value));
@@ -123,10 +276,11 @@ export default function Crossword({
     );
     focus(value);
   }
+  const shownMs = done ? (completed?.ms ?? null) : elapsedMs(timer, Date.now());
   return (
     <section
       ref={sectionRef}
-      className="puzzle"
+      className={`puzzle${done ? " is-solved" : ""}`}
       aria-label="Optional news crossword"
     >
       {!open ? (
@@ -145,7 +299,7 @@ export default function Crossword({
               className="primary"
               onClick={() => setOpen(true)}
             >
-              Play the Mini <span>↗</span>
+              {done ? "See your solved Mini" : "Play the Mini"} <span>↗</span>
             </button>
           </div>
         </div>
@@ -160,49 +314,45 @@ export default function Crossword({
                 {puzzle.title}
               </h2>
             </div>
-            <span className="mini-size">5 × 5</span>
-          </div>
-          <div className="mini-toolbar">
-            <button
-              disabled={done}
-              onClick={() => {
-                setChecked(true);
-                setDone(crosswordComplete(puzzle, values));
-              }}
+            <div
+              className={`mini-timer${done ? " done" : started ? " running" : ""}`}
+              aria-hidden={!done}
+              aria-label={
+                done && shownMs !== null
+                  ? `Solved in ${formatClock(shownMs)}`
+                  : undefined
+              }
             >
-              Check letters
-            </button>
-            <button
-              disabled={done}
-              onClick={() => {
-                setAssisted(true);
-                const next = {
-                  ...values,
-                  [cell]: puzzle.grid[Number(cell[0])][Number(cell[2])]!,
-                };
-                setValues(next);
-                setDone(crosswordComplete(puzzle, next));
-              }}
-            >
-              Reveal a letter
-            </button>
-            <button
-              onClick={() => {
-                setOpen(false);
-                requestAnimationFrame(() => inviteRef.current?.focus());
-              }}
-            >
-              Close
-            </button>
-          </div>
-          {done && (
-            <div className="mini-complete" role="status">
-              <Charm mood="mint" small />
-              <div>
-                <h3>Solved.</h3>
-                <p>Complete{assisted ? " · assisted" : ""}.</p>
-              </div>
+              <svg
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                width="16"
+                height="16"
+              >
+                <circle
+                  cx="12"
+                  cy="13"
+                  r="8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+                <path
+                  d="M12 9v4l2.5 2M9 3h6"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                />
+              </svg>
+              <span>{shownMs === null ? "—" : formatClock(shownMs)}</span>
             </div>
+          </div>
+          {done && completed && (
+            <p className="mini-solved-line" role="status">
+              <strong>Solved{assisted ? " with help" : ""}.</strong>{" "}
+              {completed.message}
+            </p>
           )}
           <div className="mini-play">
             <div>
@@ -222,10 +372,13 @@ export default function Crossword({
                 </button>
               </div>
               <div
-                className="crossword-grid"
+                className={`crossword-grid${flash ? " solved-flash" : ""}${done ? " solved" : ""}`}
                 ref={gridRef}
                 role="group"
                 aria-label="Mini crossword grid"
+                onAnimationEnd={(event) => {
+                  if (event.target === gridRef.current) setFlash(false);
+                }}
                 onKeyDown={(event) => {
                   if (event.ctrlKey || event.metaKey || event.altKey) return;
                   if (
@@ -279,7 +432,7 @@ export default function Crossword({
                         tabIndex={cell === id ? 0 : -1}
                         aria-label={`Row ${r + 1}, column ${c + 1}${start ? `, ${start.number}` : ""}: ${values[id] || "empty"}`}
                         aria-pressed={cell === id}
-                        className={`crossword-cell ${entryCells(selected).includes(id) ? "selected" : ""} ${cell === id ? "current" : ""} ${checked && values[id] && values[id] !== letter ? "incorrect" : ""}`}
+                        className={`crossword-cell ${entryCells(selected).includes(id) ? "selected" : ""} ${cell === id ? "current" : ""} ${checked && values[id] && values[id] !== letter ? "incorrect" : ""} ${finalCell === id ? "settle" : ""}`}
                         onClick={() => cellClick(id)}
                       >
                         <small>{start?.number}</small>
@@ -295,22 +448,45 @@ export default function Crossword({
                   }),
                 )}
               </div>
-              <div className="mini-keyboard" aria-label="Letter keyboard">
-                {["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM⌫"].map((row) => (
-                  <div key={row}>
-                    {[...row].map((letter) => (
-                      <button
-                        key={letter}
-                        disabled={done}
-                        aria-label={letter === "⌫" ? "Delete letter" : letter}
-                        onClick={() => type(letter)}
-                      >
-                        {letter}
-                      </button>
-                    ))}
-                  </div>
-                ))}
+              <div className="mini-assists">
+                <button
+                  disabled={done}
+                  onClick={() => {
+                    setAssisted(true);
+                    setChecked(true);
+                  }}
+                >
+                  Check
+                </button>
+                <button disabled={done} onClick={reveal}>
+                  Reveal letter
+                </button>
+                <button
+                  onClick={() => {
+                    setOpen(false);
+                    requestAnimationFrame(() => inviteRef.current?.focus());
+                  }}
+                >
+                  Close
+                </button>
               </div>
+              {!done && (
+                <div className="mini-keyboard" aria-label="Letter keyboard">
+                  {["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM⌫"].map((row) => (
+                    <div key={row}>
+                      {[...row].map((letter) => (
+                        <button
+                          key={letter}
+                          aria-label={letter === "⌫" ? "Delete letter" : letter}
+                          onClick={() => type(letter)}
+                        >
+                          {letter}
+                        </button>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
             <div className="clue-columns">
               {(["across", "down"] as const).map((direction) => (
@@ -334,7 +510,7 @@ export default function Crossword({
             </div>
           </div>
           {checked && !done && (
-            <p role="status">
+            <p role="status" className="mini-check-note">
               Red letters need another look. Empty squares are still yours to
               solve.
             </p>
@@ -343,6 +519,13 @@ export default function Crossword({
             <summary>About this puzzle</summary>
             <p>{puzzle.notice} </p>
           </details>
+          <MiniCelebration
+            open={celebrate}
+            ms={completed?.ms ?? null}
+            message={completed?.message ?? "Solved."}
+            personalBest={completed?.personalBest ?? false}
+            onClose={() => setCelebrate(false)}
+          />
         </>
       )}
     </section>

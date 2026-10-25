@@ -195,11 +195,6 @@ select {
   line-height: 1;
   text-align: left;
 }
-.wordmark span {
-  color: #74958a;
-  font-size: 24px;
-  letter-spacing: 0;
-}
 .app-sidebar nav {
   display: grid;
   gap: 10px;
@@ -241,36 +236,10 @@ select {
 .app-topbar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 15px;
   margin-bottom: 22px;
   min-height: 50px;
-}
-.topbar-date {
-  font-size: 0.85rem;
-  font-weight: 650;
-}
-.topbar-date span {
-  display: block;
-  font-size: 0.65rem;
-  color: var(--muted);
-}
-.mode-pill {
-  margin-left: auto;
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  font-size: 0.65rem;
-  padding: 8px 12px;
-  background: #fff9;
-  border: 1px solid var(--line);
-  border-radius: 99px;
-  white-space: nowrap;
-}
-.mode-pill i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #7da584;
 }
 .mobile-wordmark,
 .bottom-nav {
@@ -519,13 +488,6 @@ select {
 .puzzle {
   margin-top: 10px;
 }
-.mini-page > .puzzle {
-  background: white;
-  padding: 30px;
-  border: 1px solid var(--line);
-  border-radius: 26px;
-  text-align: left;
-}
 .mini-heading {
   display: flex;
   justify-content: space-between;
@@ -537,29 +499,6 @@ select {
 }
 .mini-heading .eyebrow {
   margin-bottom: 8px;
-}
-.mini-size {
-  border: 1px solid var(--line);
-  padding: 10px;
-  border-radius: 10px;
-  font-size: 0.8rem;
-  white-space: nowrap;
-}
-.mini-toolbar {
-  display: flex;
-  gap: 5px;
-  margin: 16px 0 25px;
-  border-bottom: 1px solid var(--line);
-  padding-bottom: 14px;
-}
-.mini-toolbar button {
-  border: 0;
-  font-size: 0.73rem;
-  padding: 8px 12px;
-  min-height: 40px;
-}
-.mini-toolbar button:last-child {
-  margin-left: auto;
 }
 .mini-play {
   display: grid;
@@ -697,22 +636,6 @@ select {
 .clue.active {
   background: #e2edf6;
 }
-.mini-complete {
-  display: flex;
-  gap: 18px;
-  padding: 20px;
-  background: #e9f5ee;
-  border-radius: 18px;
-  margin: 24px 0;
-}
-.mini-complete h3 {
-  font-size: 1.2rem;
-  margin-bottom: 8px;
-}
-.mini-complete p {
-  font-size: 0.8rem;
-  margin: 0;
-}
 .empty-card {
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -805,32 +728,6 @@ select {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
-}
-.date-picker-anchor {
-  flex: 1;
-  min-width: 0;
-}
-.date-trigger {
-  display: block;
-  border: 0;
-  background: transparent;
-  text-align: left;
-  padding: 7px 10px;
-  margin-left: -10px;
-  border-radius: 12px;
-  font-weight: 650;
-}
-.date-trigger:hover:not(:disabled) {
-  background: #eaf1f6;
-}
-.date-trigger span {
-  display: block;
-  font-weight: 400;
-}
-.date-trigger span i {
-  font-style: normal;
-  margin-left: 5px;
-  color: var(--accent);
 }
 .date-picker {
   width: min(440px, calc(100vw - 28px));
@@ -1021,17 +918,6 @@ select {
   }
   .date-picker-grid {
     gap: 0;
-  }
-  .date-trigger {
-    font-size: 0.66rem;
-    padding-right: 4px;
-  }
-  .date-trigger span {
-    font-size: 0.57rem;
-  }
-  .app-topbar .mode-pill {
-    font-size: 0.56rem;
-    padding: 9px 8px;
   }
 }
 /* Public processing view */
@@ -1583,22 +1469,6 @@ select {
     font-size: 25px;
     white-space: nowrap;
   }
-  .mobile-wordmark > span {
-    font-size: 19px;
-  }
-  .topbar-date {
-    font-size: 0.72rem;
-  }
-  .topbar-date span {
-    font-size: 0.57rem;
-  }
-  .mode-pill {
-    font-size: 0.57rem;
-    padding: 7px 9px;
-  }
-  .date-picker-anchor {
-    flex: 1;
-  }
   .edition-date-note {
     font-size: 0.59rem;
   }
@@ -1641,16 +1511,6 @@ select {
   }
   .page-heading h1 {
     font-size: 2rem;
-  }
-  .mini-page > .puzzle {
-    padding: 20px;
-  }
-  .mini-toolbar {
-    flex-wrap: wrap;
-  }
-  .mini-toolbar button {
-    font-size: 0.65rem;
-    padding: 8px;
   }
   .mini-heading h2 {
     font-size: 1.5rem;
@@ -1861,9 +1721,6 @@ select {
     padding-left: 13px;
     padding-right: 13px;
   }
-  .mode-pill {
-    display: none;
-  }
   .clue-columns {
     grid-template-columns: 1fr;
   }
@@ -1931,12 +1788,6 @@ select {
   }
 }
 
-.topbar-account {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-left: auto;
-}
 .profile-trigger,
 .profile-avatar {
   width: 38px;
@@ -1956,28 +1807,15 @@ select {
   padding: 0;
   cursor: pointer;
 }
+.profile-trigger[aria-current] {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
 .profile-trigger img,
 .profile-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-}
-.profile-card {
-  border: 1px solid var(--line);
-  background: #fff;
-  border-radius: 22px;
-  padding: 24px;
-  margin-bottom: 24px;
-}
-.profile-card h2 {
-  font-size: 1.25rem;
-  margin: 0 0 6px;
-}
-.profile-card p {
-  font-size: 0.82rem;
-  color: var(--muted);
-  margin: 0;
-  overflow-wrap: anywhere;
 }
 .profile-signin {
   display: flex;
@@ -2034,7 +1872,7 @@ select {
 .profile-sync.saved {
   color: #376249;
 }
-.profile-card button.quiet {
+.profile-page button.quiet {
   border: 0;
   background: none;
   padding: 6px 0;
@@ -2052,19 +1890,10 @@ select {
   color: #913f3f;
 }
 @media (max-width: 650px) {
-  .topbar-account {
-    gap: 8px;
-  }
-  .topbar-account .mode-pill {
-    display: none;
-  }
   .profile-signin {
     align-items: flex-start;
     flex-direction: column;
     gap: 18px;
-  }
-  .profile-card {
-    padding: 20px;
   }
   .google-signin {
     width: 100%;

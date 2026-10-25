@@ -28,7 +28,7 @@ Optional: `ANTHROPIC_MODEL`, `CARTESIA_API_KEY` (existing `CARTESIA` is also sup
 
 ## Pick a day
 
-The date in the header opens the calendar. Pick a day or jump with the month/year controls. Selecting a date loads its published edition or automatically prepares one. There is no Generate button or archive mode. `/demo` redirects to `/`.
+The Calendar tab is the only place to change the edition date. Pick a day or jump with the month/year controls. Selecting a date loads its published edition or automatically prepares one. The header shows only the wordmark and the Profile avatar; the edition's actual date is ordinary cover metadata (historical dates are marked "On this day"). There is no Generate button or archive mode. `/demo` redirects to `/`.
 
 - `/` automatically opens today using the shared `America/Los_Angeles` publishing day. An unpublished day triggers retrieval and review. A successfully published edition stays fixed for that date.
 - `/?date=2026-10-23` opens that date directly. The calendar and API accept a rolling ten-year window through today. Leap-day cutoffs clamp to the last valid day of February. Future, invalid and older dates are rejected before provider calls.
@@ -75,9 +75,9 @@ curl --max-time 300 -N -X POST \
 
 The finite reader supports Next/Back, horizontal swipes and keyboard navigation, with a clear ending. The compact cover shows the real date, story count and a text-based reading estimate (220 words/minute). Start/Continue opens an editorial reader with a dedicated thumb dock; browser Back returns to the cover. Resume positions are scoped to edition and Firebase UID or guest. The reader keeps exact source passages available through See the receipts without exposing processing logs. Detailed evidence, exact passages, field references, source assessments and Actor provenance live at `/studio?date=YYYY-MM-DD`.
 
-Four original generated reaction characters represent Interesting, Insightful, Hopeful and Stressed. Select, switch or remove one reaction per story. No comments or public counts. Guests keep reading progress and reactions on the device; signed-in users also sync completed dates and reactions through Firestore. Mini progress and in-edition resume position stay on the device. [Artwork and prompts](public/reactions/README.md).
+Four original generated reaction characters represent Interesting, Insightful, Hopeful and Stressed, each with its own small microinteraction when picked (curious bounce and sparkle, "aha" ring, warm rising glow, sympathetic wobble); restored reactions render settled without replaying. Reaching the final story animates the progress segments and settles into "You're caught up." with the story count, the optional Mini and a Finish control; completion is recorded once. Select, switch or remove one reaction per story. No comments or public counts. Guests keep reading progress and reactions on the device; signed-in users also sync completed dates and reactions through Firestore. Mini progress and in-edition resume position stay on the device. [Artwork and prompts](public/reactions/README.md).
 
-The Mini uses original validated 5×5 grids, Across/Down clues, crossing letters, hardware/on-screen keyboards, letter checking and reveal controls. Its layout is deterministic by edition date. Matching glossary terms can supply story-specific clues; the puzzle notice distinguishes general wordplay from news recall.
+The Mini uses original validated 5×5 grids, Across/Down clues, crossing letters and hardware/on-screen keyboards. Its layout is deterministic by edition date. Entering the final correct letter completes the puzzle automatically: the last cell settles, the grid glows, and a blurred modal celebration shows the solve time and an original half full character. The elapsed timer starts on the first letter, pauses while the tab is hidden or the puzzle is closed, persists unfinished time, and stops at completion. Solve times are saved on the device (`half-full-mini-records-v1`); "Your quickest one yet!" appears only when an earlier solve of the same kind (assisted or unassisted) exists, and a first solve is celebrated without inventing a record. Optional Check and Reveal mark the solve as assisted. The overlay is a native `<dialog>` with focus management, Escape/Done dismissal, body scroll locking, reduced-motion support and safe-area padding; it never replays for an already solved Mini.
 
 ## Editorial studio and constructive coverage
 
@@ -89,7 +89,19 @@ New editions prioritize evidence-supported Bay Area community developments, whil
 
 ## Audio and images
 
-Cartesia audio is prepared on demand from a retained story, never arbitrary browser text. `POST /api/audio/:editionId/:storyId` prepares a clip; `GET` serves it with byte-range support. The bounded in-memory cache deduplicates work and expires on restart. Controls include pause, replay, seek, speed and opt-in listen-through. Safari may require an explicit Play gesture after preparing audio or between clips.
+Cartesia audio is prepared on demand from a retained story, never arbitrary browser text. `POST /api/audio/:editionId/:storyId?narrator=skylar|daniel|rowan` prepares a clip; `GET` with the same query serves it with byte-range support. The bounded in-memory cache is keyed by script, voice ID and model, so clips from different narrators never mix. Controls include pause, replay, seek, speed, narrator and opt-in listen-through. Safari may require an explicit Play gesture after preparing audio or between clips.
+
+### Narrators
+
+Three user-facing narrators map to public Cartesia library voices, verified through `GET https://api.cartesia.ai/voices` on October 24, 2026 (`lib/narrators.ts`):
+
+| Narrator | Library voice | Voice ID |
+| --- | --- | --- |
+| Skylar (default) | Skylar - Friendly Guide | `db6b0ed5-d5d3-463d-ae85-518a07d3c2b4` |
+| Daniel | Daniel - Modern Assistant | `47c38ca4-5f35-497b-b1a3-415245fb35e1` |
+| Rowan | Rowan - Steady Guide | `8c254787-4eb4-4577-bd3d-fb3c273baea2` |
+
+The library also contains "Rowan - Team Leader" (`701a96e1-7fdd-4a6c-a81e-a4a450403599`); the steadier narration voice was chosen. A named narrator overrides `CARTESIA_VOICE_ID`; without a narrator the configured/default voice is used. Narrator, speed and autoplay preferences are stored on the device (`half-full-preferences-v1`), work for guests, apply to the next clip, and never regenerate the edition. They are not written to Firestore because the deployed profile rules allow only reads/reactions; syncing them would require a rules change.
 
 Publisher share images are attributed link previews fetched from approved articles. A failed lookup falls back to an illustration. Their rights remain with the publisher. Original-source links remain available.
 
@@ -118,7 +130,7 @@ Discovery prioritizes Bay Area community reporting in two lanes, retaining a thi
 
 Set the six `NEXT_PUBLIC_FIREBASE_*` web-app identifiers from `.env.example`, enable Google in Firebase Authentication, authorize the local/production domains, and create the default Firestore database. Restart Next after changing environment variables. No Firebase service-account key is used by the browser or required for this client integration.
 
-The header avatar and Your jar open the profile. Google sign-in is optional; reading works signed out. Firebase persists the session. On sign-in, guest progress moves into an account-specific import queue and merges once, preserving the account’s existing reactions. Reads and reactions sync through `users/{uid}`; transactions merge only this device’s pending edits, retaining changes from other devices. Account caches and offline edit/import queues are scoped to the Firebase UID. Signing out returns to separate guest progress. Cloud permission/network failures retain local edits and expose Retry sync.
+The header avatar opens Profile, which holds Google sign-in/sign-out, sync status, narrator and listening preferences. Your jar holds completed editions, reading history and private reaction tallies, with no account controls. Google sign-in is optional; reading works signed out. Firebase persists the session. On sign-in, guest progress moves into an account-specific import queue and merges once, preserving the account’s existing reactions. Reads and reactions sync through `users/{uid}`; transactions merge only this device’s pending edits, retaining changes from other devices. Account caches and offline edit/import queues are scoped to the Firebase UID. Signing out returns to separate guest progress. Cloud permission/network failures retain local edits and expose Retry sync.
 
 Deploy `firestore.rules` to the configured Firebase project before enabling public profile sync. These rules restrict each profile document to its owner, prohibit collection listing, validate allowed fields and sizes, and deny other collection access. If this Firebase project serves other applications, merge this profile rule into its existing rules rather than replacing unrelated rules. The app does not silently deploy rules or use open test-mode access.
 

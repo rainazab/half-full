@@ -9,6 +9,10 @@ import StoryReactions from "./StoryReactions";
 import StoryVisual from "./StoryVisual";
 import AudioPlayer from "./AudioPlayer";
 import { navigate, progressLabel, swipeDirection } from "@/lib/navigation";
+import {
+  defaultPreferences,
+  type ListeningPreferences,
+} from "@/lib/preferences";
 
 export default function EditionReader({
   stories,
@@ -23,6 +27,8 @@ export default function EditionReader({
   initialListen = false,
   onExit,
   onIndexChange,
+  preferences = defaultPreferences(),
+  onPreferences = () => {},
 }: {
   initialListen?: boolean;
   onExit?: () => void;
@@ -36,13 +42,19 @@ export default function EditionReader({
   editionId: string;
   demo?: boolean;
   active?: boolean;
+  preferences?: ListeningPreferences;
+  onPreferences?: (patch: Partial<ListeningPreferences>) => void;
 }) {
   const [index, setIndex] = useState(initialIndex);
-  const [through, setThrough] = useState(initialListen);
+  const [through, setThrough] = useState(
+    initialListen || preferences.autoplayNext,
+  );
   const [autoPlay, setAutoPlay] = useState(initialListen);
   const heading = useRef<HTMLHeadingElement>(null);
   const gesture = useRef<{ x: number; y: number; time: number } | null>(null);
   const completion = useRef(false);
+  // Arriving at the ending through reading animates; opening on it does not.
+  const [arrived, setArrived] = useState(false);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -58,12 +70,17 @@ export default function EditionReader({
   }, [index, stories.length, onComplete]);
   const go = (direction: -1 | 1) => {
     setAutoPlay(false);
-    setIndex((current) => navigate(current, direction, stories.length));
+    setIndex((current) => {
+      const next = navigate(current, direction, stories.length);
+      if (next === stories.length && current < stories.length) setArrived(true);
+      return next;
+    });
   };
   const story = stories[index];
+  const finished = index >= stories.length;
   const interactive = (target: EventTarget | null) =>
     target instanceof Element &&
-    !!target.closest("a,button,summary,input,select,textarea");
+    !!target.closest("a,button,summary,input,select,textarea,dialog");
   return (
     <section
       className="edition-reader"
@@ -97,11 +114,17 @@ export default function EditionReader({
             : "half full"}
         </span>
       </header>
-      <div className="reader-progress">
+      <div className={`reader-progress${finished ? " complete" : ""}`}>
         <span aria-live="polite">{progressLabel(index, stories.length)}</span>
         <div aria-hidden="true">
           {stories.map((s, i) => (
-            <i key={s.id} className={i <= index ? "filled" : ""} />
+            <i
+              key={s.id}
+              className={
+                i < index || finished ? "filled" : i === index ? "filled" : ""
+              }
+              style={{ animationDelay: `${i * 70}ms` }}
+            />
           ))}
         </div>
       </div>
@@ -142,6 +165,7 @@ export default function EditionReader({
               <h2 ref={heading} tabIndex={-1}>
                 {story.headline}
               </h2>
+              <StoryVisual story={story} />
               <p className="story-intro">
                 {story.experience?.explanation.text ?? story.summary}
               </p>
@@ -154,12 +178,13 @@ export default function EditionReader({
                 through={through}
                 onThrough={setThrough}
                 autoPlay={autoPlay}
+                preferences={preferences}
+                onPreferences={onPreferences}
                 onEnded={() => {
                   setAutoPlay(true);
                   setIndex((current) => navigate(current, 1, stories.length));
                 }}
               />
-              <StoryVisual story={story} />
               <div className="why-card">
                 <h3>Why it matters</h3>
                 <p>{story.whyItMatters}</p>
@@ -247,24 +272,37 @@ export default function EditionReader({
             </div>
           </article>
         ) : (
-          <article className="ending">
-            <Charm mood="mint" />
+          <article className={`ending${arrived ? " arrived" : ""}`}>
+            <div className="ending-charm">
+              <Charm mood="mint" />
+              <span className="ending-halo" aria-hidden="true" />
+            </div>
             <h2 ref={heading} tabIndex={-1}>
               You’re caught up.
             </h2>
-            <p>{stories.length} stories. A little more perspective.</p>
-            <button className="ending-cover" onClick={onExit}>
-              Back to your edition
-            </button>
-            <button
-              className="quiet"
-              onClick={() => {
-                setAutoPlay(false);
-                setIndex(0);
-              }}
-            >
-              Read again ↗
-            </button>
+            <p>
+              {stories.length} {stories.length === 1 ? "story" : "stories"}{" "}
+              read. That’s the whole edition.
+            </p>
+            <p className="ending-note">
+              Nothing more to scroll. Come back tomorrow, or take a minute with
+              the Mini.
+            </p>
+            <div className="ending-actions">
+              <button className="ending-cover" onClick={onExit}>
+                Back to your edition
+              </button>
+              <button
+                className="quiet"
+                onClick={() => {
+                  setAutoPlay(false);
+                  setArrived(false);
+                  setIndex(0);
+                }}
+              >
+                Read again ↗
+              </button>
+            </div>
             <Crossword stories={stories} demo={demo} date={date} />
           </article>
         )}
@@ -278,10 +316,14 @@ export default function EditionReader({
             ? `${index + 1} / ${stories.length}`
             : "Complete"}
         </span>
-        {index < stories.length && (
+        {index < stories.length ? (
           <button className="primary" onClick={() => go(1)}>
             {index === stories.length - 1 ? "Done" : "Next"}{" "}
             <span aria-hidden="true">→</span>
+          </button>
+        ) : (
+          <button className="primary" onClick={onExit}>
+            Finish
           </button>
         )}
       </nav>

@@ -1,4 +1,5 @@
 "use client";
+import { useEffect, useState } from "react";
 
 const options = [
   {
@@ -15,6 +16,10 @@ const options = [
   { label: "Stressed", image: "stressed", hint: "That felt like a lot" },
 ] as const;
 
+/**
+ * Each reaction has its own small motion when the reader picks it. Restored
+ * reactions render in their settled state without replaying the animation.
+ */
 export default function StoryReactions({
   value,
   onChange,
@@ -25,6 +30,12 @@ export default function StoryReactions({
   // Keep earlier device-local reactions when upgrading the character set.
   const selected =
     value === "Clearer" ? "Insightful" : value === "A lot" ? "Stressed" : value;
+  const [burst, setBurst] = useState<string | null>(null);
+  useEffect(() => {
+    if (!burst) return;
+    const timer = window.setTimeout(() => setBurst(null), 1100);
+    return () => window.clearTimeout(timer);
+  }, [burst]);
   return (
     <div
       className="story-reactions"
@@ -39,8 +50,18 @@ export default function StoryReactions({
             type="button"
             aria-pressed={selected === label}
             title={hint}
-            onClick={() => onChange(selected === label ? "" : label)}
+            className={`reaction reaction-${image}${burst === label ? " is-burst" : ""}`}
+            onClick={() => {
+              const next = selected === label ? "" : label;
+              setBurst(next ? label : null);
+              onChange(next);
+            }}
           >
+            <span className="reaction-fx" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
             <img
               src={`/reactions/${image}.webp`}
               width={64}
