@@ -313,6 +313,11 @@ export default function Crossword({
               <h2 ref={titleRef} tabIndex={-1}>
                 {puzzle.title}
               </h2>
+              {done && completed && (
+                <p className="mini-solved-line" role="status">
+                  Solved{assisted ? " with help" : ""} · {completed.message}
+                </p>
+              )}
             </div>
             <div
               className={`mini-timer${done ? " done" : started ? " running" : ""}`}
@@ -348,12 +353,7 @@ export default function Crossword({
               <span>{shownMs === null ? "—" : formatClock(shownMs)}</span>
             </div>
           </div>
-          {done && completed && (
-            <p className="mini-solved-line" role="status">
-              <strong>Solved{assisted ? " with help" : ""}.</strong>{" "}
-              {completed.message}
-            </p>
-          )}
+
           <div className="mini-play">
             <div>
               <div className="selected-clue" aria-live="polite">

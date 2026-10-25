@@ -33,6 +33,60 @@ export type AuthoredScene = {
   load: () => Promise<{ default: ComponentType<AuthoredSceneProps> }>;
 };
 export const AUTHORED_SCENES: Record<string, AuthoredScene> = {
+  "candidate-2c4b87c1d1d96844/scene-1": {
+    id: "php-flaws",
+    durationSeconds: 9,
+    usesBackground: true,
+    explains: [
+      "PHP runs on web servers behind many websites",
+      "Researchers using AI tools searched it",
+      "They found two serious flaws",
+    ],
+    load: () =>
+      import("../components/scenes/PhpScenes").then((m) => ({
+        default: m.PhpFlaws,
+      })),
+  },
+  "candidate-2c4b87c1d1d96844/scene-2": {
+    id: "php-patch",
+    durationSeconds: 8.5,
+    usesBackground: true,
+    explains: [
+      "Patches were released for the flaws",
+      "No successful attacks had been reported",
+      "Operators were urged to patch or take systems offline",
+    ],
+    load: () =>
+      import("../components/scenes/PhpScenes").then((m) => ({
+        default: m.PhpPatch,
+      })),
+  },
+  "candidate-f00e63d7b735d2ec/scene-1": {
+    id: "franklin-one",
+    durationSeconds: 8,
+    usesBackground: true,
+    explains: [
+      "Many scientists are named in the specifications",
+      "Rosalind Franklin is the only woman among them",
+    ],
+    load: () =>
+      import("../components/scenes/FranklinScenes").then((m) => ({
+        default: m.FranklinOne,
+      })),
+  },
+  "candidate-f00e63d7b735d2ec/scene-2": {
+    id: "franklin-recommend",
+    durationSeconds: 7.5,
+    usesBackground: true,
+    explains: [
+      "The authors recommend naming more scientists",
+      "Figures such as Marie Curie and Lise Meitner",
+    ],
+    load: () =>
+      import("../components/scenes/FranklinScenes").then((m) => ({
+        default: m.FranklinRecommend,
+      })),
+  },
   "candidate-e4906bdb2f8476ad/scene-1": {
     id: "svalbard-town-tap",
     durationSeconds: 8,

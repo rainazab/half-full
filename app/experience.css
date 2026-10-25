@@ -2746,3 +2746,476 @@ html.deck-open body {
   background: var(--accent);
   transform-origin: left;
 }
+
+/* ======================================================================
+   Typography: one bold modern sans everywhere (no serif), tight tracking.
+   ====================================================================== */
+:root {
+  --font-display: var(--font-body);
+}
+h1,
+h2,
+h3,
+.home-title,
+.story-hero > h2,
+.ending > h2,
+.feature-copy h2,
+.home-inside h2,
+.onboarding-step h1,
+.mini-heading h2,
+.page-heading h1,
+.edition-cover h1,
+.mini-celebration-panel h2,
+.quality-heading h2,
+.studio-title h1,
+.inside-title,
+.cover-copy h3 {
+  font-family: var(--font-body);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+}
+.story-sheet .why-card h3,
+.story-sheet .bright-side h3,
+.story-sheet .public-question h3 {
+  font-weight: 750;
+  letter-spacing: 0.08em;
+}
+.inside-title {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.home-title {
+  font-size: clamp(2rem, 7.4vw, 2.9rem);
+  line-height: 1.02;
+}
+.story-hero > h2 {
+  font-weight: 800;
+  line-height: 1.08;
+}
+.feature-copy h2 {
+  font-size: 1.75rem;
+}
+.ending > h2 {
+  font-size: clamp(2.3rem, 8vw, 3.4rem);
+  letter-spacing: -0.045em;
+}
+.onboarding-step h1 {
+  font-size: clamp(2rem, 8vw, 2.7rem);
+}
+
+/* ---------- One column, the same on every page (desktop) ---------- */
+@media (min-width: 761px) {
+  .app-main {
+    max-width: 1140px;
+  }
+  .app-topbar,
+  .today-home,
+  .mini-page,
+  .you-page,
+  .profile-page {
+    max-width: 820px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .profile-page {
+    width: 100%;
+  }
+}
+
+/* ---------- The Mini: one surface ---------- */
+.mini-page .page-heading {
+  display: none;
+}
+.mini-page .puzzle {
+  background: #fff;
+  border-radius: 28px;
+  padding: 0 0 18px;
+  overflow: hidden;
+  box-shadow: 0 20px 48px #0000001f;
+}
+.mini-page .mini-heading {
+  border-radius: 0;
+  padding: 22px 22px 20px;
+  margin: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 100%);
+  align-items: center;
+}
+.mini-page .mini-heading h2 {
+  font-size: 1.7rem;
+}
+.mini-page .mini-heading .eyebrow {
+  margin-bottom: 4px;
+}
+.mini-solved-line {
+  margin: 8px 0 0;
+  font-size: 0.82rem;
+  color: #8fd3b4;
+  font-weight: 650;
+}
+.mini-page .mini-play {
+  padding: 18px 18px 0;
+  gap: 22px;
+}
+.mini-page .selected-clue {
+  background: #fef3c7;
+  border-radius: 14px;
+  margin: 0 0 14px;
+  min-height: 56px;
+}
+.mini-page .crossword-grid {
+  margin: 0;
+  max-width: 100%;
+  border-radius: 14px;
+  box-shadow: none;
+  background: #0f172a;
+  border-color: #0f172a;
+}
+.mini-page .mini-assists {
+  margin: 12px 0 0;
+}
+.mini-page .mini-keyboard {
+  margin: 12px 0 0;
+}
+.mini-page .mini-keyboard button {
+  border-radius: 9px;
+  background: #f3f4f6;
+  border: 0;
+  border-bottom: 3px solid #d1d5db;
+}
+.mini-page .clue-columns {
+  padding: 0;
+}
+.mini-page .clue-columns h3 {
+  color: #1d4ed8;
+}
+.mini-page .clue {
+  border-radius: 10px;
+}
+.mini-page .clue.active {
+  background: #dbeafe;
+}
+.mini-page .puzzle > .note {
+  padding: 0 22px;
+  color: var(--muted);
+}
+.mini-page .puzzle > .mini-check-note {
+  padding: 0 22px;
+}
+@media (min-width: 761px) {
+  .mini-page .mini-play {
+    grid-template-columns: minmax(0, 420px) minmax(0, 1fr);
+    padding: 24px 24px 0;
+    gap: 32px;
+  }
+  .mini-page .clue-columns {
+    grid-template-columns: 1fr;
+    padding-top: 8px;
+  }
+}
+@media (max-width: 760px) {
+  .mini-page .puzzle {
+    border-radius: 22px;
+  }
+}
+
+/* ---------- Your jar: one immersive surface ---------- */
+.you-page .page-heading,
+.you-page .you-layout,
+.you-page .jar-section {
+  display: none;
+}
+.jar-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 230px;
+  gap: 24px;
+  align-items: center;
+  padding: 28px 28px 24px;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #1d4ed8 0%, #7c3aed 55%, #f472b6 100%);
+  color: #fff;
+  box-shadow: 0 20px 48px #0000002a;
+}
+.jar-hero-copy .eyebrow {
+  color: #ffffffcc;
+  margin-bottom: 8px;
+}
+.jar-hero-copy h1 {
+  color: #fff;
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+  line-height: 1.05;
+  margin-bottom: 10px;
+}
+.jar-hero-copy > p {
+  color: #ffffffd9;
+  font-size: 0.95rem;
+  max-width: 40ch;
+}
+.jar-stats {
+  display: flex;
+  gap: 22px;
+  margin: 18px 0 20px;
+}
+.jar-stats > div {
+  display: flex;
+  flex-direction: column;
+}
+.jar-stats strong {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+.jar-stats span {
+  font-size: 0.74rem;
+  color: #ffffffcc;
+  margin-top: 4px;
+}
+.jar-cta {
+  background: #fff;
+  color: #1d4ed8;
+  border: 0;
+  border-radius: 14px;
+  min-height: 48px;
+  padding: 10px 20px;
+  font-weight: 700;
+}
+.jar-hero .glass-jar {
+  margin: 0 auto;
+  width: 190px;
+  height: 230px;
+  border-color: #ffffffcc;
+  background: linear-gradient(
+    120deg,
+    #ffffffd9,
+    #ffffff44 40%,
+    #ffffff33 70%,
+    #ffffffb0
+  );
+  box-shadow: 0 16px 40px #00000033;
+}
+.jar-hero .jar-label {
+  color: #fff;
+}
+.jar-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-top: 14px;
+}
+.jar-panel {
+  background: #fff;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 10px 26px #0000001a;
+}
+.jar-panel h2 {
+  font-size: 1.05rem;
+  margin-bottom: 14px;
+}
+.jar-panel .reaction-tallies {
+  max-width: none;
+  gap: 8px;
+}
+.jar-panel .reaction-tallies > div {
+  background: #f6f7f4;
+  box-shadow: none;
+  border: 0;
+}
+.jar-panel .jar-empty {
+  margin: 12px 0 0;
+  font-size: 0.78rem;
+}
+.jar-panel .reading-history {
+  max-width: none;
+}
+@media (max-width: 760px) {
+  .jar-hero {
+    grid-template-columns: 1fr;
+    padding: 22px 20px;
+  }
+  .jar-hero .glass-jar {
+    width: 150px;
+    height: 180px;
+    order: -1;
+  }
+  .jar-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Profile: hero + panels ---------- */
+.profile-hero {
+  border-radius: 28px;
+  padding: 26px 24px;
+  background: linear-gradient(135deg, #15803d 0%, #0ea5a4 60%, #60a5fa 100%);
+  color: #fff;
+  box-shadow: 0 20px 48px #0000002a;
+}
+.profile-hero .profile-identity .profile-avatar {
+  width: 64px;
+  height: 64px;
+  font-size: 1.4rem;
+  border: 3px solid #ffffffb0;
+}
+.profile-hero .eyebrow {
+  color: #ffffffcc;
+  margin-bottom: 4px;
+}
+.profile-hero h1 {
+  color: #fff;
+  font-size: 1.7rem;
+  margin: 0 0 4px;
+}
+.profile-hero p {
+  color: #ffffffd9;
+  font-size: 0.88rem;
+  margin: 0;
+}
+.profile-hero .profile-actions {
+  margin-top: 16px;
+}
+.profile-hero .profile-sync,
+.profile-hero .profile-sync.saved {
+  color: #fff;
+  background: #ffffff2b;
+  padding: 6px 10px;
+  border-radius: 99px;
+  font-size: 0.74rem;
+}
+.profile-hero button.quiet {
+  color: #fff !important;
+}
+.profile-hero .google-signin {
+  margin-top: 18px;
+  border: 0;
+}
+.profile-hero .profile-error p {
+  color: #fff;
+}
+.profile-panels {
+  display: grid;
+  gap: 14px;
+  margin-top: 14px;
+}
+.profile-panels .preference-block {
+  border: 0;
+  background: #fff;
+  border-radius: 22px;
+  padding: 20px;
+  box-shadow: 0 10px 26px #0000001a;
+}
+.profile-panels .mode-picker,
+.profile-panels .narrator-picker {
+  grid-template-columns: 1fr;
+}
+.profile-panels .mode-option.selected,
+.profile-panels .narrator-option[aria-checked="true"] {
+  border-color: #15803d;
+  background: #dcfce7;
+}
+.profile-panels .preference-row input[type="checkbox"]:checked {
+  background: #15803d;
+}
+@media (min-width: 761px) {
+  .profile-panels {
+    grid-template-columns: 1fr 1fr;
+  }
+  .profile-panels .preference-block:first-child,
+  .profile-panels .preference-block:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+/* ---------- Studio in the same system ---------- */
+.studio-shell {
+  max-width: 1200px;
+}
+.studio-header {
+  border: 0;
+  padding: 18px 22px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #0f172a, #1d4ed8);
+  color: #fff;
+  margin-bottom: 8px;
+}
+.studio-brand,
+.studio-header > span,
+.studio-header > a:last-child {
+  color: #fff;
+}
+.studio-header > span {
+  border-left-color: #ffffff44;
+}
+.studio-title h1 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+.studio-date {
+  background: #0f172a;
+  color: #fff;
+  border: 0;
+}
+.studio-stats {
+  border: 0;
+  border-radius: 22px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #15803d, #0ea5a4);
+  color: #fff;
+}
+.studio-stats > div {
+  border-right-color: #ffffff33;
+}
+.studio-stats strong {
+  font-weight: 800;
+}
+.studio-stats span {
+  color: #ffffffcc;
+}
+.flow-node {
+  border: 0;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 8px 22px #0000000f;
+}
+.flow-node.completed {
+  background: linear-gradient(160deg, #dcfce7, #fff 70%);
+}
+.flow-node.running {
+  background: linear-gradient(160deg, #fef3c7, #fff 70%);
+}
+.flow-node.failed,
+.flow-node.limited {
+  background: linear-gradient(160deg, #fee2e2, #fff 70%);
+}
+.flow-state {
+  border-color: #0f172a22;
+  font-weight: 650;
+}
+.comparison-claim {
+  background: linear-gradient(135deg, #ede9fe, #dbeafe);
+  border-radius: 22px;
+}
+.comparison-card,
+.decision-list,
+.studio-details,
+.actor-run-list article,
+.illustration-list article,
+.coverage-counts > div {
+  border: 0;
+  box-shadow: 0 8px 22px #0000000f;
+  border-radius: 18px;
+}
+.published-copy {
+  background: linear-gradient(160deg, #fef3c7, #fff 70%);
+}
+.process-status.completed {
+  background: #dcfce7;
+}
+.studio-section > h2,
+.studio-section-title h2 {
+  font-size: 1.4rem;
+}
+@media (max-width: 760px) {
+  .studio-stats > div:nth-child(-n + 2) {
+    border-bottom-color: #ffffff33;
+  }
+}

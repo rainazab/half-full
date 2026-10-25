@@ -561,55 +561,62 @@ export default function USApp() {
         )}
         {view === "you" && (
           <section className="you-page">
-            <div className="page-heading">
-              <h1>Your jar</h1>
-              <p className="page-intro">
-                {profile.user
-                  ? "Your reading, kept across devices."
-                  : "Your reading, kept on this device."}
-              </p>
-            </div>
-            <div className="you-layout">
-              <div className="jar-card">
-                <div className="glass-jar">
-                  <span className="jar-rim" />
-                  <div className="jar-charms">
-                    {Array.from(
-                      {
-                        length: Math.min(12, progress.days.length),
-                      },
-                      (_, i) => (
-                        <Charm key={i} mood={moods[i % 5]} />
-                      ),
-                    )}
+            <div className="jar-hero">
+              <div className="jar-hero-copy">
+                <p className="eyebrow">Your jar</p>
+                <h1>
+                  {progress.days.length
+                    ? `${progress.days.length} ${progress.days.length === 1 ? "edition" : "editions"} in the jar.`
+                    : "Your jar is waiting."}
+                </h1>
+                <p>
+                  {profile.user
+                    ? "Every finished edition lands here and follows you across devices."
+                    : "Every finished edition lands here. Sign in to keep it across devices."}
+                </p>
+                <div className="jar-stats">
+                  <div>
+                    <strong>{progress.days.length}</strong>
+                    <span>read</span>
                   </div>
-                  <span className="jar-label">½</span>
+                  <div>
+                    <strong>{readingStreak(progress.days, today)}</strong>
+                    <span>day streak</span>
+                  </div>
+                  <div>
+                    <strong>
+                      {Object.values(progress.reactions).filter(Boolean).length}
+                    </strong>
+                    <span>reactions</span>
+                  </div>
                 </div>
-              </div>
-              <div className="you-stats">
-                <div>
-                  <strong>{progress.days.length}</strong>
-                  <span>editions read</span>
-                </div>
-                <div>
-                  <strong>{readingStreak(progress.days, today)}</strong>
-                  <span>day streak</span>
-                </div>
-
                 <button
+                  className="jar-cta"
                   onClick={() =>
                     stories.length
                       ? read(complete ? 0 : position)
                       : tab("today")
                   }
                 >
-                  Read your edition ↗
+                  {complete ? "Read today again" : "Open today’s edition"}
                 </button>
               </div>
+              <div className="glass-jar">
+                <span className="jar-rim" />
+                <div className="jar-charms">
+                  {Array.from(
+                    { length: Math.min(12, progress.days.length) },
+                    (_, i) => (
+                      <Charm key={i} mood={moods[i % 5]} />
+                    ),
+                  )}
+                </div>
+                <span className="jar-label">½</span>
+              </div>
             </div>
-            <section className="jar-section" aria-labelledby="jar-reactions">
-              <h2 id="jar-reactions">Your reactions</h2>
-              {Object.values(progress.reactions).some(Boolean) ? (
+            <div className="jar-grid">
+              <section className="jar-panel" aria-labelledby="jar-reactions">
+                <h2 id="jar-reactions">How the news landed</h2>
                 <div className="reaction-tallies">
                   {reactionArt.map((item) => {
                     const count = Object.values(progress.reactions).filter(
@@ -629,48 +636,48 @@ export default function USApp() {
                     );
                   })}
                 </div>
-              ) : (
                 <p className="jar-empty">
-                  Reactions you leave on stories collect here. They stay
-                  private.
+                  Reactions stay private and never change the news.
                 </p>
-              )}
-            </section>
-            <section className="jar-section" aria-labelledby="jar-history">
-              <h2 id="jar-history">Editions you’ve finished</h2>
-              {progress.days.length ? (
-                <ul className="reading-history">
-                  {[...progress.days]
-                    .reverse()
-                    .slice(0, 30)
-                    .map((day) => (
-                      <li key={day}>
-                        <button
-                          onClick={() =>
-                            day === selectedDate ? tab("today") : openDate(day)
-                          }
-                        >
-                          <span>
-                            {dateLabel(day, {
-                              weekday: "short",
-                              month: "long",
-                              day: "numeric",
-                              ...(day.slice(0, 4) !== today.slice(0, 4)
-                                ? { year: "numeric" }
-                                : {}),
-                            })}
-                          </span>
-                          <Icon name="check" size={16} />
-                        </button>
-                      </li>
-                    ))}
-                </ul>
-              ) : (
-                <p className="jar-empty">
-                  Finish an edition and it lands in the jar.
-                </p>
-              )}
-            </section>
+              </section>
+              <section className="jar-panel" aria-labelledby="jar-history">
+                <h2 id="jar-history">Finished editions</h2>
+                {progress.days.length ? (
+                  <ul className="reading-history">
+                    {[...progress.days]
+                      .reverse()
+                      .slice(0, 30)
+                      .map((day) => (
+                        <li key={day}>
+                          <button
+                            onClick={() =>
+                              day === selectedDate
+                                ? tab("today")
+                                : openDate(day)
+                            }
+                          >
+                            <span>
+                              {dateLabel(day, {
+                                weekday: "short",
+                                month: "long",
+                                day: "numeric",
+                                ...(day.slice(0, 4) !== today.slice(0, 4)
+                                  ? { year: "numeric" }
+                                  : {}),
+                              })}
+                            </span>
+                            <Icon name="check" size={16} />
+                          </button>
+                        </li>
+                      ))}
+                  </ul>
+                ) : (
+                  <p className="jar-empty">
+                    Finish an edition and it lands in the jar.
+                  </p>
+                )}
+              </section>
+            </div>
           </section>
         )}
         <PWAStatus />

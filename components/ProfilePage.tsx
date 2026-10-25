@@ -49,18 +49,16 @@ export default function ProfilePage({
   const { preferences, update } = settings;
   return (
     <section className="profile-page" aria-label="Profile">
-      <div className="page-heading">
-        <h1>Profile</h1>
-      </div>
-      <section className="profile-identity-block" aria-label="Account">
+      <section className="profile-hero" aria-label="Account">
         <div className="profile-identity">
           <div className="profile-avatar">
             <ProfileAvatar profile={profile} />
           </div>
           <div>
-            <h2>
+            <p className="eyebrow">Profile</p>
+            <h1>
               {user ? user.displayName || "Your account" : "Reading as a guest"}
-            </h2>
+            </h1>
             <p>
               {user
                 ? user.email
@@ -108,89 +106,99 @@ export default function ProfilePage({
           </div>
         )}
       </section>
-      <section className="preference-block" aria-labelledby="mode-heading">
-        <h2 id="mode-heading">How you catch up</h2>
-        <p className="preference-note">
-          Shapes the home screen and listening defaults. Never changes which
-          stories are in an edition.
-        </p>
-        <div
-          className="mode-picker"
-          role="radiogroup"
-          aria-label="How you catch up"
-        >
-          {(Object.keys(MODE_LABELS) as CatchUpMode[]).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              role="radio"
-              aria-checked={preferences.mode === mode}
-              className={`mode-option${preferences.mode === mode ? " selected" : ""}`}
-              onClick={() => update({ mode })}
-            >
-              {MODE_LABELS[mode]}
-            </button>
-          ))}
-        </div>
-      </section>
-      <section className="preference-block" aria-labelledby="narrator-heading">
-        <h2 id="narrator-heading">Narrator</h2>
-        <p className="preference-note">
-          Who reads the stories aloud. Applies to the next clip you play.
-        </p>
-        <NarratorPicker
-          value={preferences.narrator}
-          onChange={(narrator) => update({ narrator })}
-        />
-      </section>
-      <section className="preference-block" aria-labelledby="listening-heading">
-        <h2 id="listening-heading">Listening</h2>
-        <div className="preference-row">
-          <label htmlFor="preference-speed">Speed</label>
-          <select
-            id="preference-speed"
-            value={String(preferences.speed)}
-            onChange={(event) =>
-              update({
-                speed: Number(event.target.value) as (typeof SPEEDS)[number],
-              })
-            }
+      <div className="profile-panels">
+        <section className="preference-block" aria-labelledby="mode-heading">
+          <h2 id="mode-heading">How you catch up</h2>
+          <p className="preference-note">
+            Shapes the home screen and listening defaults. Never changes which
+            stories are in an edition.
+          </p>
+          <div
+            className="mode-picker"
+            role="radiogroup"
+            aria-label="How you catch up"
           >
-            {SPEEDS.map((speed) => (
-              <option key={speed} value={String(speed)}>
-                {speed}×
-              </option>
+            {(Object.keys(MODE_LABELS) as CatchUpMode[]).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="radio"
+                aria-checked={preferences.mode === mode}
+                className={`mode-option${preferences.mode === mode ? " selected" : ""}`}
+                onClick={() => update({ mode })}
+              >
+                {MODE_LABELS[mode]}
+              </button>
             ))}
-          </select>
-        </div>
-        <label className="preference-row">
-          <span>Autoplay the next story</span>
-          <input
-            type="checkbox"
-            role="switch"
-            aria-checked={preferences.autoplayNext}
-            checked={preferences.autoplayNext}
-            onChange={(event) => update({ autoplayNext: event.target.checked })}
+          </div>
+        </section>
+        <section
+          className="preference-block"
+          aria-labelledby="narrator-heading"
+        >
+          <h2 id="narrator-heading">Narrator</h2>
+          <p className="preference-note">
+            Who reads the stories aloud. Applies to the next clip you play.
+          </p>
+          <NarratorPicker
+            value={preferences.narrator}
+            onChange={(narrator) => update({ narrator })}
           />
-        </label>
-      </section>
-      <section className="preference-block" aria-labelledby="data-heading">
-        <h2 id="data-heading">Your data</h2>
-        <p className="preference-note">
-          Completed editions and reactions{" "}
-          {user ? "sync through your Google account" : "stay on this device"}.
-          Narrator and listening preferences stay on this device. Reactions are
-          private and never change which stories everyone sees.
-        </p>
-        <button className="quiet link-like" onClick={onOpenJar}>
-          Open Your jar ↗
-        </button>
-        {onReplayIntro && (
-          <button className="quiet link-like" onClick={onReplayIntro}>
-            See the intro again ↗
+        </section>
+        <section
+          className="preference-block"
+          aria-labelledby="listening-heading"
+        >
+          <h2 id="listening-heading">Listening</h2>
+          <div className="preference-row">
+            <label htmlFor="preference-speed">Speed</label>
+            <select
+              id="preference-speed"
+              value={String(preferences.speed)}
+              onChange={(event) =>
+                update({
+                  speed: Number(event.target.value) as (typeof SPEEDS)[number],
+                })
+              }
+            >
+              {SPEEDS.map((speed) => (
+                <option key={speed} value={String(speed)}>
+                  {speed}×
+                </option>
+              ))}
+            </select>
+          </div>
+          <label className="preference-row">
+            <span>Autoplay the next story</span>
+            <input
+              type="checkbox"
+              role="switch"
+              aria-checked={preferences.autoplayNext}
+              checked={preferences.autoplayNext}
+              onChange={(event) =>
+                update({ autoplayNext: event.target.checked })
+              }
+            />
+          </label>
+        </section>
+        <section className="preference-block" aria-labelledby="data-heading">
+          <h2 id="data-heading">Your data</h2>
+          <p className="preference-note">
+            Completed editions and reactions{" "}
+            {user ? "sync through your Google account" : "stay on this device"}.
+            Narrator and listening preferences stay on this device. Reactions
+            are private and never change which stories everyone sees.
+          </p>
+          <button className="quiet link-like" onClick={onOpenJar}>
+            Open Your jar ↗
           </button>
-        )}
-      </section>
+          {onReplayIntro && (
+            <button className="quiet link-like" onClick={onReplayIntro}>
+              See the intro again ↗
+            </button>
+          )}
+        </section>
+      </div>
     </section>
   );
 }
