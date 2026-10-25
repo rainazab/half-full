@@ -64,11 +64,12 @@ export function automaticVideoRequest(
     (item) => item.status === "ready" && item.asset,
   );
   if (!scene?.asset) return null;
-  const subjectMotion = /water|river|lake|stream|runoff|rain|wave/i.test(scene.objects.join(" "))
+  const objectText = scene.objects.join(" ");
+  const subjectMotion = /\b(water|river|lake|stream|runoff|rain|wave)s?\b/i.test(objectText)
     ? "Show the existing water or flow visibly moving along its current path."
-    : /train|car|vehicle|bus|bicycle|boat/i.test(scene.objects.join(" "))
+    : /\b(train|car|vehicle|bus|bicycle|boat)s?\b/i.test(objectText)
       ? "Show the existing vehicle moving through the scene while the surrounding setting stays grounded."
-      : /tree|leaf|grass|plant|cloud|smoke|steam/i.test(scene.objects.join(" "))
+      : /\b(tree|leaf|grass|plant|cloud|smoke|steam)s?\b/i.test(objectText)
         ? "Show the existing natural element visibly swaying or drifting in place."
         : `Show the existing ${scene.objects.slice(0, 2).join(" and ")} visibly changing position or state while remaining recognizable.`;
   const prompt = [

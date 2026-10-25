@@ -200,6 +200,11 @@ test("automatic video requests use the first ready approved illustration and sta
   assert.equal(generated?.ratio, "1104:832");
   assert.ok(generated && generated.prompt.length <= 1000);
   assert.match(generated!.prompt, /existing subject/);
+  const trainStoryboard = structuredClone(f.storyboard);
+  trainStoryboard.scenes[0].objects = ["train", "street"];
+  const trainPrompt = automaticVideoRequest(request.date, story, trainStoryboard)!.prompt;
+  assert.match(trainPrompt, /vehicle moving/);
+  assert.doesNotMatch(trainPrompt, /water or flow/);
 });
 test("video preparation requires an approved story and exact retained keyframe references", async () => {
   const f = fixture();
