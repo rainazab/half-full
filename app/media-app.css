@@ -313,8 +313,9 @@ button.primary:hover:not(:disabled) {
   font-size: 13px;
   gap: 12px;
 }
-.feature-actions .feature-primary:hover {
+.feature-actions .feature-primary:hover:not(:disabled) {
   background: #fff;
+  border-color: #fff;
 }
 .feature-secondary {
   display: flex;
