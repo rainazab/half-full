@@ -27,7 +27,7 @@ export default function ProfileCard({ profile }: { profile: ProfileState }) {
           <div className="profile-account-controls">
             <span className={`profile-sync ${sync}`} role="status">
               {sync === "saved"
-                ? "Jar synced"
+                ? "Progress synced"
                 : sync === "syncing"
                   ? "Syncing…"
                   : "Saved on this device"}
@@ -39,7 +39,7 @@ export default function ProfileCard({ profile }: { profile: ProfileState }) {
         </>
       ) : (
         <>
-          <h2>Your jar, wherever you are.</h2>
+          <h2>Your progress, wherever you are.</h2>
           <p>Sign in to bring your progress along.</p>
           <button
             className="google-signin"

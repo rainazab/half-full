@@ -249,7 +249,7 @@ export default function DatePicker({
             </strong>
             <small>
               {completedDays.includes(date)
-                ? "Finished · in your jar"
+                ? "Finished"
                 : entries.some(
                       (entry) => entry.date === date && entry.mode === "live",
                     )

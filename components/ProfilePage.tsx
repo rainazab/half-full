@@ -72,9 +72,9 @@ export default function ProfilePage({
           <div className="profile-account-controls">
             <span className={`profile-sync ${sync}`} role="status">
               {sync === "saved"
-                ? "Jar synced"
+                ? "Progress synced"
                 : sync === "syncing"
-                  ? "Syncing your jar…"
+                  ? "Syncing your progress…"
                   : "Saved on this device"}
             </span>
             <button className="quiet" onClick={() => void logout()}>
@@ -175,7 +175,7 @@ export default function ProfilePage({
       </section>
       <div className="profile-library-links">
         <button onClick={onOpenJar}>
-          Your jar <Icon name="next" size={16} />
+          Progress <Icon name="next" size={16} />
         </button>
         {onReplayIntro && (
           <button onClick={onReplayIntro}>

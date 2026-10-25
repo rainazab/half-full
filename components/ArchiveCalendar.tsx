@@ -187,12 +187,10 @@ export default function ArchiveCalendar({
           aria-live="polite"
           aria-labelledby="selected-edition-title"
         >
-          <div className="selected-edition-art" aria-hidden="true">
-            <span>½</span>
-          </div>
+          <div className="selected-edition-art" aria-hidden="true"><Icon name="calendar" size={34} /></div>
           <p className="eyebrow">
             {completed
-              ? "Already in your jar"
+              ? "Already finished"
               : chosen
                 ? "Ready to open"
                 : "A new day to explore"}

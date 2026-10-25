@@ -182,10 +182,10 @@ button.primary:hover:not(:disabled) {
   min-height: calc(100dvh - 80px);
 }
 .today-home > .dithered-atmosphere {
-  inset: -2rem -18vw -8rem;
-  opacity: 0.68;
-  mask-image: radial-gradient(ellipse 92% 92% at 50% 34%, #000 42%, #000b 72%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse 92% 92% at 50% 34%, #000 42%, #000b 72%, transparent 100%);
+  inset: 0;
+  opacity: 0.42;
+  mask-image: none;
+  -webkit-mask-image: none;
 }
 .today-home > *:not(.dithered-atmosphere) {
   position: relative;

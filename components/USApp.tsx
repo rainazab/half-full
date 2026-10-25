@@ -442,7 +442,7 @@ export default function USApp() {
     { view: "today", label: "Today", icon: "today" },
     { view: "archive", label: "Calendar", icon: "calendar" },
     { view: "mini", label: "Brain Break", icon: "mini" },
-    { view: "you", label: "Your jar", icon: "jar" },
+    { view: "you", label: "Progress", icon: "today" },
   ];
   return (
     <div
