@@ -204,7 +204,7 @@
 .reading-mode > .app-main {
   max-width: 880px;
   padding-top: 0;
-  padding-bottom: calc(110px + env(safe-area-inset-bottom));
+  padding-bottom: calc(40px + env(safe-area-inset-bottom));
 }
 .reading-header {
   display: flex;
@@ -253,7 +253,8 @@
 .reader-progress i.filled {
   background: var(--accent);
 }
-.reader {
+.reader,
+.feed {
   touch-action: pan-y;
 }
 .reader > article {
@@ -546,37 +547,6 @@
   font-size: 0.8rem;
   margin: 8px 0 0;
 }
-.story-navigation {
-  position: fixed;
-  z-index: 25;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin: 0;
-  padding: 12px max(20px, calc((100vw - 770px) / 2))
-    calc(12px + env(safe-area-inset-bottom));
-  background: var(--cream);
-  border-top: 1px solid var(--line);
-}
-.story-navigation button {
-  min-width: 110px;
-  min-height: 48px;
-  border-radius: 12px;
-}
-.story-navigation .primary {
-  justify-content: center;
-}
-.story-navigation button:first-child {
-  background: none;
-}
-.story-navigation .dock-progress {
-  font-size: 0.8rem;
-  color: var(--muted);
-}
 .reader > .ending {
   max-width: 620px;
   margin: 40px auto;
@@ -700,7 +670,7 @@
     gap: 12px;
   }
   .reading-mode > .app-main {
-    padding: 0 20px calc(110px + env(safe-area-inset-bottom));
+    padding: 0 20px calc(40px + env(safe-area-inset-bottom));
   }
   .reading-header {
     padding-top: calc(8px + env(safe-area-inset-top));
@@ -719,16 +689,6 @@
   .story-copy .visual-photo img {
     max-height: 210px;
   }
-  .story-navigation {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-  .story-navigation button {
-    min-width: 100px;
-  }
-  .story-navigation .dock-progress {
-    font-size: 0.73rem;
-  }
   .reader > .ending {
     margin-top: 35px;
   }
@@ -740,7 +700,6 @@
   }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .story-navigation button,
   .cover-copy h3 button {
     transition:
       background var(--motion-fast),
@@ -881,4 +840,3 @@
     min-height: 44px;
   }
 }
-

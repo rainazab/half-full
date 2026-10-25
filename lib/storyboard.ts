@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { REACTION_CHARACTERS } from "./illustration-style";
+import { sceneMotionSchema } from "./scene-motion";
 
 /**
  * Storyboard contracts shared by the server planner, the stored manifest and
@@ -98,6 +99,8 @@ export const storyboardManifestSchema = z
           status: z.enum(["pending", "ready", "failed"]),
           asset: storyboardAssetSchema.optional(),
           error: z.string().max(300).optional(),
+          /** Optional layered animation (scene-motion/1); flat scenes without it stay valid. */
+          animation: sceneMotionSchema.optional(),
         }),
       )
       .min(1)

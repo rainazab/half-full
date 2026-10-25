@@ -18,7 +18,7 @@ if (!date) {
   process.exit(1);
 }
 async function main() {
-  const { illustrateEdition } = await import("../lib/illustrate");
+  const { illustrateEdition, planMotion } = await import("../lib/illustrate");
   const { dailyStore } = await import("../lib/daily-store");
   const { illustrationStore } = await import("../lib/illustration-store");
   const edition = await dailyStore.get(date);
@@ -52,6 +52,16 @@ async function main() {
     manifest.status = "partial";
     await illustrationStore.saveManifest(manifest);
     console.error(`Marked ${regenerate} for regeneration.`);
+  }
+  if (rest.includes("--motion")) {
+    // Planner-only: layered animation for existing scenes. No Recraft credits are spent.
+    const motion = await planMotion(date, {
+      storyIds,
+      replace: rest.includes("--replace-motion"),
+      log: (message) => console.error(message),
+    });
+    console.log(JSON.stringify(motion, null, 2));
+    return;
   }
   const summary = await illustrateEdition(date, {
     storyIds,

@@ -502,8 +502,11 @@ export default function Studio() {
                             <ul>
                               {manifest.scenes.map((scene) => (
                                 <li key={scene.id}>
-                                  <em>{scene.id}</em> {scene.status}:{" "}
-                                  {scene.purpose}
+                                  <em>{scene.id}</em> {scene.status}
+                                  {scene.animation
+                                    ? ` · animated (${scene.animation.layers.length} layers, ${scene.animation.durationSeconds}s)`
+                                    : " · flat"}
+                                  : {scene.purpose}
                                   {scene.error ? ` — ${scene.error}` : ""}
                                   <details>
                                     <summary>Prompt, cue and evidence</summary>

@@ -17,7 +17,14 @@ export type PlaybackState = {
   duration: number;
   ready: boolean;
 };
-export type PlaybackController = { seekFraction: (fraction: number) => void };
+export type PlaybackController = {
+  seekFraction: (fraction: number) => void;
+  pause: () => void;
+  /** Live clock for scene motion; avoids 4 Hz timeupdate granularity. */
+  currentTime: () => number;
+  duration: () => number;
+  isPlaying: () => boolean;
+};
 export default function AudioPlayer({
   story,
   editionId,
@@ -145,9 +152,15 @@ export default function AudioPlayer({
       setBusy(false);
     }
   }
+  const autoPlayed = useRef(false);
   useEffect(() => {
-    if (autoPlay && active) void play();
-  }, []); // Only explicit listen-through can start the next clip.
+    // Only Listen on the cover or explicit listen-through can start a clip, once.
+    if (autoPlay && active && !autoPlayed.current) {
+      autoPlayed.current = true;
+      void play();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoPlay, active]);
   function seek(seconds: number) {
     const element = audio.current;
     if (!element || !duration) return;
@@ -166,6 +179,10 @@ export default function AudioPlayer({
         );
         setTime(element.currentTime);
       },
+      pause: () => audio.current?.pause(),
+      currentTime: () => audio.current?.currentTime ?? 0,
+      duration: () => duration,
+      isPlaying: () => !!audio.current && !audio.current.paused,
     };
     return () => {
       controller.current = null;

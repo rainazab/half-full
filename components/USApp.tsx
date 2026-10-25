@@ -528,7 +528,7 @@ export default function USApp() {
                     ))}
                   </span>
                   <h3>The Mini</h3>
-                  <span>5 × 5 · Play ↗</span>
+                  <span>Play today’s Mini ↗</span>
                 </button>
               </>
             )}

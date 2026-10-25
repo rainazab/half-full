@@ -21,6 +21,7 @@ import {
   type StoryboardManifest,
 } from "./storyboard";
 import { anthropicPlanner, type Planner } from "./storyboard-plan";
+import { anthropicMotionPlanner, type MotionPlanner } from "./motion-plan";
 import { composeArtPrompt } from "./storyboard-prompt";
 import type { ApprovedStory, EditionResult } from "./types";
 
@@ -54,6 +55,103 @@ export const illustrateDependencies: IllustrateDependencies = {
     readFile(path.join(process.cwd(), "public", publicPath.replace(/^\//, ""))),
   now: () => new Date(),
 };
+/**
+ * Adds layered animation to existing, ready storyboards. Planner-only: no
+ * Recraft call is ever made here, and existing animation is kept unless
+ * `replace` is set.
+ */
+export async function planMotion(
+  date: string,
+  options: {
+    storyIds?: string[];
+    replace?: boolean;
+    log?: (message: string) => void;
+  } = {},
+  deps: {
+    store: IllustrationStore;
+    getEdition: (date: string) => Promise<EditionResult | null>;
+    motionPlanner: () => MotionPlanner;
+    now: () => Date;
+  } = {
+    store: illustrationStore,
+    getEdition: (day) => dailyStore.get(day),
+    motionPlanner: () => anthropicMotionPlanner(getEditorConfig()),
+    now: () => new Date(),
+  },
+) {
+  const log = options.log ?? (() => {});
+  const edition = await deps.getEdition(date);
+  if (!edition)
+    throw new PipelineError(
+      "NO_EDITION",
+      "Motion is only planned for a published edition.",
+      404,
+    );
+  const release = await deps.store.lock(date);
+  const summary = {
+    date,
+    plannerCalls: 0,
+    animated: [] as string[],
+    skipped: [] as { storyId: string; reason: string }[],
+  };
+  try {
+    let plannerInstance: MotionPlanner | undefined;
+    const planner = () => (plannerInstance ??= deps.motionPlanner());
+    for (const story of edition.edition.stories) {
+      if (options.storyIds?.length && !options.storyIds.includes(story.id))
+        continue;
+      const manifest = await deps.store.getManifest(date, story.id);
+      if (
+        !manifest ||
+        !manifest.scenes.some((scene) => scene.status === "ready")
+      ) {
+        summary.skipped.push({
+          storyId: story.id,
+          reason: "No ready scenes to animate.",
+        });
+        continue;
+      }
+      if (
+        !options.replace &&
+        manifest.scenes.every(
+          (scene) => scene.status !== "ready" || scene.animation,
+        )
+      ) {
+        summary.skipped.push({
+          storyId: story.id,
+          reason: "Animation already planned; reused.",
+        });
+        continue;
+      }
+      try {
+        const planned = await planner()(story, manifest);
+        summary.plannerCalls += planned.calls;
+        const next = structuredClone(manifest);
+        for (const scene of next.scenes)
+          if (planned.animations[scene.id])
+            scene.animation = planned.animations[scene.id];
+        next.usage.plannerCalls += planned.calls;
+        next.updatedAt = deps.now().toISOString();
+        await deps.store.saveManifest(next);
+        summary.animated.push(story.id);
+        log(
+          `${story.id}: animation planned for ${Object.keys(planned.animations).join(", ")}.`,
+        );
+      } catch (error) {
+        const safe = publicError(error);
+        summary.skipped.push({
+          storyId: story.id,
+          reason: `${safe.code}: ${safe.message}`,
+        });
+        log(`${story.id}: ${safe.code} ${safe.message}`);
+        if (safe.code === "STORYBOARD_PLANNER_UNAVAILABLE") break;
+      }
+    }
+    return summary;
+  } finally {
+    await release();
+  }
+}
 export const sha256 = (value: string) =>
   createHash("sha256").update(value).digest("hex");
 export function illustrationLimits(

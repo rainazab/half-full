@@ -293,7 +293,7 @@ export default function Crossword({
           <div>
             <p className="eyebrow">Take a break</p>
             <h3>The Mini</h3>
-            <p>5 × 5 · A few minutes</p>
+            <p>A little brain break.</p>
             <button
               ref={inviteRef}
               className="primary"
