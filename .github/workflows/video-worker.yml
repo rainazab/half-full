@@ -4,20 +4,28 @@ on:
   schedule:
     - cron: "*/5 * * * *"
   workflow_dispatch:
+    inputs:
+      date:
+        description: "Published edition date to backfill (blank for today)"
+        required: false
+        type: string
 
 jobs:
   worker:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 6
     steps:
       - name: Run authenticated production worker
         env:
           CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          TARGET_DATE: ${{ inputs.date }}
         run: |
           set -euo pipefail
           test -n "$CRON_SECRET"
+          suffix=""
+          if [ -n "$TARGET_DATE" ]; then suffix="?date=${TARGET_DATE}"; fi
           curl --fail-with-body --silent --show-error \
-            --retry 2 --retry-delay 5 --max-time 50 \
+            --max-time 300 \
             -H "Authorization: Bearer ${CRON_SECRET}" \
             -H "User-Agent: half-full-video-worker" \
-            "https://news-ten-omega-68.vercel.app/api/videos/worker" | jq .
+            "https://news-ten-omega-68.vercel.app/api/videos/worker${suffix}" | jq .

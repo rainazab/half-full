@@ -346,13 +346,27 @@ export async function pollVideo(
       );
     const manifest = structuredClone(stored),
       clip = manifest.clips[0];
+    const autoApprove = process.env.RUNWAY_AUTO_APPROVE === "true";
     if (
       manifest.status === "ready" ||
       manifest.status === "failed" ||
-      (clip.asset && manifest.review?.status === "pending") ||
+      (clip.asset && manifest.review?.status === "pending" && !autoApprove) ||
       !clip.taskId
     )
       return manifest;
+    if (clip.asset && manifest.review?.status === "pending" && autoApprove) {
+      manifest.review = {
+        status: "approved",
+        notes: "Automatically approved after successful bounded Runway generation.",
+        reviewedAt: deps.now().toISOString(),
+      };
+      manifest.status = "ready";
+      clip.status = "ready";
+      delete clip.error;
+      manifest.updatedAt = deps.now().toISOString();
+      await deps.store.saveManifest(manifest);
+      return manifest;
+    }
     if (
       clip.checkedAt &&
       deps.now().getTime() - Date.parse(clip.checkedAt) < 5000
@@ -386,17 +400,26 @@ export async function pollVideo(
         sha256,
         cachedAt: deps.now().toISOString(),
       };
-      clip.status = "processing";
-      clip.error = {
-        code: "VIDEO_REVIEW_REQUIRED",
-        message:
-          "The generated clip is cached and awaiting a visual review. The still illustration remains available.",
-      };
-      manifest.review = {
-        status: "pending",
-        notes:
-          "Provider output is cached. An operator must inspect actual frames before readers can play it.",
-      };
+      if (autoApprove) {
+        clip.status = "ready";
+        manifest.review = {
+          status: "approved",
+          notes: "Automatically approved after successful bounded Runway generation.",
+          reviewedAt: deps.now().toISOString(),
+        };
+      } else {
+        clip.status = "processing";
+        clip.error = {
+          code: "VIDEO_REVIEW_REQUIRED",
+          message:
+            "The generated clip is cached and awaiting a visual review. The still illustration remains available.",
+        };
+        manifest.review = {
+          status: "pending",
+          notes:
+            "Provider output is cached. An operator must inspect actual frames before readers can play it.",
+        };
+      }
     } else clip.status = task.status === "RUNNING" ? "processing" : "pending";
     manifest.status = clip.status;
     manifest.updatedAt = deps.now().toISOString();
