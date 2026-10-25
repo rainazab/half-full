@@ -11,14 +11,14 @@
     let index = 0;
     const container = document.getElementById('story');
     const back = document.getElementById('back'), next = document.getElementById('next'), review = document.getElementById('review');
-    document.getElementById('date').textContent = `Saved edition for ${result.edition.date}. Retrieved ${result.edition.createdAt.slice(0,10)} (UTC). Reconnect to choose another day.`;
+    document.getElementById('date').textContent = `Edition · ${result.edition.date}`;
     function render(focus = true) {
       container.querySelectorAll('audio').forEach((audio) => audio.pause());
       container.replaceChildren();
       const heading = el('h2', index === stories.length ? 'You’re caught up.' : stories[index].headline); heading.tabIndex = -1; container.append(heading);
       document.getElementById('progress').textContent = index === stories.length ? `Complete · ${stories.length} stories` : `${index + 1} of ${stories.length}`;
       back.disabled = index === 0; next.hidden = index === stories.length; next.disabled = false; next.textContent = index === stories.length - 1 ? 'Finish edition' : 'Next'; review.hidden = index !== stories.length;
-      if (index === stories.length) { container.append(el('p', `You’ve reached the end of ${stories.length} stories. Close the app and get on with your day.`)); }
+      if (index === stories.length) { container.append(el('p', `${stories.length} stories. Done for the day.`)); }
       else {
         const story = stories[index];
         const visual = (story.media || []).find((m) => m.rights === 'licensed' && /^\/media\/[a-zA-Z0-9_.-]+$/.test(m.url) && m.licenseUrl);
@@ -32,7 +32,7 @@
         if (story.experience) { const deeper = el('details'); deeper.append(el('summary','Go deeper'),el('p',story.experience.background.text)); container.append(deeper);
           for (const term of story.experience.glossary) { const definition = el('details'); definition.append(el('summary',term.term),el('p',term.text)); container.append(definition); }
         }
-        container.append(el('p', story.experience?.explanation.text || story.summary), el('h3', 'Why it matters'), el('p', story.whyItMatters), el('h3', 'What you can do'), el('p', story.action));
+        container.append(el('p', story.experience?.explanation.text || story.summary), el('h3', 'Why it matters'), el('p', story.whyItMatters), el('h3', 'The bright side'), el('p', story.action));
         const details = el('details'); details.append(el('summary', 'Sources and evidence'), el('p', story.verificationReason), el('p', `Evidence-supported, not independently fact-checked. Editor confidence estimate: ${Math.round(story.confidence*100)}%.`));
         for (const source of story.sources) { const p = el('p'); p.append(link(source.title, source.url), el('span', ` — ${source.publisher} · ${source.publishedAt ? source.publishedAt.slice(0,10) + ' (UTC)' : 'date unavailable'}`)); details.append(p); }
         for (const evidence of story.evidence || []) details.append(el('blockquote', evidence.excerpt));

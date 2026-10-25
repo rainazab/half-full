@@ -42,7 +42,7 @@ export async function POST(request: Request) {
       {
         error: {
           code: "INVALID_DATE",
-          message: "Choose a real date between January 1, 1900 and today.",
+          message: "Choose a date within the last ten years, through today.",
         },
       },
       400,
@@ -56,7 +56,7 @@ export async function POST(request: Request) {
       await release();
       return json(existing, 200, { "X-Edition-Reused": "true" });
     }
-    run = createRun();
+    run = createRun(date);
     if (request.headers.get("accept")?.includes("application/x-ndjson")) {
       const record = run;
       let connected = true;

@@ -1,5 +1,8 @@
 import "server-only";
-import { historicalQueries } from "../actors/news-receipts/core.mjs";
+import {
+  historicalQueries,
+  defaultQueries,
+} from "../actors/news-receipts/core.mjs";
 import { retrieveReceipts } from "./receipts";
 import { boundedRetry } from "./retry";
 import type { AppConfig } from "./config";
@@ -30,9 +33,9 @@ export async function retrieveNews(
       actorInput: {
         investigate: true,
         maxResultsPerQuery: 8,
-        ...(config.editionDate
-          ? { queries: historicalQueries(config.editionDate) }
-          : {}),
+        queries: config.editionDate
+          ? historicalQueries(config.editionDate)
+          : defaultQueries(),
       },
     };
   const deadline = Date.now() + 165000;

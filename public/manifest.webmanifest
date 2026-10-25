@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "half full — a little news, a little perspective",
+  "name": "half full",
   "short_name": "half full",
-  "description": "A finite edition of evidence-aware news. Read, then get on with your day.",
+  "description": "Your daily news, in perspective.",
   "lang": "en",
   "start_url": "/",
   "scope": "/",

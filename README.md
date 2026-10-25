@@ -28,10 +28,10 @@ Optional: `ANTHROPIC_MODEL`, `CARTESIA_API_KEY` (existing `CARTESIA` is also sup
 
 ## Pick a day
 
-The date in the header opens the calendar. Pick a day or use the month/year controls for a birthday. Selecting a date loads its published edition or automatically prepares one. There is no Generate button or archive mode. `/demo` redirects to `/`.
+The date in the header opens the calendar. Pick a day or jump with the month/year controls. Selecting a date loads its published edition or automatically prepares one. There is no Generate button or archive mode. `/demo` redirects to `/`.
 
 - `/` automatically opens today using the shared `America/Los_Angeles` publishing day. An unpublished day triggers retrieval and review. A successfully published edition stays fixed for that date.
-- `/?date=2000-01-01` opens that date directly. The calendar supports real dates from 1900 through today; future and invalid dates are rejected before provider calls.
+- `/?date=2026-10-23` opens that date directly. The calendar and API accept a rolling ten-year window through today. Leap-day cutoffs clamp to the last valid day of February. Future, invalid and older dates are rejected before provider calls.
 - Today uses current reporting. Historical editions search old publisher URL structures and printed publication dates, then require each news candidate to have a publication date matching the selected UTC day. Evidence sources and editorial time are kept separate from the actual retrieval clock. Old news is never relabeled as current news, and later outcomes are not supplied from model memory.
 - Availability depends on accessible historical reporting. A date is not published unless at least three stories pass the evidence checks. Missing dates, blocked articles and insufficient evidence produce a visible failure with an audit. Failed attempts remain retryable; no sample edition is substituted.
 - Current Reddit enrichment is disabled for historical dates to avoid presenting today's discussion as conversation from that day.
@@ -60,24 +60,32 @@ These commands upload an explicit source allowlist and build a **private** Actor
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/today
 curl http://localhost:3000/api/editions
-curl http://localhost:3000/api/editions/2000-01-01
+curl http://localhost:3000/api/editions/2026-10-23
 curl http://localhost:3000/api/run/RUN_ID
 
 # Reuses a saved date; otherwise performs real provider calls:
 curl --max-time 300 -N -X POST \
   -H 'Accept: application/x-ndjson' \
-  'http://localhost:3000/api/run?date=2000-01-01'
+  'http://localhost:3000/api/run?date=2026-10-23'
 ```
 
 `POST /api/run` defaults to today. Published dates return `X-Edition-Reused: true`. Ordinary requests return JSON; streaming requests emit `run`, `log`, then `result` or `error`. An error event after HTTP 200 is still a failed generation. Stream disconnection does not replace or cancel the bounded server run. The app checks the saved date before retrying. Run logs are process-local; published editions survive restarts.
 
 ## Reader, Mini, and reactions
 
-The finite reader supports Next/Back, horizontal swipes and keyboard navigation, with a clear ending. Each story exposes source dates, exact passages, field references, source assessments and an Apify provenance trail. Model confidence is an editorial estimate, not independent fact-checking.
+The finite reader supports Next/Back, horizontal swipes and keyboard navigation, with a clear ending. The reader keeps sources available without exposing processing logs. Detailed evidence, exact passages, field references, source assessments and Actor provenance live at `/studio?date=YYYY-MM-DD`.
 
 Four original generated reaction characters represent Interesting, Insightful, Hopeful and Stressed. Select, switch or remove one reaction per story. No comments or public counts. Reading progress, reactions and Mini progress stay on the current device. [Artwork and prompts](public/reactions/README.md).
 
 The Mini uses original validated 5×5 grids, Across/Down clues, crossing letters, hardware/on-screen keyboards, letter checking and reveal controls. Its layout is deterministic by edition date. Matching glossary terms can supply story-specific clues; the puzzle notice distinguishes general wordplay from news recall.
+
+## Editorial studio and constructive coverage
+
+`/studio` is a separate, read-only generation dashboard. It shows the selected date’s actual discovery, investigation, extraction, editorial comparison and publication stages. Actor run/dataset links come from retained provenance and controlled server IDs. Selected articles, primary documents and the published copy can be compared side by side, with field-to-passage references and exclusion reasons available below. Missing primary sources are stated explicitly. Confidence is a model judgment, not independent fact-checking.
+
+`GET /api/studio/YYYY-MM-DD` reads the saved edition or a live/failed checkpoint. Publication writes bounded, validated checkpoints to Apify KV (`PROCESS-YYYY-MM-DD`) so a different server instance can display progress and failed-run reasons. No provider keys, input environment or raw provider errors are persisted in these records. The studio never launches paid generation just by being viewed. It polls unfinished dates and stops after publication.
+
+New editions favor evidence-supported progress, solutions, community, science, accessibility and culture, while retaining consequential hard news when omission would distort the day. There is no positive-news quota and no relaxation of evidence thresholds. The story’s validated `action` field supplies the closing **The bright side**: one or two short sentences with a supported constructive development or a proportional next step. It must not minimize suffering, manufacture reassurance or invent resources. Its evidence references remain subject to the same checks as other story copy. Already published daily selections remain fixed.
 
 ## Audio and images
 
@@ -89,7 +97,7 @@ Publisher share images are attributed link previews fetched from approved articl
 
 Production registers `/sw.js` on HTTPS or localhost; development does not register a worker. The service worker caches only the static offline shell, manifest, icons and reactions. API responses, POSTs and live audio are not service-worker cached. The reader saves its last opened published edition in local storage; offline navigation shows that actual edition with its original date, or asks to reconnect if the requested date is unavailable. It never substitutes a fixed demo. First installation requires a successful online visit.
 
-Use Safari Share → Add to Home Screen on iPhone or the browser install action where supported. Physical-device installation and Safari playback still need device QA.
+Installation remains available through the browser. The app does not show install prompts, installation instructions, provider badges, or a promotional footer. Physical-device installation and Safari playback still need device QA.
 
 ## Validate and deploy
 
@@ -100,4 +108,4 @@ npm run build
 npm start -- --port 3000
 ```
 
-Deploy with the existing Dockerfile or these build/start commands to a Node host with HTTPS and at least a 300-second request allowance. Store environment values in the host's secret manager. Published editions and the publisher lock are shared through Apify; live audio and detailed run logs are process-local. No public deployment has been performed.
+Deploy with the existing Dockerfile or these build/start commands to a Node host with HTTPS and at least a 300-second request allowance. Store environment values in the host's secret manager. Published editions and the publisher lock are shared through Apify; live audio is process-local; generation checkpoints and published audit records are shared through Apify. No public deployment has been performed.

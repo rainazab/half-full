@@ -10,15 +10,27 @@ interface EditionStore {
   activeRunId?: string;
 }
 
-const globalStore = globalThis as typeof globalThis & { usEditionStore?: EditionStore };
-const store: EditionStore = globalStore.usEditionStore ??= { runs: new Map<string, RunRecord>() };
+const globalStore = globalThis as typeof globalThis & {
+  usEditionStore?: EditionStore;
+};
+const store: EditionStore = (globalStore.usEditionStore ??= {
+  runs: new Map<string, RunRecord>(),
+});
 
-export function createRun(): RunRecord {
+export function createRun(date?: string): RunRecord {
   if (store.activeRunId) {
-    throw new PipelineError("RUN_IN_PROGRESS", `An edition is already being generated. Check /api/run/${store.activeRunId} for progress.`, 409);
+    throw new PipelineError(
+      "RUN_IN_PROGRESS",
+      `An edition is already being generated. Check /api/run/${store.activeRunId} for progress.`,
+      409,
+    );
   }
   const record: RunRecord = {
-    id: randomUUID(), status: "running", createdAt: new Date().toISOString(), runLog: [],
+    date,
+    id: randomUUID(),
+    status: "running",
+    createdAt: new Date().toISOString(),
+    runLog: [],
   };
   store.runs.set(record.id, record);
   store.activeRunId = record.id;
@@ -38,3 +50,6 @@ export function finishRun(record: RunRecord, result?: EditionResult) {
 
 export const getRun = (id: string) => store.runs.get(id);
 export const getLatestEdition = () => store.latest;
+
+export const getRunForDate = (date: string) =>
+  [...store.runs.values()].reverse().find((run) => run.date === date);

@@ -98,9 +98,9 @@ export function defaultQueries(now = new Date()) {
       .slice(0, 10),
     year = now.getUTCFullYear();
   return [
-    `(site:bbc.com/news/articles/ OR site:npr.org/${year}/) after:${after} (technology OR science OR health)`,
-    `(site:bbc.com/news/articles/ OR site:theguardian.com) after:${after} (economy OR education OR climate)`,
-    `(site:apnews.com/article/ OR site:bbc.com/news/articles/) after:${after} (research OR policy OR world)`,
+    `(site:bbc.com/news/articles/ OR site:npr.org/${year}/) after:${after} (science OR accessibility OR education OR community OR discovery)`,
+    `(site:bbc.com/news/articles/ OR site:theguardian.com) after:${after} (conservation OR clean energy OR innovation OR health research OR culture)`,
+    `(site:bbc.com/news/articles/ OR site:theguardian.com/world OR site:npr.org/${year}/) after:${after} (major news OR policy OR economy OR world)`,
   ];
 }
 /** Exact-day search lanes support old publisher URL structures, including BBC's pre-2008 site. */
@@ -119,6 +119,18 @@ export function historicalQueries(day) {
   });
   const shortMonth = month.slice(0, 3).toLowerCase();
   const year = date.getUTCFullYear();
+  if (year >= 2010) {
+    const previous = new Date(date.getTime() - 86400000)
+      .toISOString()
+      .slice(0, 10);
+    const next = new Date(date.getTime() + 86400000).toISOString().slice(0, 10);
+    const range = `after:${previous} before:${next}`;
+    return [
+      `(site:bbc.com/news/articles/ OR site:bbc.co.uk/news/articles/ OR site:npr.org/${year}/) ${range} (science OR health OR education OR community)`,
+      `site:theguardian.com inurl:${year}/${shortMonth}/${day.slice(8)} ${range} (science OR environment OR innovation OR education OR culture) -inurl:all -inurl:live`,
+      `(site:bbc.com/news/articles/ OR site:theguardian.com/world OR site:npr.org/${year}/) ${range} (news OR policy OR economy) -inurl:all -inurl:live`,
+    ];
+  }
   // Old pages are often re-indexed today. Search their printed mastheads/canonical
   // paths, then let the consumer check actual publication dates rather than crawl dates.
   return [

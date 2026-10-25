@@ -31,10 +31,7 @@ export default function StoryReactions({
       role="group"
       aria-label="React to this story"
     >
-      <p>
-        How did this land?
-        <span>One little reaction. Just for you, saved on this device.</span>
-      </p>
+      <p>Your take</p>
       <div>
         {options.map(({ label, image, hint }) => (
           <button

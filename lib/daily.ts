@@ -61,9 +61,13 @@ export function readingStreak(days: string[], today = editionDay()) {
 }
 
 /** Historical editions use an exact publication day, never a relabeled current batch. */
-export const FIRST_EDITION_DAY = "1900-01-01";
+export function earliestEditionDay(today = editionDay()) {
+  const [year, month, day] = today.split("-").map(Number);
+  const last = new Date(Date.UTC(year - 10, month, 0)).getUTCDate();
+  return `${year - 10}-${String(month).padStart(2, "0")}-${String(Math.min(day, last)).padStart(2, "0")}`;
+}
 export function selectableDay(day: string, today = editionDay()) {
-  return validDay(day) && day >= FIRST_EDITION_DAY && day <= today;
+  return validDay(day) && day >= earliestEditionDay(today) && day <= today;
 }
 export function shiftDay(day: string, delta: number) {
   const value = new Date(`${day}T12:00:00Z`);

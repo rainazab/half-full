@@ -143,6 +143,7 @@ export interface EditionResult {
 }
 
 export interface RunRecord {
+  date?: string;
   id: string;
   status: "running" | "completed" | "failed";
   createdAt: string;

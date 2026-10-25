@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   dateLabel,
-  FIRST_EDITION_DAY,
+  earliestEditionDay,
   selectableDay,
   shiftDay,
   type ArchiveEntry,
@@ -53,6 +53,7 @@ export default function DatePicker({
       onSelect(day);
     }
   }
+  const minimum = earliestEditionDay(today);
   const first = new Date(`${month}-01T12:00:00Z`);
   const days = new Date(
     Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0),
@@ -78,8 +79,7 @@ export default function DatePicker({
       <div className="date-picker-content">
         <div className="date-picker-heading">
           <div>
-            <p className="eyebrow">A little time travel</p>
-            <h2 id="date-picker-title">Every day has a story.</h2>
+            <h2 id="date-picker-title">Pick a day.</h2>
           </div>
           <button
             type="button"
@@ -91,16 +91,14 @@ export default function DatePicker({
           </button>
         </div>
         <p className="date-picker-intro">
-          Your birthday. A big day. Or just a Tuesday.
-          <br />
-          Pick a date. We’ll find its stories.
+          Daily editions from the last ten years.
         </p>
         <div className="date-month-controls">
           <button
             type="button"
             aria-label="Previous month"
             onClick={() => move(-1)}
-            disabled={month <= FIRST_EDITION_DAY.slice(0, 7)}
+            disabled={month <= minimum.slice(0, 7)}
           >
             ‹
           </button>
@@ -118,8 +116,10 @@ export default function DatePicker({
                   key={i}
                   value={String(i + 1).padStart(2, "0")}
                   disabled={
-                    month.slice(0, 4) === today.slice(0, 4) &&
-                    i + 1 > Number(today.slice(5, 7))
+                    (month.slice(0, 4) === today.slice(0, 4) &&
+                      i + 1 > Number(today.slice(5, 7))) ||
+                    (month.slice(0, 4) === minimum.slice(0, 4) &&
+                      i + 1 < Number(minimum.slice(5, 7)))
                   }
                 >
                   {dateLabel(`2000-${String(i + 1).padStart(2, "0")}-01`, {
@@ -134,14 +134,22 @@ export default function DatePicker({
             <select
               aria-label="Year"
               value={month.slice(0, 4)}
-              onChange={(e) =>
+              onChange={(e) => {
+                const candidate = `${e.target.value}-${month.slice(5)}`;
                 setMonth(
-                  `${e.target.value}-${e.target.value === today.slice(0, 4) && month.slice(5) > today.slice(5, 7) ? today.slice(5, 7) : month.slice(5)}`,
-                )
-              }
+                  candidate < minimum.slice(0, 7)
+                    ? minimum.slice(0, 7)
+                    : candidate > today.slice(0, 7)
+                      ? today.slice(0, 7)
+                      : candidate,
+                );
+              }}
             >
               {Array.from(
-                { length: Number(today.slice(0, 4)) - 1899 },
+                {
+                  length:
+                    Number(today.slice(0, 4)) - Number(minimum.slice(0, 4)) + 1,
+                },
                 (_, i) => (
                   <option key={i} value={Number(today.slice(0, 4)) - i}>
                     {Number(today.slice(0, 4)) - i}
@@ -216,10 +224,10 @@ export default function DatePicker({
         </div>
         <div className="date-picker-footer">
           <span>
-            <i /> Already picked & saved
+            <i /> Saved edition
           </span>
           <button type="button" onClick={() => pick(today)}>
-            Back to today ↗
+            Today
           </button>
         </div>
         <form
@@ -234,7 +242,7 @@ export default function DatePicker({
             <input
               id="edition-date-jump"
               type="date"
-              min={FIRST_EDITION_DAY}
+              min={minimum}
               max={today}
               value={jump}
               onChange={(e) => setJump(e.target.value)}
@@ -245,10 +253,6 @@ export default function DatePicker({
             </button>
           </div>
         </form>
-        <p className="date-picker-note">
-          Today’s picks stay put. Other dates are retrieved and saved on your
-          first visit. Older reporting can be harder to find.
-        </p>
       </div>
     </dialog>
   );

@@ -112,9 +112,9 @@ export default function Crossword({
             ))}
           </div>
           <div>
-            <p className="eyebrow">A little brain break</p>
-            <h3>Want to see what stuck?</h3>
-            <p>Five by five. A few minutes. Entirely optional.</p>
+            <p className="eyebrow">Take a break</p>
+            <h3>The Mini</h3>
+            <p>5 × 5 · A few minutes</p>
             <button className="primary" onClick={() => setOpen(true)}>
               Play the Mini <span>↗</span>
             </button>
@@ -294,17 +294,14 @@ export default function Crossword({
             <div className="mini-complete" role="status">
               <Charm mood="mint" small />
               <div>
-                <h3>A little win.</h3>
-                <p>
-                  Mini complete{assisted ? ", with a little help" : ""}. Your
-                  day is yours again.
-                </p>
+                <h3>Solved.</h3>
+                <p>Complete{assisted ? " · assisted" : ""}.</p>
               </div>
             </div>
           )}
           <details className="note">
             <summary>About this puzzle</summary>
-            <p>{puzzle.notice} Progress is saved on this device only.</p>
+            <p>{puzzle.notice} </p>
           </details>
         </>
       )}

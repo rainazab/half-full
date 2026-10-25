@@ -56,9 +56,7 @@ export default function AudioPlayer({
     try {
       if (!element.getAttribute("src")) {
         if (demo) {
-          setError(
-            "This archived story has no bundled narration. The full text is available below.",
-          );
+          setError("Audio isn’t available for this story.");
           return;
         }
         setBusy(true);
@@ -76,8 +74,7 @@ export default function AudioPlayer({
         const result = await response.json();
         if (!response.ok)
           throw new Error(
-            result.error?.message ??
-              "Voice is unavailable. Keep reading, or retry Play.",
+            result.error?.message ?? "Audio couldn’t load. Try again.",
           );
         if (
           typeof result.url !== "string" ||
@@ -92,10 +89,8 @@ export default function AudioPlayer({
       if (request.current?.signal.aborted) return;
       setError(
         failure instanceof DOMException && failure.name === "NotAllowedError"
-          ? "Audio is ready. Tap Play to listen on this device."
-          : failure instanceof Error
-            ? failure.message
-            : "Voice is unavailable. The text remains available.",
+          ? "Tap Listen to play."
+          : "Audio couldn’t load. Try again.",
       );
     } finally {
       setBusy(false);
@@ -106,10 +101,6 @@ export default function AudioPlayer({
   }, []); // Only explicit listen-through can start the next clip.
   return (
     <section className="audio-player" aria-label="Story narration">
-      <div className="audio-title">
-        <span>LISTEN · HALF FULL</span>
-        <span>Cartesia voice · ~{narration.estimatedSeconds}s</span>
-      </div>
       <audio
         ref={audio}
         src={bundled}
@@ -129,9 +120,7 @@ export default function AudioPlayer({
           if (through) onEnded();
         }}
         onError={() => {
-          setError(
-            "This clip could not be loaded. Keep reading, or retry Play.",
-          );
+          setError("Audio couldn’t load. Try again.");
           audio.current?.removeAttribute("src");
         }}
       />
@@ -142,23 +131,25 @@ export default function AudioPlayer({
           onClick={() => void play()}
           aria-label={playing ? "Pause narration" : "Play narration"}
         >
-          {busy ? "Preparing voice…" : playing ? "Ⅱ Pause" : "▶ Play"}
+          {busy ? "Loading…" : playing ? "Ⅱ Pause" : "▶ Listen"}
         </button>
-        <button
-          disabled={!duration}
-          onClick={() => {
-            if (audio.current) {
-              audio.current.currentTime = 0;
-              void audio.current
-                .play()
-                .catch(() => setError("Tap Play to replay."));
-            }
-          }}
-        >
-          Replay
-        </button>
+        {duration > 0 && (
+          <button
+            aria-label="Replay"
+            title="Replay"
+            onClick={() => {
+              if (audio.current) {
+                audio.current.currentTime = 0;
+                void audio.current
+                  .play()
+                  .catch(() => setError("Tap Play to replay."));
+              }
+            }}
+          >
+            ↺
+          </button>
+        )}
         <label>
-          Speed{" "}
           <select
             aria-label="Playback speed"
             defaultValue="1"
@@ -172,41 +163,53 @@ export default function AudioPlayer({
             <option value="1.5">1.5×</option>
           </select>
         </label>
+        {!duration && (
+          <span className="audio-estimate">
+            ~{clock(narration.estimatedSeconds)}
+          </span>
+        )}
+        <details className="audio-options">
+          <summary aria-label="Playback options" title="Playback options">
+            •••
+          </summary>
+          <label className="listen-through">
+            <input
+              type="checkbox"
+              checked={through}
+              onChange={(e) => onThrough(e.target.checked)}
+            />
+            Autoplay next
+          </label>
+          <details>
+            <summary>Transcript</summary>
+            <p>{narration.script}</p>
+          </details>
+        </details>
       </div>
-      <div className="audio-timeline">
-        <span>{clock(time)}</span>
-        <input
-          aria-label="Audio position"
-          type="range"
-          min="0"
-          max={duration || 1}
-          step="0.1"
-          value={time}
-          disabled={!duration}
-          onChange={(e) => {
-            if (audio.current)
-              audio.current.currentTime = Number(e.target.value);
-          }}
-        />
-        <span>{clock(duration)}</span>
-      </div>
-      <label className="listen-through">
-        <input
-          type="checkbox"
-          checked={through}
-          onChange={(e) => onThrough(e.target.checked)}
-        />{" "}
-        Listen through this edition (ends after the last story)
-      </label>
+      {duration > 0 && (
+        <div className="audio-timeline">
+          <span>{clock(time)}</span>
+          <input
+            aria-label="Audio position"
+            type="range"
+            min="0"
+            max={duration || 1}
+            step="0.1"
+            value={time}
+            disabled={!duration}
+            onChange={(e) => {
+              if (audio.current)
+                audio.current.currentTime = Number(e.target.value);
+            }}
+          />
+          <span>{clock(duration)}</span>
+        </div>
+      )}
       {error && (
         <p role="status" className="note">
           {error}
         </p>
       )}
-      <details>
-        <summary>Read the narration</summary>
-        <p>{narration.script}</p>
-      </details>
     </section>
   );
 }

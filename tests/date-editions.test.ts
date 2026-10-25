@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { historicalQueries } from "../actors/news-receipts/core.mjs";
-import { selectableDay, shiftDay } from "../lib/daily";
+import { selectableDay, shiftDay, earliestEditionDay } from "../lib/daily";
 import { editionContext } from "../lib/editor-prompt";
 import { normalizeStories } from "../lib/normalize";
 import { generateEdition, pipelineDependencies } from "../lib/pipeline";
@@ -9,11 +9,16 @@ import { POST } from "../app/api/run/route";
 import type { AppConfig } from "../lib/config";
 import type { RunRecord } from "../lib/types";
 
-test("birthday bounds support leap days and reject invalid or future dates before paid work", async () => {
-  assert.equal(selectableDay("2000-02-29", "2026-10-24"), true);
+test("ten-year bounds support leap days and reject invalid or future dates before paid work", async () => {
+  assert.equal(selectableDay("2024-02-29", "2026-10-24"), true);
   for (const date of ["2001-02-29", "2026-10-25", "1899-12-31", "not-a-date"])
     assert.equal(selectableDay(date, "2026-10-24"), false);
   assert.equal(shiftDay("2000-01-01", -1), "1999-12-31");
+  assert.equal(earliestEditionDay("2026-10-24"), "2016-10-24");
+  assert.equal(earliestEditionDay("2024-02-29"), "2014-02-28");
+  assert.equal(selectableDay("2016-10-24", "2026-10-24"), true);
+  assert.equal(selectableDay("2016-10-23", "2026-10-24"), false);
+  assert.equal(selectableDay("2000-01-01", "2026-10-24"), false);
   for (const date of ["3000-01-01", "2000-02-30", "1899-01-01"]) {
     const response = await POST(
       new Request(`http://localhost/api/run?date=${date}`, { method: "POST" }),

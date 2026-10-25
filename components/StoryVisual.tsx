@@ -31,9 +31,8 @@ export default function StoryVisual({ story }: { story: ApprovedStory }) {
           <figcaption>
             {media.attribution} ·{" "}
             <a href={media.sourceUrl} target="_blank" rel="noopener noreferrer">
-              Original article ↗
-            </a>{" "}
-            · shown as a link preview; rights remain with the publisher
+              Source ↗
+            </a>
           </figcaption>
         </>
       ) : media ? (
@@ -98,9 +97,7 @@ export default function StoryVisual({ story }: { story: ApprovedStory }) {
             </svg>
             <span>{story.category}</span>
           </div>
-          <figcaption>
-            half full topic illustration · not a photograph of this event
-          </figcaption>
+          <figcaption>Illustration</figcaption>
         </>
       )}
       {!media && story.media?.some((m) => !displayableMedia(m)) && (
@@ -110,9 +107,8 @@ export default function StoryVisual({ story }: { story: ApprovedStory }) {
             target="_blank"
             rel="noopener noreferrer"
           >
-            View imagery at the original source ↗
-          </a>{" "}
-          · reuse rights unconfirmed
+            Images at source ↗
+          </a>
         </p>
       )}
     </figure>

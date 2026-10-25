@@ -51,7 +51,7 @@ export function getConfig(date?: string): AppConfig {
   if (date && !selectableDay(date))
     throw new PipelineError(
       "INVALID_DATE",
-      "Choose a real date between 1900 and today.",
+      "Choose a date within the last ten years, through today.",
       400,
     );
   const historical = date && date < editionDay() ? date : undefined;

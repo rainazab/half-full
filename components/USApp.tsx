@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { EditionResult, RejectedStory, RunLogEntry } from "@/lib/types";
+import type { EditionResult } from "@/lib/types";
 import { parseEdition } from "@/lib/edition-schema";
 import { LiveRunError, runLive } from "@/lib/client";
 import {
@@ -13,26 +13,16 @@ import {
   type ReadingProgress,
 } from "@/lib/daily";
 import EditionReader from "./EditionReader";
-import Transparency, { RunLog } from "./Transparency";
 import PWAStatus from "./PWAStatus";
 import Charm from "./Charm";
 import StoryVisual from "./StoryVisual";
 import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
-type View = "today" | "reader" | "archive" | "mini" | "you" | "receipts";
-type Health = {
-  ready: boolean;
-  configurationError: string | null;
-  editor: { label: string; model: string } | null;
-};
+type View = "today" | "reader" | "archive" | "mini" | "you";
 const moods = ["blue", "pink", "mint", "yellow", "blue"] as const;
 export default function USApp() {
   const [edition, setEdition] = useState<EditionResult | null>(null);
-  const [audit, setAudit] = useState<RejectedStory[]>([]),
-    [log, setLog] = useState<RunLogEntry[]>([]);
-  const [health, setHealth] = useState<Health | null>(null),
-    [error, setError] = useState<string | null>(null),
-    [runId, setRunId] = useState<string>();
+  const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true),
     [offline, setOffline] = useState(false),
@@ -52,9 +42,6 @@ export default function USApp() {
   function display(result: EditionResult) {
     setEdition(result);
 
-    setAudit(result.rejectedStories);
-    setLog(result.runLog);
-    setRunId(result.edition.id);
     setStartIndex(0);
     setView("today");
     try {
@@ -87,10 +74,6 @@ export default function USApp() {
     window.addEventListener("online", online);
     window.addEventListener("offline", online);
     void refreshDates();
-    void fetch("/api/health", { signal: AbortSignal.timeout(10000) })
-      .then((r) => r.json())
-      .then(setHealth)
-      .catch(() => {});
     void openDate(day);
     let lastToday = current;
     const rollover = () => {
@@ -124,9 +107,6 @@ export default function USApp() {
     setBusy(false);
     setError(null);
     setEdition(null);
-    setAudit([]);
-    setLog([]);
-    setRunId(undefined);
     setView("today");
     window.history.replaceState(
       null,
@@ -161,15 +141,7 @@ export default function USApp() {
         const deadline = Date.now() + 360000;
         while (!result && current()) {
           try {
-            result = await runLive(
-              (event) => {
-                if (!current()) return;
-                if (event.type === "run") setRunId(event.runId);
-                if (event.type === "log") setLog((l) => [...l, event.entry]);
-              },
-              fetch,
-              day,
-            );
+            result = await runLive(() => {}, fetch, day);
           } catch (e) {
             if (
               !(e instanceof LiveRunError) ||
@@ -205,9 +177,6 @@ export default function USApp() {
             ? `We couldn’t retrieve enough well-supported reporting for ${dateLabel(day, { month: "long", day: "numeric", year: "numeric" })}. Nothing was published. Try another date.`
             : e.message,
         );
-        setAudit(e.failure.rejectedStories ?? []);
-        setLog(e.failure.runLog ?? []);
-        setRunId(e.failure.runId);
       } else {
         // A dropped stream can still finish on the server. Check without starting another job.
         try {
@@ -273,7 +242,7 @@ export default function USApp() {
         >
           half full<span aria-hidden="true">◒</span>
         </button>
-        <p className="brand-caption">A little perspective.</p>
+
         <nav aria-label="Main navigation">
           {nav.map((item) => (
             <button
@@ -291,16 +260,12 @@ export default function USApp() {
             </button>
           ))}
         </nav>
-        <div className="sidebar-note">
+        <div className="sidebar-note" aria-hidden="true">
           <Charm small mood="mint" />
-          <p>
-            A little informed.
-            <br />A little more present.
-          </p>
         </div>
-        <button className="quiet" onClick={() => tab("receipts")}>
-          How we made this ↗
-        </button>
+        <a className="studio-link" href={`/studio?date=${date}`}>
+          Studio ↗
+        </a>
       </aside>
       <main id="main" className="app-main">
         <header className="app-topbar">
@@ -352,7 +317,7 @@ export default function USApp() {
         )}
         {error && (
           <div className="error" role="alert">
-            <strong>A little pause.</strong>
+            <strong>Edition unavailable</strong>
             <p>{error}</p>
             <div className="buttons">
               <button onClick={() => setPickerOpen(true)} disabled={busy}>
@@ -364,55 +329,21 @@ export default function USApp() {
               >
                 Try this date again
               </button>
-              <button onClick={() => tab("receipts")}>See what happened</button>
+              <a href={`/studio?date=${date}`}>Details ↗</a>
             </div>
           </div>
         )}
         {loading && (
           <div className="loading-state" role="status">
             <Charm />
-            <p>Opening your little window on the world…</p>
+            <p>Loading edition…</p>
           </div>
         )}
         {busy && (
-          <section className="generation-card" role="status">
+          <section className="edition-loading" role="status">
             <Charm mood="mint" />
-            <p className="eyebrow">A little care goes into every edition</p>
-            <h2>
-              {date === today
-                ? "Finding the stories worth your time."
-                : `A little window into ${dateLabel(date, { month: "long", day: "numeric", year: "numeric" })}.`}
-            </h2>
-            <div className="pipeline-steps">
-              {["Discover", "Investigate", "Review", "Publish"].map(
-                (name, i) => (
-                  <span
-                    key={name}
-                    className={
-                      log.some(
-                        (l) =>
-                          l.step.includes(
-                            ["apify", "investigat", "review", "edition"][i],
-                          ) && l.status === "completed",
-                      )
-                        ? "done"
-                        : ""
-                    }
-                  >
-                    {i + 1}. {name}
-                  </span>
-                ),
-              )}
-            </div>
-            <p>
-              {date === today
-                ? "A few minutes of care. Once ready, today’s picks stay put."
-                : "Retrieving original reporting from this day. We’ll keep this edition for next time."}
-            </p>
-            <details>
-              <summary>Follow the evidence trail</summary>
-              <RunLog log={log} />
-            </details>
+            <h2>Preparing your edition</h2>
+            <p>This can take a couple of minutes.</p>
           </section>
         )}
         {!loading && view === "today" && !busy && stories.length > 0 && (
@@ -420,48 +351,43 @@ export default function USApp() {
             <section className="daily-hero">
               <div>
                 <p className="eyebrow">
-                  The world is a lot. The news doesn’t have to be.
+                  {stories.length} stories · {Math.max(3, stories.length)} min
                 </p>
                 <h1>
-                  A little news.
+                  A fresh
                   <br />
-                  <span>A little perspective.</span>
+                  <span>perspective.</span>
                 </h1>
-                <p>
-                  {stories.length
-                    ? `${stories.length} stories to make sense of your world. Then, back to living it.`
-                    : "A few things worth understanding. A clear place to stop."}
-                </p>
                 {stories.length ? (
                   <div className="buttons">
                     <button className="primary" onClick={() => read()}>
-                      {complete ? "Read it again" : "Open your edition"}
+                      {complete ? "Read again" : "Start reading"}
                       <span>↗</span>
                     </button>
-                    <span className="reading-time">
-                      ◷ About {Math.max(3, stories.length)} minutes
-                    </span>
                   </div>
                 ) : null}
-                <p className="daily-promise">
-                  {date === today
-                    ? "One edition for today. Picked once, here whenever you are."
-                    : `Reporting from ${dateLabel(date, { month: "long", day: "numeric", year: "numeric" })}. Retrieved and reviewed today.`}
-                </p>
+                {date !== today && (
+                  <p className="edition-date-note">
+                    {dateLabel(date, {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </p>
+                )}
               </div>
               <div className="hero-art" aria-hidden="true">
                 <div className="orb orb-one" />
                 <div className="orb orb-two" />
                 <Charm />
-                <span className="floating-label">a little clarity ✧</span>
+
                 <span className="hero-spark">✳</span>
               </div>
             </section>
             {stories.length > 0 && (
               <>
                 <div className="section-title">
-                  <h2>In your little edition</h2>
-                  <span>{stories.length} stories · that’s all</span>
+                  <h2>Your edition</h2>
                 </div>
                 <div className="cover-grid">
                   {stories.map((story, i) => (
@@ -482,7 +408,7 @@ export default function USApp() {
                           className="cover-bottom"
                           onClick={() => read(i)}
                         >
-                          <span>Read or listen</span>
+                          <span>Read story</span>
                           <span>↗</span>
                         </button>
                       </div>
@@ -499,25 +425,9 @@ export default function USApp() {
                         />
                       ))}
                     </span>
-                    <p className="eyebrow">One small puzzle</p>
-                    <h3>The daily Mini</h3>
-                    <p>
-                      A little brain break.
-                      <br />
-                      No homework energy.
-                    </p>
-                    <span>Play when you feel like it ↗</span>
+                    <h3>The Mini</h3>
+                    <span>5 × 5 · Play ↗</span>
                   </button>
-                </div>
-                <div className="trust-strip">
-                  <span>✧</span>
-                  <p>
-                    <strong>What we leave out matters, too.</strong>
-                    <br />
-                    {edition!.stats.rejected} candidates excluded. Every
-                    published claim has a trail back to retrieved evidence.
-                  </p>
-                  <button onClick={() => tab("receipts")}>Show me ↗</button>
                 </div>
               </>
             )}
@@ -548,16 +458,13 @@ export default function USApp() {
                 })
               }
               reactions={progress.reactions}
-              onTransparency={() => tab("receipts")}
             />
           </>
         )}
         {view === "mini" && (
           <section className="mini-page">
             <div className="page-heading">
-              <p className="eyebrow">A good place to end</p>
-              <h1>A small square of satisfaction.</h1>
-              <p>One original Mini. No extra levels, no pressure.</p>
+              <h1>The Mini</h1>
             </div>
             {edition ? (
               <Crossword
@@ -580,9 +487,7 @@ export default function USApp() {
         {view === "you" && (
           <section className="you-page">
             <div className="page-heading">
-              <p className="eyebrow">Your little corner</p>
-              <h1>A glass a little fuller.</h1>
-              <p>Small moments of understanding add up.</p>
+              <h1>Your jar</h1>
             </div>
             <div className="you-layout">
               <div className="jar-card">
@@ -591,7 +496,7 @@ export default function USApp() {
                   <div className="jar-charms">
                     {Array.from(
                       {
-                        length: Math.min(12, Math.max(1, progress.days.length)),
+                        length: Math.min(12, progress.days.length),
                       },
                       (_, i) => (
                         <Charm key={i} mood={moods[i % 5]} />
@@ -600,89 +505,27 @@ export default function USApp() {
                   </div>
                   <span className="jar-label">½</span>
                 </div>
-                <p>
-                  {progress.days.length
-                    ? "A little clarity, collected."
-                    : "Your first little moment is waiting."}
-                </p>
               </div>
               <div className="you-stats">
                 <div>
                   <strong>{progress.days.length}</strong>
-                  <span>daily editions finished</span>
+                  <span>editions read</span>
                 </div>
                 <div>
                   <strong>{readingStreak(progress.days, today)}</strong>
-                  <span>day reading streak · no pressure</span>
+                  <span>day streak</span>
                 </div>
-                <p>
-                  Saved on this device. No account, no leaderboard, no penalty
-                  for taking a break. Past editions keep their original dates.
-                </p>
+
                 <button
                   onClick={() => (stories.length ? read() : tab("today"))}
                 >
-                  Back to your edition ↗
+                  Read your edition ↗
                 </button>
               </div>
             </div>
           </section>
         )}
-        {view === "receipts" && (
-          <section className="receipts-page">
-            <div className="page-heading">
-              <p className="eyebrow">Carefully in. Carefully out.</p>
-              <h1>A little more transparent.</h1>
-              <p>
-                Apify gathers the reporting and original evidence. Claude checks
-                what it supports. Social conversation informs context, never
-                truth.
-              </p>
-            </div>
-            <div className="architecture-strip">
-              {["Discover", "Investigate", "Extract", "Review", "Publish"].map(
-                (x, i) => (
-                  <div key={x}>
-                    <small>0{i + 1}</small>
-                    <strong>{x}</strong>
-                    <span>
-                      {i < 3 ? "Apify" : i === 3 ? "Claude" : "half full"}
-                    </span>
-                  </div>
-                ),
-              )}
-            </div>
-            <Transparency audit={audit} log={log} />
-            {runId && (
-              <a
-                className="note"
-                href={`/api/run/${runId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Open the complete run record ↗
-              </a>
-            )}
-            <details>
-              <summary>Server & edition status</summary>
-              <p>
-                {health?.ready
-                  ? "Server configuration ready."
-                  : (health?.configurationError ??
-                    "Live status has not been checked.")}
-              </p>
-              <p>
-                Editor: {health?.editor?.label ?? "Anthropic Claude"}. Published
-                editions are reused by date. Detailed evidence is available
-                inside each story.
-              </p>
-            </details>
-          </section>
-        )}
-        <footer className="app-footer">
-          <span>Stay curious. Then go live a little.</span>
-          <PWAStatus />
-        </footer>
+        <PWAStatus />
       </main>
       <nav className="bottom-nav" aria-label="Mobile navigation">
         {nav.map((item) => (

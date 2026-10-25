@@ -3,6 +3,8 @@ import { randomUUID } from "node:crypto";
 import { parseEdition } from "./edition-schema";
 import { editionDay, validDay, type ArchiveEntry } from "./daily";
 import { PipelineError } from "./errors";
+import { checkpointSchema } from "./run-checkpoint";
+import type { RunRecord } from "./types";
 import type { EditionResult } from "./types";
 
 /** Apify KV owns published editions. One locked Apify queue item serializes writers across instances. */
@@ -11,6 +13,7 @@ export class DailyStore {
   private queue?: Promise<string>;
   private cache = new Map<string, EditionResult>();
   private memoryLocked = false;
+  private checkpoints = new Map<string, RunRecord>();
   constructor(
     private token = process.env.APIFY_API_TOKEN?.trim(),
     private name = process.env.APIFY_EDITION_STORE_NAME?.trim() ||
@@ -195,6 +198,25 @@ export class DailyStore {
     }
     this.remember(checked);
     return checked;
+  }
+  async saveRun(run: RunRecord) {
+    const checked = checkpointSchema.parse(run);
+    if (!validDay(checked.date))
+      throw new PipelineError("INVALID_DATE", "Invalid edition date.", 400);
+    if (this.memory) {
+      this.checkpoints.set(checked.date, checked);
+      if (this.checkpoints.size > 35)
+        this.checkpoints.delete(this.checkpoints.keys().next().value!);
+    } else await this.record(`PROCESS-${checked.date}`, checked);
+  }
+  async getRun(date: string): Promise<RunRecord | null> {
+    if (!validDay(date)) return null;
+    const value = this.memory
+      ? this.checkpoints.get(date)
+      : await this.record(`PROCESS-${date}`);
+    if (!value) return null;
+    const parsed = checkpointSchema.safeParse(value);
+    return parsed.success && parsed.data.date === date ? parsed.data : null;
   }
   async lock(): Promise<() => Promise<void>> {
     if (this.memory) {

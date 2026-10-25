@@ -1,3 +1,4 @@
+import { selectableDay } from "@/lib/daily";
 import { dailyStore } from "@/lib/daily-store";
 import { json } from "@/lib/http";
 import { publicError } from "@/lib/errors";
@@ -8,7 +9,18 @@ export async function GET(
   { params }: { params: Promise<{ date: string }> },
 ) {
   try {
-    const result = await dailyStore.get((await params).date);
+    const date = (await params).date;
+    if (!selectableDay(date))
+      return json(
+        {
+          error: {
+            code: "INVALID_DATE",
+            message: "Choose a date within the last ten years, through today.",
+          },
+        },
+        400,
+      );
+    const result = await dailyStore.get(date);
     return result
       ? json(result)
       : json(
