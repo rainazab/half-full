@@ -26,6 +26,18 @@ export default function Crossword({
     [assisted, setAssisted] = useState(false),
     [ready, setReady] = useState(false);
   const gridRef = useRef<HTMLDivElement>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const inviteRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (open) {
+      titleRef.current?.focus({ preventScroll: true });
+      sectionRef.current?.scrollIntoView({
+        block: "start",
+        behavior: "instant",
+      });
+    }
+  }, [open]);
   const ordered = [
     ...puzzle.entries.filter((e) => e.direction === "across"),
     ...puzzle.entries.filter((e) => e.direction === "down"),
@@ -57,6 +69,15 @@ export default function Crossword({
   function choose(entry: Entry) {
     setSelected(entry);
     focus(entryCells(entry).find((c) => !values[c]) ?? entryCells(entry)[0]);
+    const grid = gridRef.current;
+    if (grid) {
+      const bounds = grid.getBoundingClientRect();
+      if (bounds.top < 80 || bounds.bottom > window.innerHeight - 100)
+        grid.previousElementSibling?.scrollIntoView({
+          block: "start",
+          behavior: "instant",
+        });
+    }
   }
   function nextClue(delta = 1) {
     choose(
@@ -103,7 +124,11 @@ export default function Crossword({
     focus(value);
   }
   return (
-    <section className="puzzle" aria-label="Optional news crossword">
+    <section
+      ref={sectionRef}
+      className="puzzle"
+      aria-label="Optional news crossword"
+    >
       {!open ? (
         <div className="mini-invite">
           <div className="mini-icon" aria-hidden="true">
@@ -115,7 +140,11 @@ export default function Crossword({
             <p className="eyebrow">Take a break</p>
             <h3>The Mini</h3>
             <p>5 × 5 · A few minutes</p>
-            <button className="primary" onClick={() => setOpen(true)}>
+            <button
+              ref={inviteRef}
+              className="primary"
+              onClick={() => setOpen(true)}
+            >
               Play the Mini <span>↗</span>
             </button>
           </div>
@@ -127,12 +156,15 @@ export default function Crossword({
               <p className="eyebrow">
                 The half full Mini · {demo ? "archive" : date}
               </p>
-              <h2>{puzzle.title}</h2>
+              <h2 ref={titleRef} tabIndex={-1}>
+                {puzzle.title}
+              </h2>
             </div>
             <span className="mini-size">5 × 5</span>
           </div>
           <div className="mini-toolbar">
             <button
+              disabled={done}
               onClick={() => {
                 setChecked(true);
                 setDone(crosswordComplete(puzzle, values));
@@ -141,6 +173,7 @@ export default function Crossword({
               Check letters
             </button>
             <button
+              disabled={done}
               onClick={() => {
                 setAssisted(true);
                 const next = {
@@ -153,8 +186,24 @@ export default function Crossword({
             >
               Reveal a letter
             </button>
-            <button onClick={() => setOpen(false)}>Close</button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                requestAnimationFrame(() => inviteRef.current?.focus());
+              }}
+            >
+              Close
+            </button>
           </div>
+          {done && (
+            <div className="mini-complete" role="status">
+              <Charm mood="mint" small />
+              <div>
+                <h3>Solved.</h3>
+                <p>Complete{assisted ? " · assisted" : ""}.</p>
+              </div>
+            </div>
+          )}
           <div className="mini-play">
             <div>
               <div className="selected-clue" aria-live="polite">
@@ -289,15 +338,6 @@ export default function Crossword({
               Red letters need another look. Empty squares are still yours to
               solve.
             </p>
-          )}
-          {done && (
-            <div className="mini-complete" role="status">
-              <Charm mood="mint" small />
-              <div>
-                <h3>Solved.</h3>
-                <p>Complete{assisted ? " · assisted" : ""}.</p>
-              </div>
-            </div>
           )}
           <details className="note">
             <summary>About this puzzle</summary>

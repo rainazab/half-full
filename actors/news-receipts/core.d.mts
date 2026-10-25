@@ -1,3 +1,7 @@
+export function safeDirectTarget(
+  value: unknown,
+  resolve?: (host: string, options: unknown) => Promise<{ address: string }[]>,
+): Promise<boolean>;
 export function publicUrl(value: unknown): string | null;
 export function originalLinks(
   item: Record<string, unknown>,

@@ -14,7 +14,12 @@ type Log = (
   status: RunLogEntry["status"],
   message: string,
 ) => void;
-type ActorRun = { id: string; status: string; defaultDatasetId: string };
+type ActorRun = {
+  id: string;
+  status: string;
+  defaultDatasetId: string;
+  usageTotalUsd?: number;
+};
 const API = "https://api.apify.com/v2";
 const TERMINAL = new Set(["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"]);
 
@@ -176,6 +181,12 @@ export async function retrieveNews(
       );
     }
     log("apify.wait", "completed", `Actor ${run.id} succeeded.`);
+    if (Number.isFinite(run.usageTotalUsd))
+      log(
+        "apify.usage",
+        "completed",
+        `Apify reported run ${run.id} usageTotalUsd: ${run.usageTotalUsd}. This is provider-reported run usage, not a total edition cost.`,
+      );
     log(
       "apify.dataset",
       "started",

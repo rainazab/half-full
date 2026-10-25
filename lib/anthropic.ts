@@ -5,6 +5,7 @@ import type { EditorConfig } from "./config";
 import type { CandidateStory } from "./types";
 import {
   editorialGenerationSchema,
+  editorialSchemaFor,
   assembleEditorialResult,
 } from "./validation";
 import { PipelineError } from "./errors";
@@ -52,7 +53,7 @@ export async function reviewWithAnthropic(
         ],
         output_config: {
           effort: "medium",
-          format: zodOutputFormat(editorialGenerationSchema),
+          format: zodOutputFormat(editorialSchemaFor(selected)),
         },
       },
       { timeout: Math.min(timeout, deadline - Date.now()) },
@@ -79,7 +80,7 @@ export async function reviewWithAnthropic(
     const raw = await request(
       candidates,
       supportingSources,
-      "Return one decision for every candidate using the required JSON schema. Every selected source needs an assessment and an actual central-claim or contentEvidence reference. Do not list sources merely because they were retrieved.",
+      "Return one decision for every candidate using the required JSON schema. Every selected source needs an assessment and an actual central-claim or contentEvidence reference. sourceIds must match the sources cited by evidence or contentEvidence, not sources used only in optional experience. Do not list sources merely because they were retrieved.",
     );
     // A single bounded repair can fix missing IDs/field references. It never overturns evidence-based exclusions.
     try {
@@ -113,7 +114,7 @@ export async function reviewWithAnthropic(
             ...supportingSources,
             ...candidates.filter((c) => !repairCandidates.includes(c)),
           ],
-          `Repair ONLY these structurally invalid decisions. Do not change the evidence standard or manufacture references. Use source IDs actually supported by the relevant passages; remove unused source IDs. Validation feedback: ${invalid.map((r) => `${r.title}: ${r.reason}`).join(" | ")}. Already approved events, which must not be duplicated: ${checked.stories.map((s) => s.headline).join(" | ")}.`,
+          `Repair ONLY these structurally invalid decisions. Return experience:null for this bounded repair; optional presentation can be omitted. Do not select a source unless a central-claim or contentEvidence passage references it. Do not change the evidence standard or manufacture references. Use source IDs actually supported by the relevant passages; remove unused source IDs. Validation feedback: ${invalid.map((r) => `${r.title}: ${r.reason}`).join(" | ")}. Already approved events, which must not be duplicated: ${checked.stories.map((s) => s.headline).join(" | ")}.`,
           Math.min(25000, deadline - Date.now()),
         );
         const parsed = editorialGenerationSchema.safeParse(repair);

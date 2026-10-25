@@ -1,3 +1,4 @@
+import type { EvidenceReport } from "./evidence-report";
 import type { Provenance } from "./provenance";
 export interface StoryMedia {
   url: string;
@@ -84,6 +85,15 @@ export interface StoryExperience {
 }
 
 export interface ApprovedStory {
+  publicQuestion?: {
+    question: string;
+    answer: string;
+    postId: string;
+    url: string;
+    community: string | null;
+    publishedAt: string;
+    evidence: EvidenceRecord[];
+  };
   media?: StoryMedia[];
   socialContext?: { posts: SocialPost[]; notice: string };
   experience?: StoryExperience;
@@ -125,6 +135,7 @@ export interface RunLogEntry {
 }
 
 export interface EditionResult {
+  evidenceReport?: EvidenceReport;
   edition: {
     id: string;
     createdAt: string;

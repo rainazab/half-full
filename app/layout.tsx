@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import "./editorial.css";
 export const metadata: Metadata = {
   title: "half full",
   description: "Your daily news, in perspective.",
@@ -10,7 +11,8 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#f6f8fa",
+  themeColor: "#faf9f4",
+  viewportFit: "cover",
 };
 export default function RootLayout({
   children,

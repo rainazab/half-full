@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { EditionResult, RunLogEntry } from "@/lib/types";
 import { parseEdition } from "@/lib/edition-schema";
 import { LiveRunError, runLive } from "@/lib/client";
@@ -19,6 +19,12 @@ import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
 import useProfile from "@/hooks/useProfile";
 import ProfileCard, { ProfileAvatar } from "./ProfileCard";
+import Icon, { type IconName } from "./Icon";
+import {
+  positionKey,
+  validPosition,
+  readingMinutes,
+} from "@/lib/reading-position";
 import GenerationProgress from "./GenerationProgress";
 import { mergeRunLogs } from "@/lib/generation-progress";
 type View = "today" | "reader" | "archive" | "mini" | "you";
@@ -31,6 +37,8 @@ export default function USApp() {
     [loading, setLoading] = useState(true),
     [offline, setOffline] = useState(false),
     [view, setView] = useState<View>("today");
+  const [position, setPosition] = useState(0);
+  const [listenFirst, setListenFirst] = useState(false);
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
   const profile = useProfile();
@@ -254,21 +262,73 @@ export default function USApp() {
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
   }
-  function read(index = 0) {
+  useEffect(() => {
+    const restore = () => {
+      setListenFirst(false);
+      setStartIndex(position);
+      setView(window.history.state?.halfFullReader ? "reader" : "today");
+      window.scrollTo({ top: 0, behavior: "instant" });
+    };
+    window.addEventListener("popstate", restore);
+    return () => window.removeEventListener("popstate", restore);
+  }, [position]);
+  function exitReader() {
+    if (window.history.state?.halfFullReader) window.history.back();
+    else tab("today");
+  }
+  function read(index = position, listen = false) {
+    if (view !== "reader")
+      window.history.pushState(
+        { halfFullReader: true },
+        "",
+        window.location.href,
+      );
+    setListenFirst(listen);
     setStartIndex(index);
     tab("reader");
   }
+  useEffect(() => {
+    if (edition) {
+      try {
+        setPosition(
+          validPosition(
+            JSON.parse(
+              localStorage.getItem(
+                positionKey(edition.edition.id, profile.user?.uid),
+              ) ?? "0",
+            ),
+            edition.edition.stories.length,
+          ),
+        );
+      } catch {
+        setPosition(0);
+      }
+    }
+  }, [edition, profile.user?.uid]);
+  const rememberPosition = useCallback(
+    (index: number) => {
+      setPosition(index);
+      if (edition)
+        try {
+          localStorage.setItem(
+            positionKey(edition.edition.id, profile.user?.uid),
+            JSON.stringify(index),
+          );
+        } catch {}
+    },
+    [edition, profile.user?.uid],
+  );
   const date = selectedDate;
   const stories = edition?.edition.stories ?? [],
     complete = progress.days.includes(date);
-  const nav: { view: View; label: string; icon: string }[] = [
-    { view: "today", label: "Today", icon: "◒" },
-    { view: "archive", label: "Calendar", icon: "▦" },
-    { view: "mini", label: "The Mini", icon: "▧" },
-    { view: "you", label: "Your jar", icon: "◡" },
+  const nav: { view: View; label: string; icon: IconName }[] = [
+    { view: "today", label: "Today", icon: "today" },
+    { view: "archive", label: "Calendar", icon: "calendar" },
+    { view: "mini", label: "The Mini", icon: "mini" },
+    { view: "you", label: "Your jar", icon: "jar" },
   ];
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${view === "reader" ? "reading-mode" : ""}`}>
       <aside className="app-sidebar">
         <button
           className="wordmark"
@@ -290,7 +350,7 @@ export default function USApp() {
               }
               onClick={() => tab(item.view)}
             >
-              <span aria-hidden="true">{item.icon}</span>
+              <Icon name={item.icon} />
               {item.label}
             </button>
           ))}
@@ -387,50 +447,59 @@ export default function USApp() {
         {busy && <GenerationProgress key={date} date={date} log={runLogs} />}
         {!loading && view === "today" && !busy && stories.length > 0 && (
           <>
-            <section className="daily-hero">
-              <div>
-                <p className="eyebrow">
-                  {stories.length} stories · {Math.max(3, stories.length)} min
-                </p>
-                <h1>
-                  A fresh
-                  <br />
-                  <span>perspective.</span>
-                </h1>
-                {stories.length ? (
-                  <div className="buttons">
-                    <button className="primary" onClick={() => read()}>
-                      {complete ? "Read again" : "Start reading"}
-                      <span>↗</span>
-                    </button>
-                  </div>
-                ) : null}
-                {date !== today && (
-                  <p className="edition-date-note">
-                    {dateLabel(date, {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </p>
-                )}
-              </div>
-              <div className="hero-art" aria-hidden="true">
-                <div className="orb orb-one" />
-                <div className="orb orb-two" />
-                <Charm />
-
-                <span className="hero-spark">✳</span>
+            <section className="edition-cover">
+              <p className="issue-date">
+                {dateLabel(date, {
+                  weekday: "long",
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+              <h1>
+                {complete ? "An edition, well read." : "Your daily edition."}
+              </h1>
+              <p className="cover-introduction">
+                {complete
+                  ? "You’re caught up. Come back to a story whenever you like."
+                  : "A few stories. A little perspective. Then, on with your day."}
+              </p>
+              <p className="edition-facts">
+                {stories.length} stories <span>·</span> About{" "}
+                {readingMinutes(stories)} min to read
+              </p>
+              <div className="cover-actions">
+                <button
+                  className="primary"
+                  onClick={() => read(complete ? 0 : position)}
+                >
+                  {complete
+                    ? "Read again"
+                    : position > 0
+                      ? "Continue reading"
+                      : "Start reading"}
+                  <Icon name="next" />
+                </button>
+                <button
+                  className="listen-edition"
+                  onClick={() => read(0, true)}
+                >
+                  <Icon name="listen" />
+                  Listen
+                </button>
               </div>
             </section>
             {stories.length > 0 && (
               <>
                 <div className="section-title">
-                  <h2>Your edition</h2>
+                  <h2>In this edition</h2>
                 </div>
-                <div className="cover-grid">
+                <div
+                  className="cover-grid"
+                  aria-label="Stories in this edition"
+                >
                   {stories.map((story, i) => (
-                    <article className={`cover-card tone-${i}`} key={story.id}>
+                    <article className="cover-card" key={story.id}>
                       <div className="cover-art">
                         <StoryVisual story={story} />
                         <span className="story-number">0{i + 1}</span>
@@ -443,43 +512,30 @@ export default function USApp() {
                           </button>
                         </h3>
                         <p>{story.experience?.quick.text ?? story.summary}</p>
-                        <button
-                          className="cover-bottom"
-                          onClick={() => read(i)}
-                        >
-                          <span>Read story</span>
-                          <span>↗</span>
-                        </button>
                       </div>
                     </article>
                   ))}
-                  <button className="cover-mini" onClick={() => tab("mini")}>
-                    <span className="mini-cover-grid" aria-hidden="true">
-                      {Array.from({ length: 25 }, (_, i) => (
-                        <i
-                          key={i}
-                          className={
-                            [0, 1, 5, 19, 23, 24].includes(i) ? "block" : ""
-                          }
-                        />
-                      ))}
-                    </span>
-                    <h3>The Mini</h3>
-                    <span>5 × 5 · Play ↗</span>
-                  </button>
                 </div>
+                <button className="cover-mini" onClick={() => tab("mini")}>
+                  <span className="mini-cover-grid" aria-hidden="true">
+                    {Array.from({ length: 25 }, (_, i) => (
+                      <i
+                        key={i}
+                        className={
+                          [0, 1, 5, 19, 23, 24].includes(i) ? "block" : ""
+                        }
+                      />
+                    ))}
+                  </span>
+                  <h3>The Mini</h3>
+                  <span>5 × 5 · Play ↗</span>
+                </button>
               </>
             )}
           </>
         )}
         {!loading && view === "reader" && edition && (
           <>
-            <button
-              className="back-to-cover quiet"
-              onClick={() => tab("today")}
-            >
-              ← Back to the edition
-            </button>
             <EditionReader
               key={`${edition.edition.id}-${startIndex}`}
               stories={stories}
@@ -487,6 +543,9 @@ export default function USApp() {
               demo={false}
               date={date}
               initialIndex={startIndex}
+              initialListen={listenFirst}
+              onExit={exitReader}
+              onIndexChange={rememberPosition}
               onComplete={() => {
                 saveProgress((previous) => markRead(previous, date));
               }}
@@ -557,7 +616,11 @@ export default function USApp() {
                 </div>
 
                 <button
-                  onClick={() => (stories.length ? read() : tab("today"))}
+                  onClick={() =>
+                    stories.length
+                      ? read(complete ? 0 : position)
+                      : tab("today")
+                  }
                 >
                   Read your edition ↗
                 </button>
@@ -578,7 +641,7 @@ export default function USApp() {
             }
             onClick={() => tab(item.view)}
           >
-            <span aria-hidden="true">{item.icon}</span>
+            <Icon name={item.icon} />
             {item.label}
           </button>
         ))}

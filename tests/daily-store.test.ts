@@ -118,3 +118,59 @@ test("distributed queue lock cannot be acquired by a second publisher and is rel
   const next = await b.lock();
   await next();
 });
+
+test("generation budgets persist across server instances and fail closed on corrupt records", async () => {
+  const records = new Map<string, unknown>();
+  const fetcher = (async (url: RequestInfo | URL, init?: RequestInit) => {
+    const u = new URL(String(url));
+    if (u.pathname === "/v2/key-value-stores")
+      return Response.json({ data: { id: "kv" } });
+    const key = decodeURIComponent(u.pathname.split("/").at(-1)!);
+    if (init?.method === "PUT") {
+      records.set(key, JSON.parse(String(init.body)));
+      return new Response(null, { status: 201 });
+    }
+    return records.has(key)
+      ? Response.json(records.get(key))
+      : new Response(null, { status: 404 });
+  }) as typeof fetch;
+  const a = new DailyStore("token", "test", fetcher, false),
+    b = new DailyStore("token", "test", fetcher, false),
+    now = new Date("2026-10-24T12:00:00Z");
+  await a.admit("2024-04-10", now);
+  await assert.rejects(b.admit("2024-04-10", now), /ten minutes/);
+  records.set("GENERATION-BUDGET-2026-10-24", { corrupt: true });
+  await assert.rejects(b.admit("2024-04-11", now));
+});
+test("publisher renews its lock and refuses publication after a missing renewal", async (t) => {
+  t.mock.timers.enable({ apis: ["setInterval", "Date"] });
+  let renewals = 0,
+    missing = false;
+  const fetcher = (async (url: RequestInfo | URL, init?: RequestInit) => {
+    const u = new URL(String(url));
+    if (u.pathname === "/v2/request-queues")
+      return Response.json({ data: { id: "q" } });
+    if (u.pathname.endsWith("/head/lock"))
+      return Response.json({ data: { items: [{ id: "request" }] } });
+    if (init?.method === "PUT") {
+      renewals++;
+      return missing
+        ? new Response(null, { status: 404 })
+        : Response.json({ data: { lockExpiresAt: "later" } });
+    }
+    return Response.json({ data: { requestId: "request" } });
+  }) as typeof fetch;
+  const store = new DailyStore("token", "test", fetcher, false),
+    release = await store.lock();
+  release.assertOwned?.();
+  t.mock.timers.tick(90000);
+  await new Promise(setImmediate);
+  assert.equal(renewals, 1);
+  release.assertOwned?.();
+  missing = true;
+  t.mock.timers.tick(90000);
+  await new Promise(setImmediate);
+  assert.throws(() => release.assertOwned?.(), /lock could not be renewed/);
+  await release();
+  t.mock.timers.reset();
+});

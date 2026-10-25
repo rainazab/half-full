@@ -38,6 +38,15 @@ export function safeUrl(value: string): string | null {
       url.password
     )
       return null;
+    const host = url.hostname.toLowerCase();
+    if (
+      !host.includes(".") ||
+      /^\[|^(?:127\.|10\.|0\.|169\.254\.|192\.168\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(
+        host,
+      ) ||
+      /\.(local|internal|localhost|lan)$/.test(host)
+    )
+      return null;
     url.hash = "";
     for (const key of [...url.searchParams.keys()]) {
       if (key.startsWith("utm_") || ["fbclid", "gclid"].includes(key))

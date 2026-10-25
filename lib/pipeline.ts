@@ -1,3 +1,4 @@
+import { evidenceReport } from "./evidence-report";
 import "server-only";
 import { unpackReceipts } from "./receipts";
 import { enrichStories } from "./enrichment";
@@ -73,10 +74,8 @@ export async function generateEdition(
       "Normalizing Actor results, removing duplicate URLs, and bounding evidence size.",
     );
     const packets = unpackReceipts(items);
-    const normalized = normalizeStories(
-      packets.articles,
-      config.editionDate ? 100 : 20,
-    );
+    const normalized = normalizeStories(packets.articles, 100);
+    const normalizedArticleCount = normalized.candidates.length;
     if (config.editionDate) {
       const excluded = normalized.candidates.filter(
         (c) => c.publishedAt?.slice(0, 10) !== config.editionDate,
@@ -86,16 +85,14 @@ export async function generateEdition(
       );
       normalized.candidates = matching.slice(0, 20);
       normalized.rejectedStories.push(
-        ...matching
-          .slice(20)
-          .map((c) => ({
-            title: c.title,
-            url: c.url,
-            confidence: 0,
-            verificationStatus: "rejected" as const,
-            reason:
-              "Not evaluated: the bounded historical candidate limit is 20.",
-          })),
+        ...matching.slice(20).map((c) => ({
+          title: c.title,
+          url: c.url,
+          confidence: 0,
+          verificationStatus: "rejected" as const,
+          reason:
+            "Not evaluated: the bounded historical candidate limit is 20.",
+        })),
       );
       normalized.rejectedStories.push(
         ...excluded.map((c) => ({
@@ -112,6 +109,19 @@ export async function generateEdition(
         "edition.date",
         "completed",
         `Reviewing reporting published on ${config.editionDate}; articles from other dates are excluded.`,
+      );
+    }
+    if (!config.editionDate && normalized.candidates.length > 20) {
+      const overflow = normalized.candidates.slice(20);
+      normalized.candidates = normalized.candidates.slice(0, 20);
+      normalized.rejectedStories.push(
+        ...overflow.map((c) => ({
+          title: c.title,
+          url: c.url,
+          confidence: 0,
+          verificationStatus: "rejected" as const,
+          reason: "Not evaluated: bounded 20-article review limit.",
+        })),
       );
     }
     const supportingSources = normalizeStories(
@@ -292,6 +302,12 @@ export async function generateEdition(
       stats: run.stats,
       runLog: run.runLog,
     };
+    result.evidenceReport = evidenceReport(result, {
+      normalizedArticles: normalizedArticleCount,
+      eligibleArticles: normalized.candidates.length,
+      supportingSources,
+      retrievalRuns:packets.retrievalRuns,
+    });
     dependencies.finishRun(run, result);
     log("edition", "completed", "Edition is ready. You're caught up.");
     return result;

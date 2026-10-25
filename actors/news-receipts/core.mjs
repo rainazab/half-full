@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { lookup } from "node:dns/promises";
 const API = "https://api.apify.com/v2";
 const terminal = new Set(["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"]);
 export const NEWS_ACTOR = "apify~rag-web-browser";
@@ -12,6 +13,8 @@ export function publicUrl(value) {
       u.username ||
       u.password ||
       !u.hostname.includes(".") ||
+      /^[\d.]+$/.test(u.hostname) ||
+      u.hostname.includes(":") ||
       /^(?:localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(?:1[6-9]|2\d|3[01])\.|0\.|\[)/.test(
         u.hostname,
       ) ||
@@ -22,6 +25,40 @@ export function publicUrl(value) {
     return u.href;
   } catch {
     return null;
+  }
+}
+export async function safeDirectTarget(value, resolve = lookup) {
+  const url = publicUrl(value);
+  if (!url) return false;
+  try {
+    const records = await Promise.race([
+      resolve(new URL(url).hostname, { all: true, verbatim: true }),
+      new Promise((_, reject) => {
+        const timer = setTimeout(() => reject(Error("DNS deadline")), 2000);
+        timer.unref?.();
+      }),
+    ]);
+    return (
+      records.length > 0 &&
+      records.every(({ address }) => {
+        if (address.includes(":"))
+          return !/^(?:::|::ffff:|f[cd]|fe[89ab]|ff)/i.test(address);
+        const [a, b] = address.split(".").map(Number);
+        return !(
+          a === 0 ||
+          a === 10 ||
+          a === 127 ||
+          a >= 224 ||
+          (a === 169 && b === 254) ||
+          (a === 172 && b >= 16 && b <= 31) ||
+          (a === 192 && (b === 168 || b === 0)) ||
+          (a === 100 && b >= 64 && b <= 127) ||
+          (a === 198 && (b === 18 || b === 19))
+        );
+      })
+    );
+  } catch {
+    return false;
   }
 }
 export function originalLinks(item) {
@@ -75,6 +112,15 @@ export function annotate(item, run, index, relationship = "discovery") {
       0,
       18000,
     );
+  const redirected = metadata.redirectedUrl ?? item.crawl?.loadedUrl;
+  if (redirected && !publicUrl(redirected))
+    return {
+      title: item.title ?? metadata.title,
+      url: item.url ?? metadata.url,
+      text: "",
+      error: "Unsafe redirect was excluded",
+      passages: [],
+    };
   return {
     ...item,
     title: item.title ?? metadata.title ?? search.title,
@@ -143,6 +189,12 @@ export function historicalQueries(day) {
 export function actorRunner(token, log = () => {}, fetcher = fetch) {
   return async (actorId, input, budgetMs = 70000) => {
     const deadline = Date.now() + budgetMs;
+    if (
+      typeof input.query === "string" &&
+      /^https?:\/\//i.test(input.query) &&
+      !(await safeDirectTarget(input.query))
+    )
+      throw Error("Actor target must resolve to a public HTTPS destination");
     let run;
     async function api(path, init = {}) {
       const ms = deadline - Date.now();
@@ -184,12 +236,13 @@ export function actorRunner(token, log = () => {}, fetcher = fetch) {
       while (!terminal.has(run.status)) {
         run = (await api(`/actor-runs/${run.id}?waitForFinish=10`)).data;
       }
-      if (run.status !== "SUCCEEDED") throw Error(`Actor ended ${run.status}`);
+      if (!["SUCCEEDED","TIMED-OUT"].includes(run.status)) throw Error(`Actor ended ${run.status}`);
       const items = await api(
         `/datasets/${run.defaultDatasetId}/items?format=json&clean=true&limit=40`,
       );
       if (!Array.isArray(items))
         throw Error("Actor returned a malformed dataset");
+      if (run.status !== "SUCCEEDED" && !items.some(item=>String(item.markdown??item.text??"").length>=500 && !item.error)) throw Error(`Actor ended ${run.status} without usable partial records`);
       return { run: { ...run, actorId }, items };
     } catch (error) {
       if (run?.id && !terminal.has(run.status))
@@ -219,12 +272,20 @@ export async function gatherReceipts(input = {}, runActor, log = () => {}) {
         ? [publicUrl(input.articleUrl)]
         : input.claim
           ? [String(input.claim).slice(0, 400)]
-          : input.date
-            ? historicalQueries(input.date)
-            : defaultQueries()
+          : input.topic
+            ? [String(input.topic).slice(0, 400)]
+            : input.date
+              ? historicalQueries(input.date)
+              : defaultQueries()
   )
     .filter((q) => typeof q === "string" && q.trim())
-    .slice(0, 3);
+    .slice(0, 3)
+    .map((query) => {
+      const text = query.trim().slice(0, 600);
+      if (/^https?:\/\//i.test(text) && !publicUrl(text))
+        throw Error("Only public HTTPS URLs can be retrieved");
+      return text;
+    });
   if (!queries.length)
     throw Error(
       "Provide a public HTTPS article URL, a claim, or search queries.",
@@ -255,13 +316,34 @@ export async function gatherReceipts(input = {}, runActor, log = () => {}) {
     ),
   );
   const articles = [],
-    failures = [];
+    failures = [],
+    retrievalRuns = [];
+  const retainRun = (run) => {
+    retrievalRuns.push({
+      actorId: run.actorId ?? NEWS_ACTOR,
+      runId: run.id,
+      datasetId: run.defaultDatasetId,
+      ...(Number.isFinite(run.usageTotalUsd)
+        ? { usageTotalUsd: run.usageTotalUsd }
+        : {}),
+      ...(run.startedAt && run.finishedAt
+        ? {
+            durationMs: Math.max(
+              0,
+              Date.parse(run.finishedAt) - Date.parse(run.startedAt),
+            ),
+          }
+        : {}),
+    });
+  };
   for (const d of discoveries) {
-    if (d.status === "fulfilled")
+    if (d.status === "fulfilled") {
+      retainRun(d.value.run);
+      if(d.value.run.status && d.value.run.status !== "SUCCEEDED") failures.push("A discovery lane timed out. Completed dataset records were retained; retrieval was partial.");
       d.value.items.forEach((item, i) =>
         articles.push(annotate(item, d.value.run, i)),
       );
-    else {
+    } else {
       const reason =
         d.reason instanceof Error && /^(Actor|Apify)/.test(d.reason.message)
           ? d.reason.message
@@ -338,7 +420,9 @@ export async function gatherReceipts(input = {}, runActor, log = () => {}) {
       ),
     );
     results.forEach((result, i) => {
-      if (result.status === "fulfilled")
+      if (result.status === "fulfilled") {
+        retainRun(result.value.run);
+        if(result.value.run.status && result.value.run.status !== "SUCCEEDED") failures.push("An evidence lead timed out. Completed dataset records were retained; retrieval was partial.");
         result.value.items.forEach((item, j) =>
           investigations.push({
             ...annotate(
@@ -350,7 +434,7 @@ export async function gatherReceipts(input = {}, runActor, log = () => {}) {
             relatedArticleUrl: targets[i].articleUrl,
           }),
         );
-      else {
+      } else {
         const reason =
           result.reason instanceof Error &&
           /^(Actor|Apify)/.test(result.reason.message)
@@ -374,6 +458,18 @@ export async function gatherReceipts(input = {}, runActor, log = () => {}) {
     `Preserved exact text, deterministic passages, content hashes and run/dataset/item provenance for ${articles.length + investigations.length} records.`,
   );
   return articles.map((article, index) => ({
+    ...(index === 0
+      ? {
+          retrieval: {
+            runs: retrievalRuns,
+            failedCalls: failures.length,
+            investigationsSkipped:
+              input.investigate === false ||
+              !targets.length ||
+              investigations.length === 0,
+          },
+        }
+      : {}),
     schemaVersion: "us-receipts/1",
     kind: "news-receipt",
     article,

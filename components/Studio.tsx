@@ -13,6 +13,7 @@ import {
   type ArchiveEntry,
 } from "@/lib/daily";
 import type { ApprovedStory, Source } from "@/lib/types";
+import EvidenceQuality from "./EvidenceQuality";
 import DatePicker from "./DatePicker";
 import { RunLog } from "./Transparency";
 
@@ -44,7 +45,12 @@ function SourcePacket({
             {source.publisher} ↗
           </a>
           {evidence[0] ? (
-            <blockquote>{evidence[0].excerpt}</blockquote>
+            <>
+              <p className="studio-muted">
+                {evidence[0].sourceId}/{evidence[0].passageId}
+              </p>
+              <blockquote>{evidence[0].excerpt}</blockquote>
+            </>
           ) : (
             <p className="studio-muted">No retained passage for this source.</p>
           )}
@@ -258,36 +264,40 @@ export default function Studio() {
               </button>
             )}
           </div>
-          <div className="studio-stats">
-            <div>
-              <strong>{stats?.candidatesFound ?? "—"}</strong>
-              <span>candidate records</span>
+          {result && <EvidenceQuality result={result} />}
+          <details className="studio-details" open={!result}>
+            <summary>Recorded audit totals</summary>
+            <div className="studio-stats">
+              <div>
+                <strong>{stats?.candidatesFound ?? "—"}</strong>
+                <span>candidate records</span>
+              </div>
+              <div>
+                <strong>{stats?.approved ?? "—"}</strong>
+                <span>
+                  {state.status === "completed"
+                    ? "published stories"
+                    : "approved stories"}
+                </span>
+              </div>
+              <div>
+                <strong>{stats?.rejected ?? "—"}</strong>
+                <span>excluded records</span>
+              </div>
+              <div>
+                <strong>
+                  {result
+                    ? new Set(
+                        stories.flatMap((s) =>
+                          s.sources.map((source) => source.url),
+                        ),
+                      ).size
+                    : "—"}
+                </strong>
+                <span>retained sources</span>
+              </div>
             </div>
-            <div>
-              <strong>{stats?.approved ?? "—"}</strong>
-              <span>
-                {state.status === "completed"
-                  ? "published stories"
-                  : "approved stories"}
-              </span>
-            </div>
-            <div>
-              <strong>{stats?.rejected ?? "—"}</strong>
-              <span>excluded records</span>
-            </div>
-            <div>
-              <strong>
-                {result
-                  ? new Set(
-                      stories.flatMap((s) =>
-                        s.sources.map((source) => source.url),
-                      ),
-                    ).size
-                  : "—"}
-              </strong>
-              <span>retained sources</span>
-            </div>
-          </div>
+          </details>
           <section className="studio-flow" aria-label="Generation pipeline">
             {flowStages.map((stage, i) => {
               const status = stageState(stage, log, state.status);
@@ -402,7 +412,11 @@ export default function Studio() {
                     <section key={`${field.field}-${i}`}>
                       <h4>
                         {field.field === "action"
-                          ? "The bright side"
+                          ? story.closingType === "response"
+                            ? "What’s being done"
+                            : story.closingType === "bright-side"
+                              ? "The bright side"
+                              : "Closing context"
                           : field.field.replace(/([A-Z])/g, " $1")}
                       </h4>
                       <p>{field.text}</p>

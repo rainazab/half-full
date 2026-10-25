@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   gatherReceipts,
+  actorRunner,
   originalLinks,
   publicUrl,
   annotate,
@@ -95,4 +96,22 @@ test("investigation results cannot invent a verification status or drop legacy A
   );
   assert.equal((normalized.provenance as { itemIndex: number }).itemIndex, 3);
   assert.deepEqual(unpackReceipts([article]).articles, [article]);
+});
+
+test("timed-out child runs retain only real completed dataset records and disclose partial retrieval", async () => {
+  const fetcher = (async (url: RequestInfo | URL) =>
+    String(url).includes("/items?")
+      ? Response.json([article])
+      : Response.json({
+          data: { id: "r", defaultDatasetId: "d", status: "TIMED-OUT" },
+        })) as typeof fetch;
+  const run = actorRunner("synthetic", () => {}, fetcher),
+    packets = await gatherReceipts(
+      { queries: ["A topic"], investigate: false },
+      run,
+    );
+  assert.equal(packets[0].article.text, article.markdown);
+  assert.ok(
+    packets[0].limitations.some((l) => l.includes("retrieval was partial")),
+  );
 });

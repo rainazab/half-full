@@ -1,3 +1,4 @@
+import { admitGeneration } from "./generation-admission";
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { parseEdition } from "./edition-schema";
@@ -7,6 +8,9 @@ import { checkpointSchema } from "./run-checkpoint";
 import type { RunRecord } from "./types";
 import type { EditionResult } from "./types";
 
+export type PublisherLease = (() => Promise<void>) & {
+  assertOwned?: () => void;
+};
 /** Apify KV owns published editions. One locked Apify queue item serializes writers across instances. */
 export class DailyStore {
   private kv?: Promise<string>;
@@ -218,7 +222,20 @@ export class DailyStore {
     const parsed = checkpointSchema.safeParse(value);
     return parsed.success && parsed.data.date === date ? parsed.data : null;
   }
-  async lock(): Promise<() => Promise<void>> {
+  private ledgers = new Map<string, unknown>();
+  /** Must be called under the publisher lock; persist before any paid request. */
+  async admit(date: string, now = new Date()) {
+    const today = editionDay(now),
+      key = `GENERATION-BUDGET-${today}`;
+    const previous = this.memory
+      ? this.ledgers.get(key)
+      : await this.record(key);
+    const next = admitGeneration(previous, date, today, now.getTime());
+    if (this.memory) this.ledgers.set(key, next);
+    else await this.record(key, next);
+    return next;
+  }
+  async lock(): Promise<PublisherLease> {
     if (this.memory) {
       if (this.memoryLocked)
         throw new PipelineError(
@@ -253,7 +270,29 @@ export class DailyStore {
         "An edition is already being prepared. Refresh today’s edition in a few minutes.",
         409,
       );
-    return async () => {
+    let owned = true,
+      lastConfirmed = Date.now(),
+      renewing = false;
+    const heartbeat = setInterval(async () => {
+      if (renewing || !owned) return;
+      renewing = true;
+      try {
+        const renewed = await this.api(
+          `/request-queues/${id}/requests/${item.id}/lock?lockSecs=360&clientKey=${client}`,
+          { method: "PUT" },
+        );
+        if (!renewed) throw Error("Publisher lock missing");
+        lastConfirmed = Date.now();
+      } catch {
+        owned = false;
+        console.warn("Publisher lease renewal failed; publication will stop.");
+      } finally {
+        renewing = false;
+      }
+    }, 90000);
+    heartbeat.unref?.();
+    const release: PublisherLease = async () => {
+      clearInterval(heartbeat);
       try {
         await this.api(
           `/request-queues/${id}/requests/${item.id}/lock?clientKey=${client}`,
@@ -263,9 +302,25 @@ export class DailyStore {
         console.warn("Daily publisher lock will expire automatically.");
       }
     };
+    release.assertOwned = () => {
+      if (!owned || Date.now() - lastConfirmed > 300000)
+        throw new PipelineError(
+          "PUBLISHER_LEASE_LOST",
+          "The publication lock could not be renewed. Nothing new was published. Please try again shortly.",
+          503,
+        );
+    };
+    return release;
   }
 }
 const globalDaily = globalThis as typeof globalThis & {
   usDailyStore?: DailyStore;
 };
+// A hot reload must not retain a class instance bound to an older validation schema.
+if (
+  process.env.NODE_ENV === "development" &&
+  globalDaily.usDailyStore &&
+  !(globalDaily.usDailyStore instanceof DailyStore)
+)
+  globalDaily.usDailyStore = undefined;
 export const dailyStore = (globalDaily.usDailyStore ??= new DailyStore());

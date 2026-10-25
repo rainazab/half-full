@@ -1,3 +1,4 @@
+import { reportingOrigins } from "./source-independence";
 import { z } from "zod";
 import type { ApprovedStory, CandidateStory, RejectedStory } from "./types";
 import { contextualMedia } from "./media";
@@ -75,6 +76,24 @@ export const editorialGenerationSchema = z
       .max(20),
   })
   .strict();
+
+/** Provider-side structure mirrors the actual batch; the server still checks uniqueness and every passage. */
+export function editorialSchemaFor(candidates: CandidateStory[]) {
+  if (!candidates.length) throw Error("Editorial review requires candidates");
+  const ids = candidates.map((candidate) => candidate.id) as [
+    string,
+    ...string[],
+  ];
+  return editorialGenerationSchema.extend({
+    decisions: z
+      .array(
+        editorialGenerationSchema.shape.decisions.element.extend({
+          candidateId: z.enum(ids),
+        }),
+      )
+      .length(candidates.length),
+  });
+}
 
 export type EditorialResponse = z.infer<typeof editorialResponseSchema>;
 
@@ -369,7 +388,15 @@ export function assembleEditorialResult(
         source.independenceGroup.toLowerCase(),
       ),
     ).size;
-    const independentCount = Math.min(publisherCount, groupCount);
+    const origins = reportingOrigins(
+      decision.sourceIds.map((id) => byId.get(id)!),
+      decision.sourceAssessments,
+    );
+    const independentCount = Math.min(
+      publisherCount,
+      groupCount,
+      origins.count,
+    );
     const cap =
       independentCount < 2
         ? 0.85
@@ -417,8 +444,16 @@ export function assembleEditorialResult(
             evidence: decision.contentEvidence[field].map(evidenceRecord),
           })),
       ],
-      sourceAssessments: decision.sourceAssessments,
+      sourceAssessments: decision.sourceAssessments.map((a) => ({
+        ...a,
+        independenceGroup:
+          origins.groups.get(a.sourceId) ?? a.independenceGroup,
+      })),
       limitations: [
+        ...origins.signals.map(
+          (s) =>
+            `Reporting-origin check: ${s}. This does not establish independent corroboration.`,
+        ),
         "The editor evaluated only the material retrieved for this run. Source classification and relevance are model judgments, not independent fact-checking.",
         independentCount < 2
           ? "No independent corroboration was established from the supplied sources. Confidence is capped at 85%."

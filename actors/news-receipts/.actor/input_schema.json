@@ -43,6 +43,12 @@
       "type": "string",
       "description": "Optional exact historical publication day, YYYY-MM-DD. Ignored if explicit queries, claim or article URL are supplied.",
       "editor": "textfield"
+    },
+    "topic": {
+      "title": "Topic query",
+      "type": "string",
+      "description": "An optional topic search, up to 400 characters. Explicit queries, article URL and claim take precedence.",
+      "editor": "textfield"
     }
   },
   "required": []

@@ -4,6 +4,7 @@ import type { ApprovedStory } from "@/lib/types";
 import { displayableMedia } from "@/lib/media";
 export default function StoryVisual({ story }: { story: ApprovedStory }) {
   const [broken, setBroken] = useState<string[]>([]);
+  const [small, setSmall] = useState(false);
   const usable =
     story.media?.filter(
       (m) => displayableMedia(m) && !broken.includes(m.url),
@@ -16,11 +17,14 @@ export default function StoryVisual({ story }: { story: ApprovedStory }) {
     <figure className="story-visual">
       {media?.rights === "publisher-preview" ? (
         <>
-          <div className="visual-photo">
+          <div className={`visual-photo${small ? " small-preview" : ""}`}>
             <img
               src={media.url}
               alt={media.alt}
               onError={onError}
+              onLoad={(event) =>
+                setSmall(event.currentTarget.naturalWidth < 400)
+              }
               referrerPolicy="no-referrer"
               loading="lazy"
               decoding="async"

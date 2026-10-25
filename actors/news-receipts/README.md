@@ -13,7 +13,7 @@ This Actor does not decide truth. A government domain is not proof; a primary-so
 
 ## Input
 
-No input: current news through three bounded topic lanes. `{"date":"2000-01-01"}` searches historical mastheads and publisher date paths; the app also supports passing the generated historical queries explicitly to an existing Actor build. The consuming editor must validate actual publication dates; retrieval alone does not establish a story’s date. Or `{"articleUrl":"https://..."}`, `{"claim":"the headline to investigate"}`, or `{"queries":["your search"],"maxResultsPerQuery":5,"investigate":true}`. Only public HTTPS direct URLs are accepted. Do not put API keys in the input. On Apify, the SDK provides `APIFY_TOKEN` server-side.
+No input: current news through three bounded topic lanes. `{"date":"2024-04-09"}` searches historical mastheads and publisher date paths; the app also supports passing the generated historical queries explicitly to an existing Actor build. The consuming editor must validate actual publication dates; retrieval alone does not establish a story’s date. Or `{"articleUrl":"https://..."}`, `{"claim":"the headline to investigate"}`, or `{"queries":["your search"],"maxResultsPerQuery":5,"investigate":true}`. Only public HTTPS direct URLs are accepted. Do not put API keys in the input. On Apify, the SDK provides `APIFY_TOKEN` server-side.
 
 ## Output
 
@@ -28,3 +28,10 @@ Up to 24 discovery results and eight evidence search results; three discovery ca
 Node 22+. `cd actors/news-receipts && npm install && npm start` runs the Actor locally using Apify SDK input/storage conventions (`APIFY_TOKEN` required for child Actors). `apify run` also works with the Apify CLI. `apify push` uploads the package to your own account; set the app’s `APIFY_RECEIPTS_ACTOR_ID=your-name/us-news-receipts` after building. Publishing to the public Actor Store is a separate owner action.
 
 half full also imports the exact same retrieval engine server-side when no custom Actor ID is configured. `APIFY_RECEIPTS_ENABLED=false` restores the original single-Actor discovery path. No Claude or Cartesia credentials are needed by this reusable Actor.
+
+
+### Contract and limits
+
+`topic` is a single-query alias. Inputs are bounded to three searches, ten results per lane, four investigations, 18,000 characters per retained document, and a 135-second total retrieval budget. Direct URL inputs and original-document targets must resolve to public addresses; private IP literals, credentials, local names and private redirect results are rejected. The downstream RAG Actor controls its own crawl networking; this wrapper does not claim to provide an independent network-egress firewall or eliminate DNS-rebinding races.
+
+The first packet may additionally include `retrieval.runs`: actual child Actor/run/dataset identifiers, provider-reported `usageTotalUsd` where available, and observed run durations. Costs are never estimated from runtime. `failedCalls` and investigation-skipping metadata describe retrieval limitations, not verification outcomes. Consumers of the original `us-receipts/1` shape remain compatible.

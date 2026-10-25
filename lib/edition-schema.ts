@@ -1,3 +1,4 @@
+import { evidenceReportSchema } from "./evidence-report";
 import { provenanceSchema } from "./provenance";
 import { z } from "zod";
 import type { EditionResult } from "./types";
@@ -34,6 +35,7 @@ const grounded = z.object({
 
 export const editionResultSchema = z
   .object({
+    evidenceReport: evidenceReportSchema.optional(),
     edition: z.object({
       id: z.string().min(1),
       createdAt: date,
@@ -53,6 +55,17 @@ export const editionResultSchema = z
       stories: z
         .array(
           z.object({
+            publicQuestion: z
+              .object({
+                question: z.string().min(10).max(300),
+                answer: z.string().min(1).max(1100),
+                postId: z.string(),
+                url: httpUrl,
+                community: z.string().nullable(),
+                publishedAt: date,
+                evidence: z.array(evidence).min(1).max(5),
+              })
+              .optional(),
             id: z.string(),
             headline: z.string().min(1),
             centralClaim: z.string(),
@@ -217,8 +230,29 @@ export const editionResultSchema = z
     if (result.edition.mode === "demo" && !result.edition.demoInfo)
       ctx.addIssue({ code: "custom", message: "Demo provenance is required" });
     for (const story of result.edition.stories) {
+      if (
+        story.publicQuestion &&
+        (!/^https:\/\/(?:www\.)?reddit\.com\//.test(story.publicQuestion.url) ||
+          story.publicQuestion.evidence.some(
+            (ref) =>
+              !story.evidence?.some(
+                (e) =>
+                  e.sourceId === ref.sourceId &&
+                  e.passageId === ref.passageId &&
+                  e.url === ref.url &&
+                  e.excerpt === ref.excerpt,
+              ),
+          ))
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message:
+            "Public-question answers require exact retained evidence and a public Reddit source",
+        });
+      }
       for (const item of [
         ...(story.evidence ?? []),
+        ...(story.publicQuestion?.evidence ?? []),
         ...(story.contentSupport ?? []).flatMap((claim) => claim.evidence),
         ...(story.narration?.evidence ?? []),
         ...[

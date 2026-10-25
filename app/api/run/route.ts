@@ -1,7 +1,8 @@
 import { publishDaily } from "@/lib/publication";
-import { dailyStore } from "@/lib/daily-store";
+import { getConfig } from "@/lib/config";
+import { dailyStore, type PublisherLease } from "@/lib/daily-store";
 import { editionDay, selectableDay } from "@/lib/daily";
-import { createRun } from "@/lib/store";
+import { createRun, finishRun } from "@/lib/store";
 import { publicError } from "@/lib/errors";
 import { json } from "@/lib/http";
 import type { RunRecord } from "@/lib/types";
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
     }
   }
   let run: RunRecord | undefined;
-  let release: (() => Promise<void>) | undefined;
+  let release: PublisherLease | undefined;
   const date = new URL(request.url).searchParams.get("date") ?? editionDay();
   if (!selectableDay(date))
     return json(
@@ -56,6 +57,14 @@ export async function POST(request: Request) {
       await release();
       return json(existing, 200, { "X-Edition-Reused": "true" });
     }
+    try {
+      getConfig(date);
+    } catch (error) {
+      run = createRun(date);
+      finishRun(run);
+      throw error;
+    }
+    await dailyStore.admit(date);
     run = createRun(date);
     if (request.headers.get("accept")?.includes("application/x-ndjson")) {
       const record = run;
@@ -74,8 +83,11 @@ export async function POST(request: Request) {
             }
           };
           send({ type: "run", runId: record.id });
-          void publishDaily(record, date, (entry) =>
-            send({ type: "log", entry }),
+          void publishDaily(
+            record,
+            date,
+            (entry) => send({ type: "log", entry }),
+            () => release?.assertOwned?.(),
           )
             .then((result) => send({ type: "result", result }))
             .catch((error) => {
@@ -110,7 +122,9 @@ export async function POST(request: Request) {
         },
       });
     }
-    const result = await publishDaily(run, date);
+    const result = await publishDaily(run, date, undefined, () =>
+      release?.assertOwned?.(),
+    );
     await release?.();
     return json(result, 200, {
       "X-Run-Id": run.id,
@@ -119,6 +133,33 @@ export async function POST(request: Request) {
   } catch (error) {
     await release?.();
     const safe = publicError(error);
+    if (
+      run?.status === "failed" &&
+      request.headers.get("accept")?.includes("application/x-ndjson")
+    ) {
+      return new Response(
+        [
+          { type: "run", runId: run.id },
+          {
+            type: "error",
+            failure: {
+              runId: run.id,
+              error: { code: safe.code, message: safe.message },
+              rejectedStories: [],
+              runLog: run.runLog,
+            },
+          },
+        ]
+          .map((event) => JSON.stringify(event) + "\n")
+          .join(""),
+        {
+          headers: {
+            "Content-Type": "application/x-ndjson; charset=utf-8",
+            "Cache-Control": "no-store",
+          },
+        },
+      );
+    }
     return json(
       {
         runId: run?.id,

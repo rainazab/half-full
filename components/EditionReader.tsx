@@ -3,15 +3,12 @@ import { useEffect, useRef, useState } from "react";
 import type { ApprovedStory } from "@/lib/types";
 import Crossword from "./Crossword";
 import Charm from "./Charm";
+import StoryReceipts from "./StoryReceipts";
+import Icon from "./Icon";
 import StoryReactions from "./StoryReactions";
 import StoryVisual from "./StoryVisual";
 import AudioPlayer from "./AudioPlayer";
-import {
-  formatDate,
-  navigate,
-  progressLabel,
-  swipeDirection,
-} from "@/lib/navigation";
+import { navigate, progressLabel, swipeDirection } from "@/lib/navigation";
 
 export default function EditionReader({
   stories,
@@ -23,7 +20,13 @@ export default function EditionReader({
   onComplete,
   onReaction,
   reactions = {},
+  initialListen = false,
+  onExit,
+  onIndexChange,
 }: {
+  initialListen?: boolean;
+  onExit?: () => void;
+  onIndexChange?: (index: number) => void;
   date?: string;
   initialIndex?: number;
   onComplete?: () => void;
@@ -35,20 +38,18 @@ export default function EditionReader({
   active?: boolean;
 }) {
   const [index, setIndex] = useState(initialIndex);
-  const [through, setThrough] = useState(false);
-  const [autoPlay, setAutoPlay] = useState(false);
+  const [through, setThrough] = useState(initialListen);
+  const [autoPlay, setAutoPlay] = useState(initialListen);
   const heading = useRef<HTMLHeadingElement>(null);
   const gesture = useRef<{ x: number; y: number; time: number } | null>(null);
-  const first = useRef(true);
   const completion = useRef(false);
   useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
     heading.current?.focus({ preventScroll: true });
-    heading.current?.scrollIntoView({ block: "nearest" });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [index]);
+  useEffect(() => {
+    onIndexChange?.(index);
+  }, [index, onIndexChange]);
   useEffect(() => {
     if (index === stories.length && !completion.current) {
       completion.current = true;
@@ -65,6 +66,7 @@ export default function EditionReader({
     !!target.closest("a,button,summary,input,select,textarea");
   return (
     <section
+      className="edition-reader"
       aria-label="Finite edition"
       onKeyDown={(event) => {
         if (
@@ -80,6 +82,21 @@ export default function EditionReader({
         }
       }}
     >
+      <header className="reading-header">
+        <button className="reader-exit" onClick={onExit}>
+          <Icon name="back" />
+          Back to cover
+        </button>
+        <span>
+          {date
+            ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+                timeZone: "UTC",
+              })
+            : "half full"}
+        </span>
+      </header>
       <div className="reader-progress">
         <span aria-live="polite">{progressLabel(index, stories.length)}</span>
         <div aria-hidden="true">
@@ -120,12 +137,14 @@ export default function EditionReader({
       >
         {story ? (
           <article key={story.id}>
-            <StoryVisual story={story} />
             <div className="story-copy">
               <p className="eyebrow">{story.category}</p>
               <h2 ref={heading} tabIndex={-1}>
                 {story.headline}
               </h2>
+              <p className="story-intro">
+                {story.experience?.explanation.text ?? story.summary}
+              </p>
               <AudioPlayer
                 key={story.id}
                 story={story}
@@ -140,7 +159,7 @@ export default function EditionReader({
                   setIndex((current) => navigate(current, 1, stories.length));
                 }}
               />
-              <p className="story-intro">{story.summary}</p>
+              <StoryVisual story={story} />
               <div className="why-card">
                 <h3>Why it matters</h3>
                 <p>{story.whyItMatters}</p>
@@ -148,7 +167,6 @@ export default function EditionReader({
               {story.experience && (
                 <details className="reader-context">
                   <summary>More context</summary>
-                  <p>{story.experience.explanation.text}</p>
                   <p>{story.experience.background.text}</p>
                   {story.experience.glossary.length > 0 && (
                     <dl>
@@ -188,36 +206,40 @@ export default function EditionReader({
                   </div>
                 </aside>
               )}
-              <details className="reader-sources">
-                <summary>
-                  {story.sources.length}{" "}
-                  {story.sources.length === 1 ? "source" : "sources"}
-                </summary>
-                <ul>
-                  {story.sources.map((source) => (
-                    <li key={source.id ?? source.url}>
-                      <a
-                        href={source.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {source.publisher} ↗
-                      </a>
-                      {source.publishedAt && (
-                        <time dateTime={source.publishedAt}>
-                          {formatDate(source.publishedAt)}
-                        </time>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                <a
-                  className="source-studio-link"
-                  href={`/studio?date=${date ?? ""}&story=${encodeURIComponent(story.id)}`}
+              {story.publicQuestion && (
+                <section
+                  className="public-question"
+                  aria-label="A public question explained"
                 >
-                  Evidence & decisions ↗
-                </a>
-              </details>
+                  <h3>Wait, what does that mean?</h3>
+                  <blockquote>{story.publicQuestion.question}</blockquote>
+                  <p>{story.publicQuestion.answer}</p>
+                  <a
+                    href={story.publicQuestion.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    A question from {story.publicQuestion.community || "Reddit"}{" "}
+                    ↗
+                  </a>
+                  <details>
+                    <summary>Evidence for this explanation</summary>
+                    {story.publicQuestion.evidence.map((e) => (
+                      <blockquote key={`${e.sourceId}/${e.passageId}`}>
+                        <p>{e.excerpt}</p>
+                        <a
+                          href={e.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {e.publisher} · {e.passageId} ↗
+                        </a>
+                      </blockquote>
+                    ))}
+                  </details>
+                </section>
+              )}
+              <StoryReceipts story={story} date={date} />
               <StoryReactions
                 value={reactions[story.id]}
                 onChange={(reaction) => onReaction?.(story.id, reaction)}
@@ -230,7 +252,10 @@ export default function EditionReader({
             <h2 ref={heading} tabIndex={-1}>
               You’re caught up.
             </h2>
-            <p>{stories.length} stories. Done for the day.</p>
+            <p>{stories.length} stories. A little more perspective.</p>
+            <button className="ending-cover" onClick={onExit}>
+              Back to your edition
+            </button>
             <button
               className="quiet"
               onClick={() => {
@@ -248,6 +273,11 @@ export default function EditionReader({
         <button disabled={index === 0} onClick={() => go(-1)}>
           Back
         </button>
+        <span className="dock-progress">
+          {index < stories.length
+            ? `${index + 1} / ${stories.length}`
+            : "Complete"}
+        </span>
         {index < stories.length && (
           <button className="primary" onClick={() => go(1)}>
             {index === stories.length - 1 ? "Done" : "Next"}{" "}
