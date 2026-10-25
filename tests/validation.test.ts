@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { assembleEditorialResult, validateEditorialResponse, type EditorialResponse } from "../lib/validation";
 import type { CandidateStory } from "../lib/types";
+import { parseEdition } from "../lib/edition-schema";
 import { evidencePassages, editorialCandidates } from "../lib/evidence";
 
 const quote = "The fictional test observatory published its measurement on October 24, 2026.";
@@ -139,4 +140,30 @@ test("unknown publication dates cannot be asserted as current", () => {
   const result = assembleEditorialResult({ decisions: [decision()] }, [{ ...candidate, publishedAt: null }], now);
   assert.equal(result.stories.length, 0);
   assert.equal(result.rejectedStories[0].verificationStatus, "uncertain");
+});
+
+test("positive stories can omit a closing without dropping core evidence requirements", () => {
+  const good = {...decision(), closingType: "none", action: "", contentEvidence: {...decision().contentEvidence, action: []}};
+  const result = assembleEditorialResult({decisions:[good]},[candidate],now);
+  assert.equal(result.stories.length,1);
+  assert.equal(result.stories[0].action, "");
+  assert.equal(result.stories[0].closingType,"none");
+  assert.ok(!result.stories[0].contentSupport?.some(part=>part.field==="action"));
+  assert.throws(()=>validateEditorialResponse({decisions:[{...good,contentEvidence:{...good.contentEvidence,summary:[]}}]},[candidate]),/evidence references/);
+  assert.throws(()=>validateEditorialResponse({decisions:[{...good,closingType:"response",action:"A reported response."}]},[candidate]),/evidence references/);
+  assert.throws(()=>validateEditorialResponse({decisions:[{...good,action:"An unnecessary closing."}]},[candidate]));
+});
+test("a sourced response retains its type and evidence",()=>{
+  const result=assembleEditorialResult({decisions:[{...decision(),closingType:"response"}]},[candidate],now);
+  assert.equal(result.stories[0].closingType,"response");
+  assert.ok(result.stories[0].contentSupport?.find(part=>part.field==="action")?.evidence.length);
+});
+
+test("published editions round-trip stories with no optional closing",()=>{
+  const candidates=Array.from({length:3},(_,i)=>({...candidate,id:`optional-${i}`,url:`https://example.org/optional-${i}`}));
+  const decisions=candidates.map(item=>({...decision(),...referencesFor(item.id),candidateId:item.id,sourceIds:[item.id],evidence:[{sourceId:item.id,passageId:"p1"}],closingType:"none",action:"",contentEvidence:{...referencesFor(item.id).contentEvidence,action:[]}}));
+  const result=assembleEditorialResult({decisions},candidates,now);
+  assert.equal(result.stories.length,3);
+  const saved=parseEdition({edition:{id:"optional-test",createdAt:now.toISOString(),date:"2026-10-24",mode:"live",stories:result.stories},stats:{candidatesFound:3,approved:3,rejected:0},rejectedStories:[],runLog:[]});
+  assert.ok(saved.edition.stories.every(story=>story.closingType==="none" && story.action===""));
 });

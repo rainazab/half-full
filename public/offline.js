@@ -32,7 +32,8 @@
         if (story.experience) { const deeper = el('details'); deeper.append(el('summary','Go deeper'),el('p',story.experience.background.text)); container.append(deeper);
           for (const term of story.experience.glossary) { const definition = el('details'); definition.append(el('summary',term.term),el('p',term.text)); container.append(definition); }
         }
-        container.append(el('p', story.experience?.explanation.text || story.summary), el('h3', 'Why it matters'), el('p', story.whyItMatters), el('h3', 'The bright side'), el('p', story.action));
+        container.append(el('p', story.experience?.explanation.text || story.summary), el('h3', 'Why it matters'), el('p', story.whyItMatters));
+        if (story.action?.trim() && story.closingType !== 'none') container.append(el('h3', story.closingType === 'bright-side' ? 'The bright side' : story.closingType === 'response' ? 'What’s being done' : 'Next steps'), el('p', story.action));
         const details = el('details'); details.append(el('summary', 'Sources and evidence'), el('p', story.verificationReason), el('p', `Evidence-supported, not independently fact-checked. Editor confidence estimate: ${Math.round(story.confidence*100)}%.`));
         for (const source of story.sources) { const p = el('p'); p.append(link(source.title, source.url), el('span', ` — ${source.publisher} · ${source.publishedAt ? source.publishedAt.slice(0,10) + ' (UTC)' : 'date unavailable'}`)); details.append(p); }
         for (const evidence of story.evidence || []) details.append(el('blockquote', evidence.excerpt));

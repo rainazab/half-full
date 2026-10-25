@@ -98,8 +98,8 @@ export function defaultQueries(now = new Date()) {
       .slice(0, 10),
     year = now.getUTCFullYear();
   return [
-    `(site:bbc.com/news/articles/ OR site:npr.org/${year}/) after:${after} (science OR accessibility OR education OR community OR discovery)`,
-    `(site:bbc.com/news/articles/ OR site:theguardian.com) after:${after} (conservation OR clean energy OR innovation OR health research OR culture)`,
+    `(site:kqed.org/news OR site:sfstandard.com OR site:berkeleyside.org OR site:oaklandside.org) after:${after} (community OR schools OR housing OR culture)`,
+    `(site:kqed.org OR site:sanjosespotlight.com OR site:sfchronicle.com OR site:mercurynews.com) after:${after} ("Bay Area" OR "San Francisco" OR Oakland OR "San Jose") (science OR health OR environment OR transit)`,
     `(site:bbc.com/news/articles/ OR site:theguardian.com/world OR site:npr.org/${year}/) after:${after} (major news OR policy OR economy OR world)`,
   ];
 }
@@ -126,8 +126,8 @@ export function historicalQueries(day) {
     const next = new Date(date.getTime() + 86400000).toISOString().slice(0, 10);
     const range = `after:${previous} before:${next}`;
     return [
-      `(site:bbc.com/news/articles/ OR site:bbc.co.uk/news/articles/ OR site:npr.org/${year}/) ${range} (science OR health OR education OR community)`,
-      `site:theguardian.com inurl:${year}/${shortMonth}/${day.slice(8)} ${range} (science OR environment OR innovation OR education OR culture) -inurl:all -inurl:live`,
+      `(site:kqed.org/news OR site:sfstandard.com OR site:berkeleyside.org OR site:oaklandside.org) ${range} (community OR schools OR housing OR culture)`,
+      `(site:kqed.org OR site:sanjosespotlight.com OR site:sfchronicle.com OR site:mercurynews.com) ${range} ("Bay Area" OR "San Francisco" OR Oakland OR "San Jose") (science OR health OR environment OR transit)`,
       `(site:bbc.com/news/articles/ OR site:theguardian.com/world OR site:npr.org/${year}/) ${range} (news OR policy OR economy) -inurl:all -inurl:live`,
     ];
   }

@@ -2583,3 +2583,11 @@ select {
     height: 75px;
   }
 }
+
+.generation-progress { max-width: 540px; margin: 0 auto; }
+.generation-meter-label { display: flex; justify-content: space-between; gap: 12px; font-size: .8rem; margin: 30px 0 10px; text-align: left; }
+.generation-meter-label > span:last-child { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.generation-meter { height: 12px; border-radius: 20px; background: #e3e9df; overflow: hidden; }
+.generation-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--ink); transition: width 1s linear; }
+.generation-progress .generation-timing { margin-top: 16px; font-size: .75rem; }
+@media (prefers-reduced-motion: reduce) { .generation-meter > span { transition: none; } }

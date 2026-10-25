@@ -379,7 +379,15 @@ export default function Studio() {
                   <p className="eyebrow">Published copy</p>
                   <h3>{story.headline}</h3>
                   <p>{story.summary}</p>
-                  <h4>The bright side</h4>
+                  {story.action.trim() && (
+                    <h4>
+                      {story.closingType === "bright-side"
+                        ? "The bright side"
+                        : story.closingType === "response"
+                          ? "What’s being done"
+                          : "Next steps"}
+                    </h4>
+                  )}
                   <p>{story.action}</p>
                   <span className="confidence-label">
                     Editor estimate: {Math.round(story.confidence * 100)}%

@@ -101,3 +101,14 @@ test("deduplicates query-order variations and substantive identical syndicated t
   assert.match(result.rejectedStories[0].reason,/Duplicate source URL/);
   assert.match(result.rejectedStories[1].reason,/syndicated/);
 });
+
+test("KQED mastheads retain original publication day, never updates, captions or unrelated publishers",()=>{
+  const row = {title:"Local community report",url:"https://www.kqed.org/news/123/local-report",text:"# Local community report\n\nA short deck.\n\nApr 9, 2024\n\nUpdated Jul 16, 2024\n\n![Photo](https://example.org/a.jpg)\n\nReporting."};
+  assert.equal(normalizeStories([row]).candidates[0].publishedAt,"2024-04-09T00:00:00.000Z");
+  for(const change of [
+    {text:row.text.replace("Apr 9, 2024\n\n","")},
+    {url:"https://example.org/news/local-report"},
+    {text:"# Local report\n\n![Photo](https://example.org/a.jpg)\n\nApr 9, 2024\n\nA photo caption."},
+    {text:row.text.replace("Apr 9, 2024","Apr 31, 2024")},
+  ]) assert.equal(normalizeStories([{...row,...change}]).candidates[0].publishedAt,null);
+});

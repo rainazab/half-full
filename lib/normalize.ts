@@ -162,6 +162,19 @@ function publishedDate(row: Row, metadata: Row, article: Row): string | null {
     const host = new URL(first(row.url, row.URL, row.link, metadata.url))
       .hostname;
     let printed: RegExpMatchArray | null = null;
+    if (/(^|\.)kqed\.org$/.test(host) && /^#\s+/.test(legacyText)) {
+      // KQED prints an unlabelled date under its headline/deck. Only inspect
+      // that masthead, before any image/body caption, never an Updated line.
+      const masthead = legacyText.slice(0, 1000).split(/\n!\[/)[0];
+      const date = masthead.match(
+        /(?:^|\n)\s*(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2}),\s+(\d{4})\s*(?:\n|$)/i,
+      );
+      if (date) {
+        const value = printedDate(date[2], date[1], date[3]);
+        if (value) return value;
+      }
+    }
+
     if (/(^|\.)bbc\.co\.uk$/.test(host)) {
       printed = legacyText.match(
         /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+(\d{1,2})\s+([A-Za-z]+),\s+(\d{4}),\s+\d{1,2}:\d{2}\s+GMT/i,

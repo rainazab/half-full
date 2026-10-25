@@ -58,7 +58,8 @@ export const editionResultSchema = z
             centralClaim: z.string(),
             summary: z.string().min(1),
             whyItMatters: z.string().min(1),
-            action: z.string().min(1),
+            action: z.string(),
+            closingType: z.enum(["none", "response", "bright-side"]).optional(),
             category: z.string(),
             sources: z
               .array(

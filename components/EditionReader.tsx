@@ -162,15 +162,32 @@ export default function EditionReader({
                   )}
                 </details>
               )}
-              <aside className="bright-side" aria-label="The bright side">
-                <span className="bright-side-icon" aria-hidden="true">
-                  ✳
-                </span>
-                <div>
-                  <h3>The bright side</h3>
-                  <p>{story.action}</p>
-                </div>
-              </aside>
+              {story.action.trim() && story.closingType !== "none" && (
+                <aside
+                  className="bright-side"
+                  aria-label={
+                    story.closingType === "bright-side"
+                      ? "The bright side"
+                      : story.closingType === "response"
+                        ? "What’s being done"
+                        : "Next steps"
+                  }
+                >
+                  <span className="bright-side-icon" aria-hidden="true">
+                    ✳
+                  </span>
+                  <div>
+                    <h3>
+                      {story.closingType === "bright-side"
+                        ? "The bright side"
+                        : story.closingType === "response"
+                          ? "What’s being done"
+                          : "Next steps"}
+                    </h3>
+                    <p>{story.action}</p>
+                  </div>
+                </aside>
+              )}
               <details className="reader-sources">
                 <summary>
                   {story.sources.length}{" "}

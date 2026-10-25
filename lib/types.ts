@@ -94,6 +94,7 @@ export interface ApprovedStory {
   summary: string;
   whyItMatters: string;
   action: string;
+  closingType?: "none" | "response" | "bright-side";
   category: string;
   sources: Source[];
   verificationStatus: "verified";

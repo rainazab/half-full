@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import type { EditionResult } from "@/lib/types";
+import type { EditionResult, RunLogEntry } from "@/lib/types";
 import { parseEdition } from "@/lib/edition-schema";
 import { LiveRunError, runLive } from "@/lib/client";
 import {
@@ -18,10 +18,13 @@ import Charm from "./Charm";
 import StoryVisual from "./StoryVisual";
 import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
+import GenerationProgress from "./GenerationProgress";
+import { mergeRunLogs } from "@/lib/generation-progress";
 type View = "today" | "reader" | "archive" | "mini" | "you";
 const moods = ["blue", "pink", "mint", "yellow", "blue"] as const;
 export default function USApp() {
   const [edition, setEdition] = useState<EditionResult | null>(null);
+  const [runLogs, setRunLogs] = useState<RunLogEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true),
@@ -96,6 +99,39 @@ export default function USApp() {
     // A date is loaded once on mount; date changes go through the picker.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  useEffect(() => {
+    if (!busy) return;
+    const controller = new AbortController();
+    const version = generation.current;
+    let active = true;
+    async function update() {
+      try {
+        const response = await fetch(`/api/studio/${selectedDate}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const state = await response.json();
+        if (state.status === "failed") return;
+        if (active && generation.current === version)
+          setRunLogs((previous) =>
+            mergeRunLogs(
+              previous,
+              state.run?.runLog ?? state.result?.runLog ?? [],
+            ),
+          );
+      } catch {
+        /* Stream events remain available if the checkpoint cannot be reached. */
+      }
+    }
+    void update();
+    const timer = setInterval(update, 4000);
+    return () => {
+      active = false;
+      controller.abort();
+      clearInterval(timer);
+    };
+  }, [busy, selectedDate]);
   async function openDate(day: string) {
     if (!selectableDay(day)) return;
     const version = ++generation.current;
@@ -103,6 +139,7 @@ export default function USApp() {
     selectedDateRef.current = day;
     setSelectedDate(day);
     setPickerOpen(false);
+    setRunLogs([]);
     setLoading(true);
     setBusy(false);
     setError(null);
@@ -141,7 +178,16 @@ export default function USApp() {
         const deadline = Date.now() + 360000;
         while (!result && current()) {
           try {
-            result = await runLive(() => {}, fetch, day);
+            result = await runLive(
+              (event) => {
+                if (current() && event.type === "log")
+                  setRunLogs((previous) =>
+                    mergeRunLogs(previous, [event.entry]),
+                  );
+              },
+              fetch,
+              day,
+            );
           } catch (e) {
             if (
               !(e instanceof LiveRunError) ||
@@ -339,13 +385,7 @@ export default function USApp() {
             <p>Loading edition…</p>
           </div>
         )}
-        {busy && (
-          <section className="edition-loading" role="status">
-            <Charm mood="mint" />
-            <h2>Preparing your edition</h2>
-            <p>This can take a couple of minutes.</p>
-          </section>
-        )}
+        {busy && <GenerationProgress key={date} date={date} log={runLogs} />}
         {!loading && view === "today" && !busy && stories.length > 0 && (
           <>
             <section className="daily-hero">

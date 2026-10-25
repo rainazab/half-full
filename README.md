@@ -85,7 +85,7 @@ The Mini uses original validated 5×5 grids, Across/Down clues, crossing letters
 
 `GET /api/studio/YYYY-MM-DD` reads the saved edition or a live/failed checkpoint. Publication writes bounded, validated checkpoints to Apify KV (`PROCESS-YYYY-MM-DD`) so a different server instance can display progress and failed-run reasons. No provider keys, input environment or raw provider errors are persisted in these records. The studio never launches paid generation just by being viewed. It polls unfinished dates and stops after publication.
 
-New editions favor evidence-supported progress, solutions, community, science, accessibility and culture, while retaining consequential hard news when omission would distort the day. There is no positive-news quota and no relaxation of evidence thresholds. The story’s validated `action` field supplies the closing **The bright side**: one or two short sentences with a supported constructive development or a proportional next step. It must not minimize suffering, manufacture reassurance or invent resources. Its evidence references remain subject to the same checks as other story copy. Already published daily selections remain fixed.
+New editions prioritize evidence-supported Bay Area community developments, while allowing pivotal national or global news to take precedence. Positive stories need no extra closing. When useful, the validated `action` field describes a sourced response under **What’s being done**, or a distinct constructive development under **The bright side**. It must not minimize suffering, manufacture reassurance or invent resources. Evidence thresholds apply equally to closing copy. Published selections remain fixed.
 
 ## Audio and images
 
@@ -109,3 +109,7 @@ npm start -- --port 3000
 ```
 
 Deploy with the existing Dockerfile or these build/start commands to a Node host with HTTPS and at least a 300-second request allowance. Store environment values in the host's secret manager. Published editions and the publisher lock are shared through Apify; live audio is process-local; generation checkpoints and published audit records are shared through Apify. No public deployment has been performed.
+
+Generation progress uses live stream events and stored checkpoints, with stage-weighted estimates based on observed retrieval/review times. In-flight estimates are capped below 100%; only a saved edition is complete. The reader shows the current stage and a typical 2–3 minute wait.
+
+Discovery prioritizes Bay Area community reporting in two lanes, retaining a third national/global lane. Editorial importance can override local preference. Positive or neutral stories can omit the optional closing (`closingType: "none"`, empty `action` and action references). Pivotal hard news includes sourced responses under “What’s being done”; “The bright side” is reserved for distinct supported constructive developments. Previously published dates remain fixed.

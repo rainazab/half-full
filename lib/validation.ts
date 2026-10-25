@@ -26,7 +26,11 @@ export const editorialResponseSchema = z
             headline: z.string().max(300),
             summary: z.string().max(1200),
             whyItMatters: z.string().max(1000),
-            action: z.string().max(700),
+            action: z.string().trim().max(700),
+            closingType: z
+              .enum(["none", "response", "bright-side"])
+              .nullable()
+              .optional(),
             category: z.string().max(100),
             sourceIds: z.array(z.string()).max(5),
             evidence: refs,
@@ -65,6 +69,7 @@ export const editorialGenerationSchema = z
       .array(
         editorialResponseSchema.shape.decisions.element.extend({
           experience: experienceSchema.nullable(),
+          closingType: z.enum(["none", "response", "bright-side"]),
         }),
       )
       .max(20),
@@ -174,8 +179,10 @@ function validateDecision(
   if (
     decision.verificationStatus === "verified" &&
     (decision.sourceIds.some((id) => !assessmentIds.includes(id)) ||
-      Object.values(decision.contentEvidence).some(
-        (references) => references.length === 0,
+      Object.entries(decision.contentEvidence).some(
+        ([field, references]) =>
+          (field !== "action" || decision.action.trim()) &&
+          references.length === 0,
       ) ||
       decision.sourceIds.some(
         (id) =>
@@ -187,6 +194,18 @@ function validateDecision(
   ) {
     throw new EditorialValidationError(
       "Approved copy requires evidence references for every field and assessments of every source.",
+    );
+  }
+  if (
+    decision.verificationStatus === "verified" &&
+    ((!decision.action && decision.contentEvidence.action.length > 0) ||
+      (decision.closingType === "none" && !!decision.action) ||
+      (decision.closingType &&
+        decision.closingType !== "none" &&
+        !decision.action))
+  ) {
+    throw new EditorialValidationError(
+      "Closing copy, type, and evidence must agree.",
     );
   }
   // URLs in generated prose could smuggle in invented sources or actions.
@@ -211,7 +230,6 @@ function validateDecision(
       decision.headline,
       decision.summary,
       decision.whyItMatters,
-      decision.action,
       decision.category,
     ].some((value) => !value.trim())
   )
@@ -378,6 +396,7 @@ export function assembleEditorialResult(
       summary: decision.summary,
       whyItMatters: decision.whyItMatters,
       action: decision.action,
+      closingType: decision.closingType ?? undefined,
       category: decision.category,
       verificationStatus: "verified",
       confidence: Math.min(decision.confidence, cap),
@@ -390,13 +409,13 @@ export function assembleEditorialResult(
           text: decision.centralClaim,
           evidence: decision.evidence.map(evidenceRecord),
         },
-        ...(["headline", "summary", "whyItMatters", "action"] as const).map(
-          (field) => ({
+        ...(["headline", "summary", "whyItMatters", "action"] as const)
+          .filter((field) => field !== "action" || !!decision.action)
+          .map((field) => ({
             field,
             text: decision[field],
             evidence: decision.contentEvidence[field].map(evidenceRecord),
-          }),
-        ),
+          })),
       ],
       sourceAssessments: decision.sourceAssessments,
       limitations: [
