@@ -2698,3 +2698,51 @@ html.deck-open body {
     justify-content: flex-start;
   }
 }
+
+/* ---------- Hand-off from the intro into the app ---------- */
+.handoff {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 24px;
+  background: linear-gradient(180deg, #e8f1fb 0%, #faf9f4 55%, #fbf1de 100%);
+  color: var(--ink);
+  text-align: center;
+}
+.handoff-charm .charm {
+  width: 110px;
+  height: 110px;
+}
+.handoff-wordmark {
+  font-weight: 800;
+  letter-spacing: -0.06em;
+  font-size: 1.5rem;
+  margin: 6px 0 0;
+}
+.handoff-stage {
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0;
+  animation: fade-up 360ms ease-out both;
+}
+.handoff-bar {
+  width: 160px;
+  height: 4px;
+  border-radius: 99px;
+  background: #d9dfd5;
+  overflow: hidden;
+  margin-top: 8px;
+}
+.handoff-bar span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--accent);
+  transform-origin: left;
+}

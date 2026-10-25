@@ -25,6 +25,7 @@ import { positionKey, validPosition } from "@/lib/reading-position";
 import GenerationProgress from "./GenerationProgress";
 import TodayHome from "./TodayHome";
 import OnboardingFlow from "./OnboardingFlow";
+import HandoffScreen from "./HandoffScreen";
 import {
   clearOnboarding,
   ONBOARDING_VERSION,
@@ -57,6 +58,8 @@ export default function USApp() {
   const [storyboards, setStoryboards] = useState<StoryboardIndex>({});
   // First-run intro: decided once from device storage and the URL, never from the edition.
   const [intro, setIntro] = useState<boolean | null>(null);
+  // After the intro, a short hand-off covers the app until the edition is ready.
+  const [handoff, setHandoff] = useState(false);
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
   const profile = useProfile();
@@ -365,7 +368,7 @@ export default function USApp() {
       skipped,
     });
     setIntro(false);
-    heading.current?.focus({ preventScroll: true });
+    setHandoff(true);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
   if (intro) {
@@ -672,6 +675,15 @@ export default function USApp() {
         )}
         <PWAStatus />
       </main>
+      {handoff && (
+        <HandoffScreen
+          ready={!loading}
+          onDone={() => {
+            setHandoff(false);
+            heading.current?.focus({ preventScroll: true });
+          }}
+        />
+      )}
       <nav className="bottom-nav" aria-label="Mobile navigation">
         {nav.map((item) => (
           <button
