@@ -2,13 +2,12 @@
 import { useEffect, useRef, useState } from "react";
 import type { ApprovedStory } from "@/lib/types";
 import { localDemoAudio, narrationFor } from "@/lib/narration";
-import { narratorById, type NarratorId } from "@/lib/narrators";
+import { type NarratorId } from "@/lib/narrators";
 import {
   audioPath,
   SPEEDS,
   type ListeningPreferences,
 } from "@/lib/preferences";
-import NarratorPicker from "./NarratorPicker";
 import FollowAlong from "./FollowAlong";
 const clock = (seconds: number) =>
   `${Math.floor(seconds / 60)}:${String(Math.floor(seconds % 60)).padStart(2, "0")}`;
@@ -249,7 +248,7 @@ export default function AudioPlayer({
         <div className="player-track">
           <div className="player-meta">
             <span className="player-voice">
-              {narratorById(narrator).name}
+              Narration
               {duration > 0
                 ? ""
                 : ` · about ${clock(narration.estimatedSeconds)}`}
@@ -312,13 +311,20 @@ export default function AudioPlayer({
             ))}
           </select>
         </label>
-        <details className="player-voice-control">
-          <summary aria-label="Choose narrator">Voice · {narratorById(narrator).name}</summary>
-          <NarratorPicker compact value={narrator} onChange={(next) => onPreferences({ narrator: next })} />
-        </details>
         <button type="button" className="player-read-along" onClick={() => setTranscriptOpen((value) => !value)} aria-expanded={transcriptOpen}>
           {transcriptOpen ? "Hide read along" : "Read along"}
         </button>
+        <label className="autoplay-toggle">
+          <input
+            type="checkbox"
+            checked={through}
+            onChange={(e) => {
+              onThrough(e.target.checked);
+              onPreferences({ autoplayNext: e.target.checked });
+            }}
+          />
+          Autoplay
+        </label>
         </div>
         {(onPrevious || onNext) && (
           <div className="player-story-nav" aria-label="Story navigation">
@@ -326,20 +332,6 @@ export default function AudioPlayer({
             <button type="button" className="player-skip" aria-label={transportLabel ?? "Next story"} disabled={!onNext} onClick={onNext}>→</button>
           </div>
         )}
-        <details className="audio-options">
-          <summary aria-label="Playback options" title="Playback options">•••</summary>
-          <label className="listen-through">
-            <input
-              type="checkbox"
-              checked={through}
-              onChange={(e) => {
-                onThrough(e.target.checked);
-                onPreferences({ autoplayNext: e.target.checked });
-              }}
-            />
-            Autoplay next
-          </label>
-        </details>
       </div>
       {transcriptOpen && (
         <div className="player-transcript">

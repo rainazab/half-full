@@ -1649,6 +1649,24 @@ html.deck-open body {
   flex-wrap: wrap;
   justify-content: center;
 }
+.autoplay-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: #ffffffd9;
+  font-size: 11px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.autoplay-toggle input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: #f9f7f2;
+}
 .player-voice-control { position: relative; z-index: 6; }
 .player-voice-control > summary,
 .player-read-along {
