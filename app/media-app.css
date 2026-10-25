@@ -174,7 +174,10 @@ button.primary:hover:not(:disabled) {
   position: relative;
   isolation: isolate;
   margin: 0 -20px;
-  padding: 14px 20px 32px;
+  /* The shell reserves space for the fixed bottom nav. Extend this section
+     through that reserved area so its atmosphere reaches the viewport edge. */
+  margin-bottom: calc(-90px - var(--safe-bottom));
+  padding: 14px 20px calc(32px + 90px + var(--safe-bottom));
   overflow: hidden;
   min-height: calc(100dvh - 80px);
 }
@@ -1386,8 +1389,8 @@ html.deck-open body {
     padding: 6px 10px;
   }
   .today-home {
-    margin: 0 -36px;
-    padding: 22px 36px 60px;
+    margin: 0 -36px calc(-90px - var(--safe-bottom));
+    padding: 22px 36px calc(60px + 90px + var(--safe-bottom));
     min-height: calc(100dvh - 100px);
   }
   .home-intro {
