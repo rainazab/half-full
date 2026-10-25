@@ -256,7 +256,7 @@ button.primary:hover:not(:disabled) {
   min-height: 0;
   border: 0;
   background: none;
-  border-radius: 18px;
+  border-radius: 28px;
   padding: 0;
   margin: 15px 0 17px;
   overflow: hidden;
@@ -269,8 +269,8 @@ button.primary:hover:not(:disabled) {
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  border-radius: 18px;
+  object-fit: cover;
+  border-radius: inherit;
   mix-blend-mode: normal;
 }
 .feature-art > .brand-world-artwork {
@@ -1642,6 +1642,12 @@ html.deck-open body {
   color: #fff;
   padding: 0 9px;
   font-size: 11px;
+}
+.player-jump:hover:not(:disabled),
+.player-jump:focus-visible {
+  background: #ffffff22;
+  color: #fff;
+  border: 0;
 }
 .player-secondary {
   order: 3;
