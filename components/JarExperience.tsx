@@ -24,9 +24,9 @@ export default function JarExperience({ profile, today, entries, selectedDate, o
   const week = Array.from({ length: 7 }, (_, index) => shiftDay(today, index - 6));
   return <section className="library-screen progress-experience" aria-labelledby="your-days-title">
     <DitheredAtmosphere tone="mint" intensity={0.17} />
-    <header className="library-page-intro progress-intro"><p className="eyebrow">A little perspective, every day</p><h1 id="your-days-title">Your days.</h1><p>A quiet record of what you’ve made time for.</p></header>
+    <header className="library-page-intro progress-intro"><p className="eyebrow">A little perspective, every day</p><h1 id="your-days-title">Your days.</h1><p>A record of what you’ve made time for.</p></header>
     <section className="progress-rhythm-card" aria-labelledby="progress-rhythm-title">
-      <div className="progress-rhythm-heading"><div><p className="eyebrow">Your rhythm</p><h2 id="progress-rhythm-title">{streak ? `${streak}-day streak` : "Start a gentle streak"}</h2><p>{streak ? "A little time with the news, at your own pace." : "Finish an edition whenever you’re ready."}</p></div><div className="progress-streak-mark" aria-hidden="true"><Icon name="today" size={34} /></div></div>
+      <div className="progress-rhythm-heading"><div><p className="eyebrow">Your rhythm</p><h2 id="progress-rhythm-title">{streak ? `${streak}-day streak` : "Start a streak"}</h2><p>{streak ? "Keep up with the news, at your own pace." : "Finish an edition whenever you’re ready."}</p></div><div className="progress-streak-mark" aria-hidden="true"><Icon name="today" size={34} /></div></div>
       <div className="progress-week" aria-label="Last seven days">{week.map((day) => <div key={day} className={progress.days.includes(day) ? "is-complete" : ""}><span>{dateLabel(day, { weekday: "short" }).slice(0, 2)}</span><i aria-hidden="true">{progress.days.includes(day) ? "✓" : ""}</i></div>)}</div>
       <div className="progress-stats"><div><strong>{finished.length}</strong><span>editions finished</span></div><div><strong>{longest}</strong><span>longest streak</span></div></div>
       <button className="primary progress-open-edition" onClick={onOpenToday}>{progress.days.includes(today) ? "Visit today’s edition" : "Get caught up"}<Icon name="next" size={17} /></button>
