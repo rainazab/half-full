@@ -1,6 +1,6 @@
 # Story reaction artwork
 
-The four characters are the team's original hand-drawn artwork (drawn in Illustrator, see `originals/`). They are used as drawn: nothing is regenerated, restyled or recolored. `originals/` holds the source PNGs; the reader uses lossless WebP copies padded to a square canvas.
+The four characters are the team's original hand-drawn artwork (see `originals/`). They are used as drawn: nothing is regenerated, restyled or recolored. `originals/` holds the source PNGs; the reader uses lossless WebP copies padded to a square canvas.
 
 | Reaction id | Character | Source file |
 |-------------|-----------|-------------|
