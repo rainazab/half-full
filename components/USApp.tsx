@@ -10,7 +10,6 @@ import {
   readingStreak,
   selectableDay,
   type ArchiveEntry,
-  type ReadingProgress,
 } from "@/lib/daily";
 import EditionReader from "./EditionReader";
 import PWAStatus from "./PWAStatus";
@@ -18,6 +17,8 @@ import Charm from "./Charm";
 import StoryVisual from "./StoryVisual";
 import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
+import useProfile from "@/hooks/useProfile";
+import ProfileCard, { ProfileAvatar } from "./ProfileCard";
 import GenerationProgress from "./GenerationProgress";
 import { mergeRunLogs } from "@/lib/generation-progress";
 type View = "today" | "reader" | "archive" | "mini" | "you";
@@ -32,11 +33,9 @@ export default function USApp() {
     [view, setView] = useState<View>("today");
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
-  const [progress, setProgress] = useState<ReadingProgress>({
-      days: [],
-      reactions: {},
-    }),
-    [today, setToday] = useState(editionDay);
+  const profile = useProfile();
+  const { progress, saveProgress } = profile;
+  const [today, setToday] = useState(editionDay);
   const [selectedDate, setSelectedDate] = useState(editionDay);
   const [pickerOpen, setPickerOpen] = useState(false);
   const selectedDateRef = useRef(selectedDate);
@@ -65,10 +64,6 @@ export default function USApp() {
   useEffect(() => {
     const current = editionDay();
     setToday(current);
-    try {
-      const p = JSON.parse(localStorage.getItem("us-reading-v1") ?? "null");
-      if (p && Array.isArray(p.days) && p.reactions) setProgress(p);
-    } catch {}
     const requested = new URLSearchParams(window.location.search).get("date");
     const day =
       requested && selectableDay(requested, current) ? requested : current;
@@ -263,12 +258,6 @@ export default function USApp() {
     setStartIndex(index);
     tab("reader");
   }
-  function saveProgress(next: ReadingProgress) {
-    setProgress(next);
-    try {
-      localStorage.setItem("us-reading-v1", JSON.stringify(next));
-    } catch {}
-  }
   const date = selectedDate;
   const stories = edition?.edition.stories ?? [],
     complete = progress.days.includes(date);
@@ -343,10 +332,20 @@ export default function USApp() {
               </span>
             </button>
           </div>
-          <span className="mode-pill">
-            <i />
-            Live edition
-          </span>
+          <div className="topbar-account">
+            <span className="mode-pill">
+              <i />
+              Live edition
+            </span>
+            <button
+              className="profile-trigger"
+              onClick={() => tab("you")}
+              aria-label={profile.user ? "Your profile" : "Sign in"}
+              title={profile.user?.displayName || "Your profile"}
+            >
+              <ProfileAvatar profile={profile} />
+            </button>
+          </div>
           <DatePicker
             open={pickerOpen}
             date={date}
@@ -489,13 +488,13 @@ export default function USApp() {
               date={date}
               initialIndex={startIndex}
               onComplete={() => {
-                saveProgress(markRead(progress, date));
+                saveProgress((previous) => markRead(previous, date));
               }}
               onReaction={(id, mood) =>
-                saveProgress({
-                  ...progress,
-                  reactions: { ...progress.reactions, [id]: mood },
-                })
+                saveProgress((previous) => ({
+                  ...previous,
+                  reactions: { ...previous.reactions, [id]: mood },
+                }))
               }
               reactions={progress.reactions}
             />
@@ -529,6 +528,7 @@ export default function USApp() {
             <div className="page-heading">
               <h1>Your jar</h1>
             </div>
+            <ProfileCard profile={profile} />
             <div className="you-layout">
               <div className="jar-card">
                 <div className="glass-jar">

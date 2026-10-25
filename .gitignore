@@ -6,3 +6,8 @@ node_modules/
 generated/
 .vercel/
 .DS_Store
+
+# Firebase CLI/emulator artifacts
+.firebase/
+*-debug.log
+*-debug.*.log

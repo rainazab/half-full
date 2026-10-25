@@ -2591,3 +2591,25 @@ select {
 .generation-meter > span { display: block; height: 100%; border-radius: inherit; background: var(--ink); transition: width 1s linear; }
 .generation-progress .generation-timing { margin-top: 16px; font-size: .75rem; }
 @media (prefers-reduced-motion: reduce) { .generation-meter > span { transition: none; } }
+
+.topbar-account {display:flex;align-items:center;gap:12px;margin-left:auto;}
+.profile-trigger, .profile-avatar {width:38px;height:38px;border-radius:50%;overflow:hidden;display:grid;place-items:center;background:var(--mint);color:var(--ink);flex:none;font-weight:800;}
+.profile-trigger {min-height:38px;border:1px solid var(--line);padding:0;cursor:pointer;}
+.profile-trigger img, .profile-avatar img {width:100%;height:100%;object-fit:cover;}
+.profile-card {border:1px solid var(--line);background:#fff;border-radius:22px;padding:24px;margin-bottom:24px;}
+.profile-card h2 {font-size:1.25rem;margin:0 0 6px;}
+.profile-card p {font-size:.82rem;color:var(--muted);margin:0;overflow-wrap:anywhere;}
+.profile-signin {display:flex;align-items:center;justify-content:space-between;gap:22px;}
+.google-signin {display:inline-flex;justify-content:center;align-items:center;gap:12px;white-space:nowrap;background:#fff;border:1px solid #c9d1c8;border-radius:12px;padding:13px 18px;color:var(--ink);font-weight:650;font-size:.85rem;cursor:pointer;}
+.google-signin:hover {background:#f5f7f1;}
+.google-signin:disabled {opacity:.6;cursor:wait;}
+.profile-identity {display:flex;align-items:center;gap:14px;min-width:0;}
+.profile-identity > div:last-child {min-width:0;}
+.profile-identity .profile-avatar {width:48px;height:48px;}
+.profile-actions {display:flex;justify-content:space-between;align-items:center;gap:16px;margin-top:18px;}
+.profile-sync {color:var(--muted);font-size:.75rem;}
+.profile-sync.saved {color:#376249;}
+.profile-card button.quiet {border:0;background:none;padding:6px 0;text-decoration:underline;font-size:.8rem;color:var(--ink);cursor:pointer;}
+.profile-error {margin-top:16px;padding-top:14px;border-top:1px solid var(--line);}
+.profile-error p {color:#913f3f;}
+@media(max-width:650px) {.topbar-account{gap:8px;}.topbar-account .mode-pill{display:none;}.profile-signin{align-items:flex-start;flex-direction:column;gap:18px;}.profile-card{padding:20px;}.google-signin{width:100%;}.profile-trigger{width:36px;height:36px;min-height:36px;}}

@@ -113,3 +113,18 @@ Deploy with the existing Dockerfile or these build/start commands to a Node host
 Generation progress uses live stream events and stored checkpoints, with stage-weighted estimates based on observed retrieval/review times. In-flight estimates are capped below 100%; only a saved edition is complete. The reader shows the current stage and a typical 2–3 minute wait.
 
 Discovery prioritizes Bay Area community reporting in two lanes, retaining a third national/global lane. Editorial importance can override local preference. Positive or neutral stories can omit the optional closing (`closingType: "none"`, empty `action` and action references). Pivotal hard news includes sourced responses under “What’s being done”; “The bright side” is reserved for distinct supported constructive developments. Previously published dates remain fixed.
+
+## Profiles and Google sign-in
+
+Set the six `NEXT_PUBLIC_FIREBASE_*` web-app identifiers from `.env.example`, enable Google in Firebase Authentication, authorize the local/production domains, and create the default Firestore database. Restart Next after changing environment variables. No Firebase service-account key is used by the browser or required for this client integration.
+
+The header avatar and Your jar open the profile. Google sign-in is optional; reading works signed out. Firebase persists the session. On sign-in, guest progress moves into an account-specific import queue and merges once, preserving the account’s existing reactions. Reads and reactions sync through `users/{uid}`; transactions merge only this device’s pending edits, retaining changes from other devices. Account caches and offline edit/import queues are scoped to the Firebase UID. Signing out returns to separate guest progress. Cloud permission/network failures retain local edits and expose Retry sync.
+
+Deploy `firestore.rules` to the configured Firebase project before enabling public profile sync. These rules restrict each profile document to its owner, prohibit collection listing, validate allowed fields and sizes, and deny other collection access. If this Firebase project serves other applications, merge this profile rule into its existing rules rather than replacing unrelated rules. The app does not silently deploy rules or use open test-mode access.
+
+```sh
+npx firebase login
+npx firebase deploy --only firestore:rules --project YOUR_FIREBASE_PROJECT_ID
+```
+
+Use `npm run test:firebase` to test rules against the local Firestore emulator (Java 21+). No live Firebase user or production document is created by the emulator tests.
