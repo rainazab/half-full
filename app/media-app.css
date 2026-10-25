@@ -1620,10 +1620,12 @@ html.deck-open body {
 .player-track { flex: 1 0 100%; order: 1; }
 .player-transport {
   order: 2;
+  flex: 1 0 100%;
   display: flex;
   align-items: center;
   gap: 12px;
   margin-inline: auto;
+  justify-content: center;
 }
 .player-jump,
 .player-voice-control > summary,
@@ -1642,6 +1644,7 @@ html.deck-open body {
 }
 .player-secondary {
   order: 3;
+  flex: 1 0 100%;
   display: flex;
   align-items: center;
   gap: 8px;

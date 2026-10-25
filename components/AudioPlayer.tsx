@@ -247,17 +247,10 @@ export default function AudioPlayer({
         </div>
         <div className="player-track">
           <div className="player-meta">
-            <span className="player-voice">
-              Narration
-              {duration > 0
-                ? ""
-                : ` · about ${clock(narration.estimatedSeconds)}`}
+            <span className="player-time">{clock(time)}</span>
+            <span className="player-time">
+              {clock(duration || narration.estimatedSeconds)}
             </span>
-            {duration > 0 && (
-              <span className="player-time">
-                {clock(time)} / {clock(duration)}
-              </span>
-            )}
           </div>
           <input
             className="player-seek"
