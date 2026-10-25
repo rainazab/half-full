@@ -25,14 +25,16 @@ For every selected source, sourceAssessments must classify it as primary (origin
 Compare relevant primary and secondary material when both are supplied. If they materially disagree about the central claim, return uncertain, list conflictingSourceIds and explain contradictionReason. Do not conflate different dates, scopes, predictions, or attributed opinions with factual contradictions. Use empty conflictingSourceIds and contradictionReason when there is no unresolved contradiction. Unknown publication metadata is conservatively excluded by the server.
 For uncertain/rejected decisions use closingType "none", empty evidence, sourceIds, sourceAssessments and all contentEvidence arrays. Keep reasons specific and concise, and generated headline/summary/whyItMatters/action/category empty. Do not waste output space rewriting excluded articles.`;
 
+import { editionDayEnd } from "./historical-coverage";
 /** Historical context is explicit and separate from the actual retrieval clock. */
 export function editionContext(date?: string) {
   return date
     ? {
-        currentUtcTime: `${date}T23:59:59.999Z`,
+        // The end of the edition day in Pacific time, matching server validation.
+        currentUtcTime: editionDayEnd(date).toISOString(),
         editionDate: date,
         retrievedAt: new Date().toISOString(),
-        temporalInstruction: `This is a historical edition for ${date}. Only approve articles published on this exact UTC calendar day. Politics, conflict and human-interest reporting are eligible when narrow attributed claims are well supported; do not exclude a report merely because of its topic, political focus or emotional tone. Retain all evidence thresholds and reject unsupported claims. Treat the provided currentUtcTime as the editorial reference time. Describe the news as it was reported then, in past tense. Do not add later outcomes from memory or imply old advice, deadlines, health guidance, or policies apply today. Omit unnecessary closings; where needed, describe what was being done at that time, with its limits; do not advise present-day action based on expired conditions. Supporting documents must not introduce facts from after the edition date. Unknown publication dates cannot qualify.`,
+        temporalInstruction: `This is a historical edition for ${date}. Only approve articles published on this exact calendar day; the server checks each timestamp against that day in UTC and in Pacific time (America/Los_Angeles), the shared publishing zone. Politics, conflict and human-interest reporting are eligible when narrow attributed claims are well supported; do not exclude a report merely because of its topic, political focus or emotional tone. Retain all evidence thresholds and reject unsupported claims. Treat the provided currentUtcTime as the editorial reference time. Describe the news as it was reported then, in past tense. Do not add later outcomes from memory or imply old advice, deadlines, health guidance, or policies apply today. Omit unnecessary closings; where needed, describe what was being done at that time, with its limits; do not advise present-day action based on expired conditions. Supporting documents must not introduce facts from after the edition date. Unknown publication dates cannot qualify.`,
       }
     : { currentUtcTime: new Date().toISOString() };
 }

@@ -8,6 +8,13 @@ import { retrieveNews } from "./apify";
 import { reviewCandidates } from "./editor";
 import { normalizeStories } from "./normalize";
 import {
+  COVERAGE_TARGET,
+  coverageMessage,
+  editionDayEnd,
+  matchesEditionDay,
+  secondPassQueries,
+} from "./historical-coverage";
+import {
   assembleEditorialResult,
   EditorialValidationError,
 } from "./validation";
@@ -77,12 +84,91 @@ export async function generateEdition(
     const normalized = normalizeStories(packets.articles, 100);
     const normalizedArticleCount = normalized.candidates.length;
     if (config.editionDate) {
-      const excluded = normalized.candidates.filter(
-        (c) => c.publishedAt?.slice(0, 10) !== config.editionDate,
+      const editionDate = config.editionDate;
+      // Timezone policy: the article's timestamp must fall on the edition day in UTC
+      // or in the shared Pacific publishing zone. See lib/historical-coverage.ts.
+      const exclusionReason = (c: CandidateStory) =>
+        c.publishedAt
+          ? `Published outside the selected day (${editionDate}, checked in UTC and Pacific time).`
+          : "No reliable publication date was retrieved for this historical article.";
+      let excluded = normalized.candidates.filter(
+        (c) => !matchesEditionDay(c.publishedAt, editionDate),
       );
-      const matching = normalized.candidates.filter(
-        (c) => c.publishedAt?.slice(0, 10) === config.editionDate,
+      let matching = normalized.candidates.filter((c) =>
+        matchesEditionDay(c.publishedAt, editionDate),
       );
+      const counts = {
+        retrieved: packets.articles.length,
+        unique: normalizedArticleCount,
+        sameDay: matching.length,
+        undated: excluded.filter((c) => !c.publishedAt).length,
+        otherDay: excluded.filter((c) => !!c.publishedAt).length,
+      };
+      log(
+        "edition.coverage",
+        "completed",
+        coverageMessage(editionDate, counts),
+      );
+      // A thin first pass gets one bounded, broader discovery pass. It never relaxes
+      // the date policy or evidence thresholds; it only looks in more credible places.
+      const remainingMs = deadline - Date.now();
+      if (matching.length < COVERAGE_TARGET && remainingMs > 160000) {
+        const budgetMs = Math.min(70000, remainingMs - 110000);
+        log(
+          "discovery.second-pass",
+          "started",
+          `Only ${matching.length} same-day articles after the first pass (target ${COVERAGE_TARGET}). Running one broader ${Math.round(budgetMs / 1000)}-second discovery pass across additional credible publishers for ${editionDate}.`,
+        );
+        try {
+          const extra = unpackReceipts(
+            await dependencies.retrieveNews(config, log, () => {}, {
+              budgetMs,
+              queries: secondPassQueries(editionDate),
+              investigate: false,
+              label: `second-pass historical discovery for ${editionDate}`,
+            }),
+          );
+          const known = new Set([
+            ...normalized.candidates.map((c) => c.id),
+            ...normalized.rejectedStories.map((c) => c.url),
+          ]);
+          const supplement = normalizeStories(extra.articles, 60);
+          const fresh = supplement.candidates.filter(
+            (c) => !known.has(c.id) && !known.has(c.url),
+          );
+          const added = fresh.filter((c) =>
+            matchesEditionDay(c.publishedAt, editionDate),
+          );
+          matching = [...matching, ...added];
+          excluded = [
+            ...excluded,
+            ...fresh.filter(
+              (c) => !matchesEditionDay(c.publishedAt, editionDate),
+            ),
+          ];
+          normalized.rejectedStories.push(
+            ...supplement.rejectedStories.filter((r) => !known.has(r.url)),
+          );
+          packets.retrievalRuns.push(...extra.retrievalRuns);
+          log(
+            "discovery.second-pass",
+            "completed",
+            `Second pass retrieved ${extra.articles.length} records; ${fresh.length} new unique articles, ${added.length} published on ${editionDate} (UTC or Pacific). Same-day candidates now ${matching.length}.`,
+          );
+        } catch (error) {
+          const safe = publicError(error);
+          log(
+            "discovery.second-pass",
+            "failed",
+            `The second discovery pass was unavailable (${safe.code}); continuing with the first pass only.`,
+          );
+        }
+      } else if (matching.length < COVERAGE_TARGET)
+        log(
+          "discovery.second-pass",
+          "failed",
+          `Only ${matching.length} same-day articles were found and ${Math.round(remainingMs / 1000)} seconds remain, too little for a second discovery pass.`,
+        );
       normalized.candidates = matching.slice(0, 20);
       normalized.rejectedStories.push(
         ...matching.slice(20).map((c) => ({
@@ -100,15 +186,13 @@ export async function generateEdition(
           url: c.url,
           confidence: 0,
           verificationStatus: "rejected" as const,
-          reason: c.publishedAt
-            ? `Published outside the selected day (${config.editionDate}).`
-            : "No reliable publication date was retrieved for this historical article.",
+          reason: exclusionReason(c),
         })),
       );
       log(
         "edition.date",
         "completed",
-        `Reviewing reporting published on ${config.editionDate}; articles from other dates are excluded.`,
+        `Reviewing ${normalized.candidates.length} articles published on ${editionDate} (UTC or Pacific); articles from other dates are excluded.`,
       );
     }
     if (!config.editionDate && normalized.candidates.length > 20) {
@@ -189,9 +273,7 @@ export async function generateEdition(
       reviewed = assembleEditorialResult(
         response,
         normalized.candidates,
-        config.editionDate
-          ? new Date(`${config.editionDate}T23:59:59.999Z`)
-          : new Date(),
+        config.editionDate ? editionDayEnd(config.editionDate) : new Date(),
         supportingSources,
       );
     } catch (error) {
@@ -306,7 +388,7 @@ export async function generateEdition(
       normalizedArticles: normalizedArticleCount,
       eligibleArticles: normalized.candidates.length,
       supportingSources,
-      retrievalRuns:packets.retrievalRuns,
+      retrievalRuns: packets.retrievalRuns,
     });
     dependencies.finishRun(run, result);
     log("edition", "completed", "Edition is ready. You're caught up.");

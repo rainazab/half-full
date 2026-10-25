@@ -24,7 +24,7 @@ ANTHROPIC_API_KEY=your-key
 LLM_PROVIDER=anthropic
 ```
 
-Optional: `ANTHROPIC_MODEL`, `CARTESIA_API_KEY` (existing `CARTESIA` is also supported), `CARTESIA_VOICE_ID`, `CARTESIA_MODEL_ID`, `ARTICLE_IMAGES_ENABLED`, and `APIFY_SOCIAL_ENABLED`. See `.env.example`. Keys are never prefixed with `NEXT_PUBLIC_` or sent to the browser. Claude is the default; there is no automatic provider fallback. An explicit `LLM_PROVIDER=openai` adapter remains available.
+Optional: `ANTHROPIC_MODEL`, `CARTESIA_API_KEY` (existing `CARTESIA` is also supported), `CARTESIA_VOICE_ID`, `CARTESIA_MODEL_ID`, `ARTICLE_IMAGES_ENABLED`, `APIFY_SOCIAL_ENABLED`, and `RECRAFT_API_KEY` (existing `RECRAFT` is also supported) for optional illustrations. See `.env.example`. Keys are never prefixed with `NEXT_PUBLIC_` or sent to the browser. Claude is the default; there is no automatic provider fallback. An explicit `LLM_PROVIDER=openai` adapter remains available.
 
 ## Pick a day
 
@@ -32,7 +32,7 @@ The Calendar tab is the only place to change the edition date. Pick a day or jum
 
 - `/` automatically opens today using the shared `America/Los_Angeles` publishing day. An unpublished day triggers retrieval and review. A successfully published edition stays fixed for that date.
 - `/?date=2026-10-23` opens that date directly. The calendar and API accept a rolling ten-year window through today. Leap-day cutoffs clamp to the last valid day of February. Future, invalid and older dates are rejected before provider calls.
-- Today uses current reporting. Historical editions search old publisher URL structures and printed publication dates, then require each news candidate to have a publication date matching the selected UTC day. Evidence sources and editorial time are kept separate from the actual retrieval clock. Old news is never relabeled as current news, and later outcomes are not supplied from model memory.
+- Today uses current reporting. Historical editions search old publisher URL structures and printed publication dates, then require each news candidate's publication timestamp to fall on the selected calendar day in UTC **or** in the shared Pacific publishing zone (`lib/historical-coverage.ts`). Bay Area evening reporting is published after midnight UTC, so a UTC-only check wrongly excluded it; the Pacific reading is the same timestamp, not a borrowed date. Articles without a reliable date never qualify. The editorial reference clock is the end of that day in Pacific time. When fewer than eight same-day articles survive the first pass and enough of the 285-second budget remains, one bounded (at most 70-second) second discovery pass searches additional credible publishers for the exact day range without original-document investigation; it never relaxes the date policy or evidence thresholds. Studio's **Date coverage** panel shows retrieved/unique/same-day/undated/other-day counts and the second-pass outcome. Old news is never relabeled as current news, and later outcomes are not supplied from model memory.
 - Availability depends on accessible historical reporting. A date is not published unless at least three stories pass the evidence checks. Missing dates, blocked articles and insufficient evidence produce a visible failure with an audit. Failed attempts remain retryable within the generation budgets and cooldown; no sample edition is substituted.
 - Current Reddit enrichment is disabled for historical dates to avoid presenting today's discussion as conversation from that day.
 - The app checks for day rollover while open. When viewing today, it opens the new day's edition; selecting a historical date preserves that selection.
@@ -104,6 +104,23 @@ Three user-facing narrators map to public Cartesia library voices, verified thro
 The library also contains "Rowan - Team Leader" (`701a96e1-7fdd-4a6c-a81e-a4a450403599`); the steadier narration voice was chosen. A named narrator overrides `CARTESIA_VOICE_ID`; without a narrator the configured/default voice is used. Narrator, speed and autoplay preferences are stored on the device (`half-full-preferences-v1`), work for guests, apply to the next clip, and never regenerate the edition. They are not written to Firestore because the deployed profile rules allow only reads/reactions; syncing them would require a rules change.
 
 Publisher share images are attributed link previews fetched from approved articles. A failed lookup falls back to an illustration. Their rights remain with the publisher. Original-source links remain available.
+
+## Illustrated storyboards (Recraft)
+
+Every approved story can carry an optional 2–3 scene illustrated explainer. Claude (the existing editor model) plans scenes from the approved copy, the retained evidence passages and the narration script; Recraft draws them in the permanent half full style; React renders captions, labels and alt text from validated data. Illustrations are presentation data stored beside the immutable edition (never inside it), so a missing, failed or broken storyboard simply falls back to the publisher preview or neutral visual.
+
+- **Style.** `lib/illustration-style.ts` is the versioned house style (`half-full-style/1`): palette from the reaction stickers, prompt prefix/suffix, forbidden prompt terms and Recraft colour controls. The reusable Recraft style was created once from 768px copies of the four original reaction characters (`public/illustration-references/`, derived with macOS `sips` because Recraft requires 256px minimum) and is persisted in the illustration store; `RECRAFT_STYLE_ID` can pin a specific style.
+- **Provider.** `lib/recraft.ts` calls `https://external.api.recraft.ai/v1`, verified against the published OpenAPI document on October 24, 2026: `POST /styles` (multipart `files`, `model=recraftv4_styles`, `match=flexible`; V4 Styles rejects a base `style`) and `POST /images/generations` (`model`, `style_id`, `size: "4:3"`, `n: 1`, `response_format: "url"`, `image_format: "webp"`, `controls.colors` with total weight ≤ 1.0 and `controls.background_color`). The response's `credits` field is the API units charged for that call. Result URLs expire after about 24 hours, so assets are downloaded through the public-host transport checks and stored. Rate limits: 100 images/minute, 5 requests/second. Provider error bodies are never surfaced.
+- **Planning and validation.** `lib/storyboard-prompt.ts` + `lib/storyboard-plan.ts` ask Claude for structured scenes (purpose, evidence references, subject, required objects, setting, composition, motion, narration cue, caption, prohibited details, art prompt, alt text, optional existing blob character). `lib/storyboard-validation.ts` deterministically rejects plans whose evidence references are not retained for the story, whose captions introduce wording or numbers absent from the approved copy, whose prompts request text, logos, photos, maps or portraits, whose cues are not verbatim in-order narration phrases, or that pair cute characters with sober (death, disaster, violence) stories. One bounded repair request is allowed; two failures abandon the story.
+- **Spending limits.** Generation never happens on page load or when browsing Calendar. It runs only through the explicit operator script (`scripts/illustrate-edition.ts`), the same-origin `POST /api/illustrations/:date`, the Studio button, or after publication when `RECRAFT_AUTO_ILLUSTRATE=true`. Existing scenes are reused; repairs regenerate only missing scenes; concurrent runs for a date are refused by a lock. Caps: `RECRAFT_SCENES_PER_STORY` (2, max 3), `RECRAFT_MAX_SCENES_PER_EDITION` (10), `RECRAFT_DAILY_IMAGE_BUDGET` (24, a Pacific-day ledger shared across instances), two concurrent images, 90-second timeouts, one retry on 429/5xx, and `RECRAFT_GENERATION_ENABLED=false` to disable. Attempts are reserved before paid calls, so failed attempts count.
+- **Storage.** `lib/illustration-store.ts` keeps manifests (`STORYBOARD-<date>-<storyId>`) and binary assets (`ASSET-<date>-<storyId>-<sceneId>`) in a separate Apify key-value store (`<edition store>-illustrations`, override `APIFY_ILLUSTRATION_STORE_NAME`). The manifest records schema and style versions, prompt hashes, scene IDs, asset references, narration cue fractions, generation status, provider model/style and usage. `GET /api/illustrations/:date` reads manifests; `GET /api/illustrations/:date/:storyId/:sceneId` serves an image with an ETag. Memory mode keeps assets in process memory only.
+- **Player.** `components/IllustratedStoryPlayer.tsx` crossfades scenes, applies gentle pan/zoom motion that pauses with the audio and can be switched off, overlays an existing reaction character when the plan allows one, and renders the caption, an "Illustration · n of m" label and alt text. While a Cartesia clip is loaded the narration clock chooses the scene using the manifest's character-proportional cue fractions (each scene starts where its verbatim cue begins in the script, scaled to the actual audio duration); this is an approximation, not word-level alignment. Seeking, pausing, replaying, switching narrator and switching story all keep the scene coherent, and tapping a scene dot seeks the audio to that scene. Without audio the reader steps through scenes by hand. Reduced motion disables all animation.
+
+```sh
+# Explicit operator generation; spends Recraft credits only for scenes that do not exist yet.
+node --conditions=react-server --import tsx scripts/illustrate-edition.ts 2026-10-24 --stories 1 --scenes 2 --max-images 2
+node --conditions=react-server --import tsx scripts/illustrate-edition.ts 2026-10-24 --story-id STORY --regenerate-scene scene-1 --max-images 1
+```
 
 ## PWA and offline
 
@@ -178,6 +195,38 @@ node --conditions=react-server --import tsx scripts/replay-receipts-edition.ts Y
 ```
 
 The normal browser/API path always uses the configured deployed Actor; replay is an explicit operator tool for bounded recovery and audit inspection. The fallback engine remains available when no private Actor ID is configured.
+
+## Illustrated briefing validation record
+
+This record covers the October 24–25, 2026 UX and illustrated-storyboard milestones (commits after `159c559`). No existing environment file, Firestore rule, or published edition was replaced; illustration assets live in a separate store.
+
+### Git milestones
+
+- Starting commit: `159c559`.
+- UX milestone (profile, narrators, crossword timer/overlay, reactions, completion): `a486e9d`, pushed to `origin/main` before any Recraft work.
+- Storyboard milestone: the commit containing this record, pushed after the real Recraft generation below.
+
+### Recraft results (actual)
+
+- Endpoint/model: `POST https://external.api.recraft.ai/v1/styles` and `POST /v1/images/generations` with `model: "recraftv4_styles"`, `style_id`, `size: "4:3"` (resolved by Recraft to 1216×896), `image_format: "webp"`.
+- Reusable style `d88b760a-b7ab-482c-b9d9-ed7de8ea2360` created once from the four 768px reference copies of the original reaction characters (5 API units).
+- Paid image calls on October 24–25, 2026 (all for the 2026-10-24 edition): 1 exploratory curl probe, 2 failed-then-retried attempts that returned HTTP 400 and were not charged (counted conservatively in the per-day ledger), then 7 charged images: Svalbard water story scene-1 (regenerated once after visual inspection, so 2 charged images) and scene-2; PHP story scenes 1–2; Rosalind Franklin story scenes 1–2. Recraft reported 35 units per image, so 8 charged images including the probe = 280 units plus 5 for the style, 285 units total (US$0.285 at the published 1,000 units per dollar). The account balance went from 25,000 to 24,715 units (checked via `GET /v1/users/me` at the start; the final figure is the ledger arithmetic). The AI face-photo story's plan asked for "text" in a prompt twice and was rejected by validation, so it keeps its publisher visual. Claude planner calls: 8.
+- Visual inspection: the Svalbard sequence shows the lake that supplies Longyearbyen with the small town and a tap, then a cutaway of thawing permafrost over pyrite-bearing shale leaching into the lake; the PHP sequence shows a server behind blank browser windows with a magnifying glass finding cracks, then a patched server; the Franklin sequence shows one highlighted booklet among many identical ones with a microscope and helix. The first Svalbard scene-1 draft was too abstract (no town or snow), which prompted adding "clearly recognizable objects that must appear" to every composed prompt. Style consistency with the reference stickers is good but not perfect; soft gouache texture and palette carry across, line weight varies.
+- Storage: Apify key-value store `us-daily-editions-illustrations`, manifests `STORYBOARD-2026-10-24-<storyId>` and assets `ASSET-…-scene-n` (0.5–0.74 MB WebP each). The edition record `EDITION-2026-10-24` was not modified.
+
+### Animation and audio
+
+Scenes crossfade; the active scene gets a gentle pan or zoom that runs only while narration plays (`animation-play-state`) and can be paused with a control; the optional existing reaction character bobs in a corner. Timing uses the manifest's character-proportional cue fractions scaled to the real clip duration: approximate, not word-level. Browser QA with Rowan's clip (29.3 s): scene 1 at start, scene 2 after seeking to 70%, pause froze motion, tapping scene dot 1 seeked the audio to 0, and switching to Skylar dropped the loaded clip and showed the estimate again. Silent reading steps scenes by hand; blocking the image routes hides the player and shows the publisher preview with the full text (`generated/qa-m2/story-fallback-390.png`).
+
+### Historical retrieval
+
+Failure mechanisms found in the June 29, 2026 run log: 24 retrieved records, 16 normalization rejections dominated by "no reliable publication date" and "published outside the selected day", the latter judged in UTC only, which excludes Bay Area evening reporting. Changes: UTC-or-Pacific day matching with the Pacific end of day as the editorial reference clock, coverage diagnostics in the run log and Studio, and one bounded broader second discovery pass when fewer than eight same-day articles remain. Real test on an unpublished date, April 10, 2026 (previously two qualifying stories): first run under the new date policy found 24 records, 24 unique articles, 6 published that day, 3 undated, 15 other days; the second pass did not trigger at the original threshold of six and only 2 stories verified, so nothing was published. The threshold was raised to eight and the date was retried after the ten-minute cooldown; see the line below for that outcome. June 29 itself is already published (five stories) and was not regenerated.
+
+### Quality verification
+
+Automated: 151 tests (`npm test`), 4 Firestore emulator tests, `tsc --noEmit`, and `next build` all pass. New coverage: narrators and cache separation, preferences, Mini timer and records, storyboard validation, cue timing, Recraft request shape and error handling, asset download safety, store idempotency, budgets, locks, provider failures, manifest tampering, UTC/Pacific date policy, second-pass lanes and pipeline behaviour. Browser QA (Chrome via Playwright, not a physical iPhone): six viewports with no horizontal overflow and no console errors for cover, Profile, Your jar, story, reaction, ending, Mini and the celebration overlay (focus on Done, Escape closes, no replay after reload); illustrated story at 390 and 1440 with and without audio; Studio panels. Screenshots are in ignored `generated/qa-m1/` and `generated/qa-m2/`.
+
+Known limitations: no physical-device Safari test; preferences are device-local; scene timing is approximate; the Recraft style was learned from four small stickers, so some scenes lean abstract and should be inspected before publication; automatic illustration after publication is off by default.
 
 ## Consumer app upgrade validation record
 

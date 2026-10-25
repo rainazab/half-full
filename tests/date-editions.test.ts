@@ -4,6 +4,7 @@ import { historicalQueries } from "../actors/news-receipts/core.mjs";
 import { selectableDay, shiftDay, earliestEditionDay } from "../lib/daily";
 import { editionContext } from "../lib/editor-prompt";
 import { normalizeStories } from "../lib/normalize";
+import { matchesEditionDay } from "../lib/historical-coverage";
 import { generateEdition, pipelineDependencies } from "../lib/pipeline";
 import { POST } from "../app/api/run/route";
 import type { AppConfig } from "../lib/config";
@@ -37,7 +38,7 @@ test("historical retrieval uses the selected day across old and new publisher UR
   assert.match(queries[1], /inurl:2000\/jan\/01/);
   assert.throws(() => historicalQueries("2001-02-29"));
   const context = editionContext("2000-01-01");
-  assert.equal(context.currentUtcTime, "2000-01-01T23:59:59.999Z");
+  assert.equal(context.currentUtcTime, "2000-01-02T07:59:59.999Z");
   assert.match(context.temporalInstruction!, /Do not add later outcomes/);
 });
 
@@ -126,7 +127,10 @@ test("historical pipeline excludes other dates and validates eligible reporting 
     date,
     date,
     date,
-    "2000-01-02",
+    // 9 pm Pacific on January 1 (05:00 UTC on January 2): the same day for this publication.
+    "2000-01-02T05:00:00.000Z",
+    // Noon UTC on January 2 is January 2 in both zones: excluded.
+    "2000-01-02T12:00:00.000Z",
     "2026-10-24",
     null,
   ].map((day, i) => ({
@@ -143,16 +147,20 @@ test("historical pipeline excludes other dates and validates eligible reporting 
     createdAt: new Date().toISOString(),
     runLog: [],
   };
+  const retrievals: unknown[] = [];
   const result = await generateEdition(run, undefined, {
     ...pipelineDependencies,
     getConfig: () => config,
-    retrieveNews: async () => inputs,
+    retrieveNews: async (_config, _log, _onRun, options) => {
+      retrievals.push(options);
+      return inputs;
+    },
     enrichStories: async () => {},
     attachArticleImages: async () => {},
     finishRun: () => {},
     reviewCandidates: async (editor, candidates) => {
       assert.equal(editor.editionDate, date);
-      assert.equal(candidates.length, 3);
+      assert.equal(candidates.length, 4);
       return {
         decisions: candidates.map((c) => ({
           candidateId: c.id,
@@ -190,12 +198,46 @@ test("historical pipeline excludes other dates and validates eligible reporting 
       };
     },
   });
-  assert.equal(result.edition.stories.length, 3);
+  assert.equal(result.edition.stories.length, 4);
   assert.equal(result.rejectedStories.length, 24);
   assert.ok(
     result.edition.stories.every((s) =>
-      s.sources[0].publishedAt?.startsWith(date),
+      matchesEditionDay(s.sources[0].publishedAt, date),
     ),
   );
-  assert.equal(result.stats.candidatesFound, 27);
+  assert.ok(
+    result.rejectedStories.some(
+      (r) =>
+        r.url === "https://example.org/news-25" &&
+        /outside the selected day/.test(r.reason),
+    ),
+  );
+  assert.equal(result.stats.candidatesFound, 28);
+  // Fewer than eight same-day articles triggered exactly one bounded, broader second pass.
+  assert.equal(retrievals.length, 2);
+  const second = retrievals[1] as {
+    queries?: string[];
+    budgetMs?: number;
+    investigate?: boolean;
+  };
+  assert.ok(
+    second.queries?.length &&
+      second.budgetMs! <= 70000 &&
+      second.investigate === false,
+  );
+  const passLog = result.runLog.filter(
+    (e) => e.step === "discovery.second-pass",
+  );
+  assert.deepEqual(
+    passLog.map((e) => e.status),
+    ["started", "completed"],
+  );
+  assert.match(passLog[1].message, /0 new unique articles/);
+  assert.ok(
+    result.runLog.some(
+      (e) =>
+        e.step === "edition.coverage" &&
+        /4 published that day \(UTC or Pacific\)/.test(e.message),
+    ),
+  );
 });

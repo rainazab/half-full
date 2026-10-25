@@ -17,6 +17,7 @@ export type PlaybackState = {
   duration: number;
   ready: boolean;
 };
+export type PlaybackController = { seekFraction: (fraction: number) => void };
 export default function AudioPlayer({
   story,
   editionId,
@@ -29,6 +30,7 @@ export default function AudioPlayer({
   preferences,
   onPreferences,
   onPlayback,
+  controller,
 }: {
   story: ApprovedStory;
   editionId: string;
@@ -42,6 +44,8 @@ export default function AudioPlayer({
   onPreferences: (patch: Partial<ListeningPreferences>) => void;
   /** Lets illustrated scenes follow the same clock as the narration. */
   onPlayback?: (state: PlaybackState) => void;
+  /** Filled in so scene navigation can seek the same clip. */
+  controller?: React.RefObject<PlaybackController | null>;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const request = useRef<AbortController | null>(null);
@@ -150,6 +154,23 @@ export default function AudioPlayer({
     element.currentTime = Math.max(0, Math.min(duration, seconds));
     setTime(element.currentTime);
   }
+  useEffect(() => {
+    if (!controller) return;
+    controller.current = {
+      seekFraction: (fraction) => {
+        const element = audio.current;
+        if (!element || !duration) return;
+        element.currentTime = Math.max(
+          0,
+          Math.min(duration, fraction * duration),
+        );
+        setTime(element.currentTime);
+      },
+    };
+    return () => {
+      controller.current = null;
+    };
+  }, [controller, duration]);
   return (
     <section className="audio-player" aria-label="Story narration">
       <audio

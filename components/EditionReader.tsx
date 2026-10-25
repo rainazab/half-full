@@ -7,8 +7,13 @@ import StoryReceipts from "./StoryReceipts";
 import Icon from "./Icon";
 import StoryReactions from "./StoryReactions";
 import StoryVisual from "./StoryVisual";
-import AudioPlayer from "./AudioPlayer";
+import AudioPlayer, {
+  type PlaybackController,
+  type PlaybackState,
+} from "./AudioPlayer";
+import IllustratedStoryPlayer from "./IllustratedStoryPlayer";
 import { navigate, progressLabel, swipeDirection } from "@/lib/navigation";
+import { displayableScenes, type StoryboardIndex } from "@/lib/storyboard";
 import {
   defaultPreferences,
   type ListeningPreferences,
@@ -29,6 +34,7 @@ export default function EditionReader({
   onIndexChange,
   preferences = defaultPreferences(),
   onPreferences = () => {},
+  storyboards = {},
 }: {
   initialListen?: boolean;
   onExit?: () => void;
@@ -44,6 +50,8 @@ export default function EditionReader({
   active?: boolean;
   preferences?: ListeningPreferences;
   onPreferences?: (patch: Partial<ListeningPreferences>) => void;
+  /** Optional illustrated scenes, keyed by story ID; missing entries fall back to the article visual. */
+  storyboards?: StoryboardIndex;
 }) {
   const [index, setIndex] = useState(initialIndex);
   const [through, setThrough] = useState(
@@ -55,6 +63,9 @@ export default function EditionReader({
   const completion = useRef(false);
   // Arriving at the ending through reading animates; opening on it does not.
   const [arrived, setArrived] = useState(false);
+  const [playback, setPlayback] = useState<PlaybackState>();
+  const [unavailable, setUnavailable] = useState<string[]>([]);
+  const controller = useRef<PlaybackController | null>(null);
   useEffect(() => {
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -78,6 +89,13 @@ export default function EditionReader({
   };
   const story = stories[index];
   const finished = index >= stories.length;
+  const storyboard = story ? storyboards[story.id] : undefined;
+  const illustrated =
+    !!story &&
+    !!storyboard &&
+    date !== undefined &&
+    displayableScenes(storyboard).length > 0 &&
+    !unavailable.includes(story.id);
   const interactive = (target: EventTarget | null) =>
     target instanceof Element &&
     !!target.closest("a,button,summary,input,select,textarea,dialog");
@@ -165,7 +183,20 @@ export default function EditionReader({
               <h2 ref={heading} tabIndex={-1}>
                 {story.headline}
               </h2>
-              <StoryVisual story={story} />
+              {illustrated ? (
+                <IllustratedStoryPlayer
+                  key={`illustrated-${story.id}`}
+                  manifest={storyboard!}
+                  date={date!}
+                  playback={playback}
+                  controller={controller}
+                  onUnavailable={() =>
+                    setUnavailable((list) => [...list, story.id])
+                  }
+                />
+              ) : (
+                <StoryVisual story={story} />
+              )}
               <p className="story-intro">
                 {story.experience?.explanation.text ?? story.summary}
               </p>
@@ -180,6 +211,8 @@ export default function EditionReader({
                 autoPlay={autoPlay}
                 preferences={preferences}
                 onPreferences={onPreferences}
+                onPlayback={setPlayback}
+                controller={controller}
                 onEnded={() => {
                   setAutoPlay(true);
                   setIndex((current) => navigate(current, 1, stories.length));

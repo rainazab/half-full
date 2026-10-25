@@ -20,12 +20,22 @@ export async function retrieveReceipts(
   config: AppConfig,
   log: Log,
   onRun: (runId: string, datasetId: string) => void,
+  options: {
+    budgetMs?: number;
+    queries?: string[];
+    investigate?: boolean;
+  } = {},
 ) {
   const runner = actorRunner(config.apifyToken, log);
   let first = true;
   try {
     return await gatherReceipts(
-      config.editionDate ? { date: config.editionDate } : {},
+      {
+        ...(config.editionDate ? { date: config.editionDate } : {}),
+        ...(options.queries ? { queries: options.queries } : {}),
+        ...(options.budgetMs ? { budgetMs: options.budgetMs } : {}),
+        ...(options.investigate === false ? { investigate: false } : {}),
+      },
       async (...args) => {
         const result = await runner(...args);
         if (first) {

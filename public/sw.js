@@ -1,5 +1,5 @@
 /* Only static shell assets are cached. The last opened live edition is saved by the reader on this device. Never cache API requests. */
-const CACHE = "us-shell-editorial20261024-v2";
+const CACHE = "us-shell-editorial20261025-v3";
 const SHELL = [
   "/offline.html",
   "/offline.js",

@@ -12,6 +12,7 @@ import { PipelineError } from "./errors";
 import { EDITOR_SYSTEM_PROMPT, editionContext } from "./editor-prompt";
 import { EXPERIENCE_PROMPT } from "./experience";
 import { editorialCandidates } from "./evidence";
+import { editionDayEnd } from "./historical-coverage";
 
 export async function reviewWithAnthropic(
   config: EditorConfig,
@@ -87,9 +88,7 @@ export async function reviewWithAnthropic(
       const checked = assembleEditorialResult(
         raw,
         candidates,
-        config.editionDate
-          ? new Date(`${config.editionDate}T23:59:59.999Z`)
-          : new Date(),
+        config.editionDate ? editionDayEnd(config.editionDate) : new Date(),
         supportingSources,
       );
       const invalid = checked.rejectedStories.filter((s) =>

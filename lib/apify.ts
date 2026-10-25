@@ -23,27 +23,53 @@ type ActorRun = {
 const API = "https://api.apify.com/v2";
 const TERMINAL = new Set(["SUCCEEDED", "FAILED", "ABORTED", "TIMED-OUT"]);
 
+export type RetrievalOptions = {
+  /** Total retrieval budget for this call; the default is the first-pass 165 seconds. */
+  budgetMs?: number;
+  /** Replacement discovery lanes (second pass); the Actor still enforces its own limits. */
+  queries?: string[];
+  /** Skip original-document investigation for a quick supplementary pass. */
+  investigate?: boolean;
+  label?: string;
+};
 /** Official Apify REST API. Tokens only travel in Authorization headers. */
 export async function retrieveNews(
   config: AppConfig,
   log: Log,
   onRun: (runId: string, datasetId: string) => void,
+  options: RetrievalOptions = {},
 ): Promise<unknown[]> {
+  const budgetMs = Math.max(
+    30000,
+    Math.min(165000, options.budgetMs ?? 165000),
+  );
   if (config.receiptsEnabled && !config.receiptsActorId)
-    return retrieveReceipts(config, log, onRun);
+    return retrieveReceipts(config, log, onRun, options);
   if (config.receiptsActorId)
     config = {
       ...config,
       actorId: config.receiptsActorId,
       actorInput: {
-        investigate: true,
+        investigate: options.investigate ?? true,
         maxResultsPerQuery: 8,
-        queries: config.editionDate
-          ? historicalQueries(config.editionDate)
-          : defaultQueries(),
+        queries:
+          options.queries ??
+          (config.editionDate
+            ? historicalQueries(config.editionDate)
+            : defaultQueries()),
+        ...(options.budgetMs
+          ? { budgetMs: Math.max(20000, budgetMs - 15000) }
+          : {}),
       },
     };
-  const deadline = Date.now() + 165000;
+  else if (options.queries)
+    config = {
+      ...config,
+      actorInput: { ...config.actorInput, query: options.queries.join(" OR ") },
+    };
+  const deadline = Date.now() + budgetMs;
+  const actorTimeoutSecs = Math.max(20, Math.floor(budgetMs / 1000) - 15);
+  const label = options.label ?? "current news discovery and article retrieval";
   let run: ActorRun | undefined;
 
   async function request(
@@ -55,7 +81,7 @@ export async function retrieveNews(
     if (remaining <= 0)
       throw new PipelineError(
         "APIFY_TIMEOUT",
-        "Apify exceeded the 165-second retrieval deadline.",
+        `Apify exceeded the ${Math.round(budgetMs / 1000)}-second retrieval deadline.`,
         504,
       );
     return boundedRetry(
@@ -133,11 +159,11 @@ export async function retrieveNews(
     log(
       "apify.start",
       "started",
-      `Starting configured Actor ${config.actorId}; current news discovery and article retrieval.`,
+      `Starting configured Actor ${config.actorId}; ${label}.`,
     );
     run = readRun(
       await request(
-        `/actors/${encodeURIComponent(config.actorId)}/runs?timeout=150`,
+        `/actors/${encodeURIComponent(config.actorId)}/runs?timeout=${actorTimeoutSecs}`,
         {
           method: "POST",
           body: JSON.stringify(config.actorInput),
@@ -153,13 +179,13 @@ export async function retrieveNews(
     log(
       "apify.wait",
       "started",
-      "Waiting for the Actor to finish (bounded retrieval deadline: 165 seconds).",
+      `Waiting for the Actor to finish (bounded retrieval deadline: ${Math.round(budgetMs / 1000)} seconds).`,
     );
     while (!TERMINAL.has(run.status)) {
       if (Date.now() >= deadline)
         throw new PipelineError(
           "APIFY_TIMEOUT",
-          "The Apify Actor exceeded the 165-second retrieval deadline.",
+          `The Apify Actor exceeded the ${Math.round(budgetMs / 1000)}-second retrieval deadline.`,
           504,
         );
       run = readRun(
@@ -230,7 +256,7 @@ export async function retrieveNews(
         log(
           "apify.abort",
           "failed",
-          `Could not abort Apify run ${run.id}; its Actor timeout is 150 seconds.`,
+          `Could not abort Apify run ${run.id}; its Actor timeout is ${actorTimeoutSecs} seconds.`,
         );
       }
     }

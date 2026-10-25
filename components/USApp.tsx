@@ -28,6 +28,7 @@ import {
   readingMinutes,
 } from "@/lib/reading-position";
 import GenerationProgress from "./GenerationProgress";
+import type { StoryboardIndex } from "@/lib/storyboard";
 import { mergeRunLogs } from "@/lib/generation-progress";
 type View = "today" | "reader" | "archive" | "mini" | "you" | "profile";
 const moods = ["blue", "pink", "mint", "yellow", "blue"] as const;
@@ -49,6 +50,7 @@ export default function USApp() {
     [view, setView] = useState<View>("today");
   const [position, setPosition] = useState(0);
   const [listenFirst, setListenFirst] = useState(false);
+  const [storyboards, setStoryboards] = useState<StoryboardIndex>({});
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
   const profile = useProfile();
@@ -62,6 +64,18 @@ export default function USApp() {
   const heading = useRef<HTMLElement>(null);
   function display(result: EditionResult) {
     setEdition(result);
+    setStoryboards({});
+    // Existing illustrations are read-only presentation data; this never generates any.
+    if (result.edition.date)
+      fetch(`/api/illustrations/${result.edition.date}`, {
+        signal: AbortSignal.timeout(15000),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((value) => {
+          if (value?.date === result.edition.date && value.storyboards)
+            setStoryboards(value.storyboards as StoryboardIndex);
+        })
+        .catch(() => {});
 
     setStartIndex(0);
     setView("today");
@@ -544,6 +558,7 @@ export default function USApp() {
               reactions={progress.reactions}
               preferences={settings.preferences}
               onPreferences={settings.update}
+              storyboards={storyboards}
             />
           </>
         )}

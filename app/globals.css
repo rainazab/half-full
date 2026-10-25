@@ -1904,3 +1904,69 @@ select {
     min-height: 36px;
   }
 }
+
+/* Studio: date coverage and illustration records */
+.coverage-counts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+.coverage-counts > div {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.coverage-counts dt {
+  font-size: 0.65rem;
+  color: var(--muted);
+}
+.coverage-counts dd {
+  margin: 4px 0 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+.coverage-pass {
+  font-size: 0.78rem;
+  line-height: 1.7;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f0f1eb;
+}
+.coverage-pass.failed {
+  background: #f3e5df;
+}
+.coverage-pass.completed {
+  background: #eaf0e2;
+}
+.illustration-list {
+  display: grid;
+  gap: 12px;
+}
+.illustration-list article {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 16px 18px;
+  font-size: 0.78rem;
+}
+.illustration-list article > strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.illustration-list article > span {
+  color: var(--muted);
+}
+.illustration-list ul {
+  padding-left: 18px;
+  margin: 10px 0 0;
+}
+.illustration-list li {
+  margin-bottom: 8px;
+  line-height: 1.6;
+}
+.illustration-list details p {
+  margin: 6px 0;
+  color: var(--muted);
+}

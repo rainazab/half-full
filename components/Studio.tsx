@@ -16,6 +16,9 @@ import type { ApprovedStory, Source } from "@/lib/types";
 import EvidenceQuality from "./EvidenceQuality";
 import DatePicker from "./DatePicker";
 import { RunLog } from "./Transparency";
+import { parseCoverageMessage } from "@/lib/historical-coverage";
+import type { StoryboardIndex } from "@/lib/storyboard";
+import { ILLUSTRATION_STYLE } from "@/lib/illustration-style";
 
 function SourcePacket({
   story,
@@ -116,6 +119,50 @@ export default function Studio() {
   const [error, setError] = useState("");
   const [storyId, setStoryId] = useState("");
   const [refresh, setRefresh] = useState(0);
+  const [storyboards, setStoryboards] = useState<StoryboardIndex>({});
+  const [illustrating, setIllustrating] = useState(false);
+  const [illustrationNote, setIllustrationNote] = useState("");
+  useEffect(() => {
+    if (!ready) return;
+    setStoryboards({});
+    setIllustrationNote("");
+    const controller = new AbortController();
+    void fetch(`/api/illustrations/${date}`, {
+      signal: controller.signal,
+      cache: "no-store",
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((value) => {
+        if (value?.date === date) setStoryboards(value.storyboards ?? {});
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [date, ready, refresh]);
+  async function illustrate() {
+    setIllustrating(true);
+    setIllustrationNote("");
+    try {
+      const response = await fetch(`/api/illustrations/${date}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+        signal: AbortSignal.timeout(290000),
+      });
+      const value = await response.json();
+      if (!response.ok)
+        throw Error(value.error?.message ?? "Illustration failed.");
+      setStoryboards(value.storyboards ?? {});
+      setIllustrationNote(
+        `${value.imageCalls} image call${value.imageCalls === 1 ? "" : "s"} (${value.creditsUsed ?? 0} API units reported by Recraft), ${value.plannerCalls} planner call${value.plannerCalls === 1 ? "" : "s"}${value.styleCreated ? ", style created" : ""}${value.skipped?.length ? `; skipped: ${value.skipped.map((s: { storyId: string; reason: string }) => s.reason).join(" · ")}` : ""}.`,
+      );
+    } catch (e) {
+      setIllustrationNote(
+        e instanceof Error ? e.message : "Illustration failed.",
+      );
+    } finally {
+      setIllustrating(false);
+    }
+  }
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const requested = params.get("date");
@@ -171,6 +218,20 @@ export default function Studio() {
   const log = result?.runLog ?? state?.run?.runLog ?? [];
   const stats = result?.stats ?? state?.run?.stats;
   const audit = result?.rejectedStories ?? state?.run?.rejectedStories ?? [];
+  const coverage = log
+    .map((entry) => parseCoverageMessage(entry.message))
+    .filter(Boolean)
+    .at(-1);
+  const secondPass = log.filter(
+    (entry) => entry.step === "discovery.second-pass",
+  );
+  const dateExclusions = {
+    undated: audit.filter((r) => /No reliable publication date/.test(r.reason))
+      .length,
+    otherDay: audit.filter((r) =>
+      /Published outside the selected day/.test(r.reason),
+    ).length,
+  };
   const stories = result?.edition.stories ?? [];
   const story = stories.find((s) => s.id === storyId) ?? stories[0];
   const primary = story?.sources.find((source) =>
@@ -194,7 +255,7 @@ export default function Studio() {
     <main id="main" className="studio-shell">
       <header className="studio-header">
         <a className="studio-brand" href="/">
-          half full<span aria-hidden="true">◒</span>
+          half full
         </a>
         <span>Editorial studio</span>
         <a href={date === editionDay() ? "/" : `/?date=${date}`}>
@@ -322,6 +383,157 @@ export default function Studio() {
               <strong>{state.run.error.code}</strong>
               <p>{state.run.error.message}</p>
             </div>
+          )}
+          {(coverage ||
+            secondPass.length > 0 ||
+            dateExclusions.undated + dateExclusions.otherDay > 0) && (
+            <section
+              className="studio-section coverage-panel"
+              aria-label="Date coverage"
+            >
+              <h2>Date coverage</h2>
+              <p className="studio-muted">
+                Historical days require each article's publication timestamp to
+                fall on the selected day in UTC or Pacific time. Articles
+                without a reliable date never qualify; the second pass only
+                widens where we look.
+              </p>
+              {coverage && (
+                <dl className="coverage-counts">
+                  <div>
+                    <dt>Retrieved records</dt>
+                    <dd>{coverage.retrieved}</dd>
+                  </div>
+                  <div>
+                    <dt>Unique articles</dt>
+                    <dd>{coverage.unique}</dd>
+                  </div>
+                  <div>
+                    <dt>Published that day</dt>
+                    <dd>{coverage.sameDay}</dd>
+                  </div>
+                  <div>
+                    <dt>No reliable date</dt>
+                    <dd>{coverage.undated}</dd>
+                  </div>
+                  <div>
+                    <dt>Other days</dt>
+                    <dd>{coverage.otherDay}</dd>
+                  </div>
+                </dl>
+              )}
+              {!coverage && (
+                <dl className="coverage-counts">
+                  <div>
+                    <dt>No reliable date</dt>
+                    <dd>{dateExclusions.undated}</dd>
+                  </div>
+                  <div>
+                    <dt>Other days</dt>
+                    <dd>{dateExclusions.otherDay}</dd>
+                  </div>
+                  <div>
+                    <dt>First-pass coverage</dt>
+                    <dd>Not recorded</dd>
+                  </div>
+                </dl>
+              )}
+              {secondPass.map((entry) => (
+                <p
+                  key={entry.timestamp}
+                  className={`coverage-pass ${entry.status}`}
+                >
+                  <strong>Second pass · {entry.status}</strong> {entry.message}
+                </p>
+              ))}
+            </section>
+          )}
+          {state.status === "completed" && (
+            <section className="studio-section" aria-label="Illustrations">
+              <div className="studio-section-title">
+                <h2>Illustrations</h2>
+                <button
+                  type="button"
+                  disabled={illustrating}
+                  onClick={() => void illustrate()}
+                  title="Uses Recraft API credits for scenes that do not exist yet"
+                >
+                  {illustrating
+                    ? "Illustrating…"
+                    : "Illustrate this edition (uses Recraft credits)"}
+                </button>
+              </div>
+              <p className="studio-muted">
+                Optional presentation data stored beside the immutable edition.
+                Claude plans scenes from the approved copy and retained
+                passages; Recraft draws them in the half full style (
+                {ILLUSTRATION_STYLE.version}). Nothing here changes the
+                published news.
+              </p>
+              {illustrationNote && (
+                <p className="studio-muted">{illustrationNote}</p>
+              )}
+              {stories.length > 0 && (
+                <div className="illustration-list">
+                  {stories.map((s) => {
+                    const manifest = storyboards[s.id];
+                    return (
+                      <article key={s.id}>
+                        <strong>{s.headline}</strong>
+                        {manifest ? (
+                          <>
+                            <span>
+                              {manifest.status} ·{" "}
+                              {
+                                manifest.scenes.filter(
+                                  (scene) => scene.status === "ready",
+                                ).length
+                              }
+                              /{manifest.scenes.length} scenes · tone{" "}
+                              {manifest.tone} · {manifest.provider.model}
+                              {manifest.provider.styleId
+                                ? ` · style ${manifest.provider.styleId.slice(0, 8)}…`
+                                : ""}{" "}
+                              · {manifest.usage.imageCalls} image calls
+                              {typeof manifest.usage.creditsUsed === "number"
+                                ? ` · ${manifest.usage.creditsUsed} units`
+                                : ""}
+                            </span>
+                            <ul>
+                              {manifest.scenes.map((scene) => (
+                                <li key={scene.id}>
+                                  <em>{scene.id}</em> {scene.status}:{" "}
+                                  {scene.purpose}
+                                  {scene.error ? ` — ${scene.error}` : ""}
+                                  <details>
+                                    <summary>Prompt, cue and evidence</summary>
+                                    <p>{scene.prompt}</p>
+                                    <p>
+                                      Cue: “{scene.cue}” · Caption:{" "}
+                                      {scene.caption}
+                                    </p>
+                                    <p>
+                                      Evidence:{" "}
+                                      {scene.evidence
+                                        .map(
+                                          (e) => `${e.sourceId}/${e.passageId}`,
+                                        )
+                                        .join(", ")}
+                                    </p>
+                                  </details>
+                                </li>
+                              ))}
+                            </ul>
+                          </>
+                        ) : (
+                          <span>No storyboard yet.</span>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
           )}
           {actorRuns(state).length > 0 && (
             <section className="studio-section">
