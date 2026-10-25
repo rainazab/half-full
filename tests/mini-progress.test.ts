@@ -51,7 +51,7 @@ test("first completion celebrates without inventing a record", () => {
   assert.equal(first.first, true);
   assert.equal(first.personalBest, false);
   assert.equal(first.records.solves.length, 1);
-  assert.match(first.message, /first Mini/);
+  assert.match(first.message, /first Brain Break/);
   assert.doesNotMatch(first.message, /quickest/);
 });
 test("personal bests compare only against earlier solves of the same kind", () => {
