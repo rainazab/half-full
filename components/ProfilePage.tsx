@@ -3,9 +3,9 @@ import type { ProfileState } from "./ProfileCard";
 import { ProfileAvatar } from "./ProfileCard";
 import NarratorPicker from "./NarratorPicker";
 import type { PreferencesState } from "@/hooks/usePreferences";
-import { SPEEDS } from "@/lib/preferences";
+import { SPEEDS, type CatchUpMode } from "@/lib/preferences";
 
-function GoogleMark() {
+export function GoogleMark() {
   return (
     <svg aria-hidden="true" width="18" height="18" viewBox="0 0 48 48">
       <path
@@ -29,14 +29,21 @@ function GoogleMark() {
 }
 
 /** Account management and listening preferences. Reading history lives in Your jar. */
+const MODE_LABELS: Record<CatchUpMode, string> = {
+  read: "I like to read",
+  listen: "I like to listen",
+  both: "A little of both",
+};
 export default function ProfilePage({
   profile,
   settings,
   onOpenJar,
+  onReplayIntro,
 }: {
   profile: ProfileState;
   settings: PreferencesState;
   onOpenJar: () => void;
+  onReplayIntro?: () => void;
 }) {
   const { user, ready, signingIn, sync, error, login, logout, retry } = profile;
   const { preferences, update } = settings;
@@ -101,6 +108,31 @@ export default function ProfilePage({
           </div>
         )}
       </section>
+      <section className="preference-block" aria-labelledby="mode-heading">
+        <h2 id="mode-heading">How you catch up</h2>
+        <p className="preference-note">
+          Shapes the home screen and listening defaults. Never changes which
+          stories are in an edition.
+        </p>
+        <div
+          className="mode-picker"
+          role="radiogroup"
+          aria-label="How you catch up"
+        >
+          {(Object.keys(MODE_LABELS) as CatchUpMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={preferences.mode === mode}
+              className={`mode-option${preferences.mode === mode ? " selected" : ""}`}
+              onClick={() => update({ mode })}
+            >
+              {MODE_LABELS[mode]}
+            </button>
+          ))}
+        </div>
+      </section>
       <section className="preference-block" aria-labelledby="narrator-heading">
         <h2 id="narrator-heading">Narrator</h2>
         <p className="preference-note">
@@ -153,6 +185,11 @@ export default function ProfilePage({
         <button className="quiet link-like" onClick={onOpenJar}>
           Open Your jar ↗
         </button>
+        {onReplayIntro && (
+          <button className="quiet link-like" onClick={onReplayIntro}>
+            See the intro again ↗
+          </button>
+        )}
       </section>
     </section>
   );

@@ -216,17 +216,74 @@ export default function AudioPlayer({
           loadedNarrator.current = null;
         }}
       />
-      <div className="audio-controls">
+      <div className="player-row">
         <button
-          className="primary"
+          className="player-play"
           disabled={busy}
           onClick={() => void play()}
           aria-label={playing ? "Pause narration" : "Play narration"}
         >
-          {busy ? "Loading…" : playing ? "Ⅱ Pause" : "▶ Listen"}
+          {busy ? (
+            <span className="player-spinner" aria-hidden="true" />
+          ) : playing ? (
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <rect
+                x="6"
+                y="5"
+                width="4"
+                height="14"
+                rx="1.2"
+                fill="currentColor"
+              />
+              <rect
+                x="14"
+                y="5"
+                width="4"
+                height="14"
+                rx="1.2"
+                fill="currentColor"
+              />
+            </svg>
+          ) : (
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M8 5.5v13l11-6.5z" fill="currentColor" />
+            </svg>
+          )}
         </button>
+        <div className="player-track">
+          <div className="player-meta">
+            <span className="player-voice">
+              {narratorById(narrator).name}
+              {duration > 0
+                ? ""
+                : ` · about ${clock(narration.estimatedSeconds)}`}
+            </span>
+            {duration > 0 && (
+              <span className="player-time">
+                {clock(time)} / {clock(duration)}
+              </span>
+            )}
+          </div>
+          <input
+            className="player-seek"
+            aria-label="Audio position"
+            type="range"
+            min="0"
+            max={duration || 1}
+            step="0.1"
+            value={duration ? time : 0}
+            disabled={!duration}
+            onChange={(e) => seek(Number(e.target.value))}
+            style={
+              {
+                "--played": `${duration ? (time / duration) * 100 : 0}%`,
+              } as React.CSSProperties
+            }
+          />
+        </div>
         {duration > 0 && (
           <button
+            className="player-replay"
             aria-label="Replay"
             title="Replay"
             onClick={() => {
@@ -241,7 +298,7 @@ export default function AudioPlayer({
             ↺
           </button>
         )}
-        <label>
+        <label className="player-speed">
           <select
             aria-label="Playback speed"
             value={String(preferences.speed)}
@@ -258,11 +315,6 @@ export default function AudioPlayer({
             ))}
           </select>
         </label>
-        <span className="audio-estimate">
-          {duration > 0
-            ? narratorById(narrator).name
-            : `${narratorById(narrator).name} · ~${clock(narration.estimatedSeconds)}`}
-        </span>
         <details className="audio-options">
           <summary aria-label="Playback options" title="Playback options">
             •••
@@ -292,22 +344,6 @@ export default function AudioPlayer({
           </details>
         </details>
       </div>
-      {duration > 0 && (
-        <div className="audio-timeline">
-          <span>{clock(time)}</span>
-          <input
-            aria-label="Audio position"
-            type="range"
-            min="0"
-            max={duration || 1}
-            step="0.1"
-            value={time}
-            disabled={!duration}
-            onChange={(e) => seek(Number(e.target.value))}
-          />
-          <span>{clock(duration)}</span>
-        </div>
-      )}
       {error && (
         <p role="status" className="note">
           {error}

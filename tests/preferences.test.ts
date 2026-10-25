@@ -63,7 +63,7 @@ test("preferences clean malformed input and persist for guests", () => {
   assert.deepEqual(cleanPreferences(null), defaultPreferences());
   assert.deepEqual(
     cleanPreferences({ narrator: "rowan", speed: 1.25, autoplayNext: true }),
-    { narrator: "rowan", speed: 1.25, autoplayNext: true },
+    { narrator: "rowan", speed: 1.25, autoplayNext: true, mode: "both" },
   );
   assert.deepEqual(
     cleanPreferences({ narrator: "nobody", speed: 9, autoplayNext: "yes" }),
@@ -81,6 +81,7 @@ test("preferences clean malformed input and persist for guests", () => {
     narrator: "daniel",
     speed: 1.5,
     autoplayNext: false,
+    mode: "read",
   });
   assert.equal(readPreferences(storage).narrator, "daniel");
   assert.equal(readPreferences(storage).speed, 1.5);

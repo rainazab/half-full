@@ -33,6 +33,13 @@ import {
 } from "@/lib/deck";
 import { displayableScenes, type StoryboardIndex } from "@/lib/storyboard";
 import {
+  assignThemes,
+  ENDING_THEME,
+  mixColor,
+  themeVariables,
+  type StoryTheme,
+} from "@/lib/story-theme";
+import {
   defaultPreferences,
   type ListeningPreferences,
 } from "@/lib/preferences";
@@ -123,6 +130,21 @@ export default function EditionReader({
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [arrived, setArrived] = useState(false);
   const completed = useRef(false);
+  // Story atmospheres. The deck background follows the track position, so the
+  // colour environment moves with the finger and settles with the spring.
+  const themes = [...assignThemes(stories), ENDING_THEME];
+  const background = useTransform(x, (value) => {
+    if (!(width > 0))
+      return themes[Math.min(index, themes.length - 1)].background;
+    const position = Math.max(0, Math.min(themes.length - 1, -value / width));
+    const low = Math.floor(position);
+    const high = Math.min(themes.length - 1, low + 1);
+    return mixColor(
+      themes[low].background,
+      themes[high].background,
+      position - low,
+    );
+  });
   // The deck owns the viewport while reading: the document itself must not scroll.
   useEffect(() => {
     document.documentElement.classList.add("deck-open");
@@ -202,9 +224,13 @@ export default function EditionReader({
   }
   const finished = index >= stories.length;
   return (
-    <section
+    <motion.section
       className="edition-reader story-deck-reader"
       aria-label="Finite edition"
+      style={{
+        backgroundColor: background,
+        ...themeVariables(themes[Math.min(index, themes.length - 1)]),
+      }}
     >
       <header className="reading-header deck-header">
         <button
@@ -279,6 +305,7 @@ export default function EditionReader({
                 active={i === index}
                 id={`story-${i + 1}`}
                 label={story.headline}
+                theme={themes[i]}
               >
                 <div className="story-copy">
                   <p className="eyebrow">
@@ -428,6 +455,7 @@ export default function EditionReader({
             active={finished}
             id={`story-${stories.length + 1}`}
             label="You're caught up"
+            theme={ENDING_THEME}
           >
             <article
               className={`ending${arrived ? " arrived" : ""}`}
@@ -465,7 +493,7 @@ export default function EditionReader({
           </DeckPage>
         </motion.div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 /** One page of the deck. Scale and opacity follow the track without rerenders. */
@@ -476,6 +504,7 @@ function DeckPage({
   active,
   id,
   label,
+  theme,
   children,
 }: {
   index: number;
@@ -484,6 +513,7 @@ function DeckPage({
   active: boolean;
   id: string;
   label: string;
+  theme: StoryTheme;
   children: React.ReactNode;
 }) {
   const scale = useTransform(
@@ -497,8 +527,8 @@ function DeckPage({
   return (
     <motion.article
       id={id}
-      className={`deck-page${active ? " is-current" : ""}`}
-      style={{ scale, opacity }}
+      className={`deck-page theme-${theme.id}${active ? " is-current" : ""}`}
+      style={{ scale, opacity, ...themeVariables(theme) }}
       aria-label={label}
       aria-hidden={!active}
       // Inactive pages stay out of the tab order so focus never lands offscreen.

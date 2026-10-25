@@ -14,7 +14,6 @@ import {
 import EditionReader from "./EditionReader";
 import PWAStatus from "./PWAStatus";
 import Charm from "./Charm";
-import StoryVisual from "./StoryVisual";
 import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
 import useProfile from "@/hooks/useProfile";
@@ -22,12 +21,17 @@ import usePreferences from "@/hooks/usePreferences";
 import { ProfileAvatar } from "./ProfileCard";
 import ProfilePage from "./ProfilePage";
 import Icon, { type IconName } from "./Icon";
-import {
-  positionKey,
-  validPosition,
-  readingMinutes,
-} from "@/lib/reading-position";
+import { positionKey, validPosition } from "@/lib/reading-position";
 import GenerationProgress from "./GenerationProgress";
+import TodayHome from "./TodayHome";
+import OnboardingFlow from "./OnboardingFlow";
+import {
+  clearOnboarding,
+  ONBOARDING_VERSION,
+  readOnboarding,
+  shouldShowOnboarding,
+  writeOnboarding,
+} from "@/lib/onboarding";
 import type { StoryboardIndex } from "@/lib/storyboard";
 import { mergeRunLogs } from "@/lib/generation-progress";
 type View = "today" | "reader" | "archive" | "mini" | "you" | "profile";
@@ -51,6 +55,8 @@ export default function USApp() {
   const [position, setPosition] = useState(0);
   const [listenFirst, setListenFirst] = useState(false);
   const [storyboards, setStoryboards] = useState<StoryboardIndex>({});
+  // First-run intro: decided once from device storage and the URL, never from the edition.
+  const [intro, setIntro] = useState<boolean | null>(null);
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
   const profile = useProfile();
@@ -95,6 +101,12 @@ export default function USApp() {
     }
   }
   useEffect(() => {
+    setIntro(
+      shouldShowOnboarding(
+        readOnboarding(window.localStorage),
+        window.location.search,
+      ),
+    );
     const current = editionDay();
     setToday(current);
     const requested = new URLSearchParams(window.location.search).get("date");
@@ -346,6 +358,29 @@ export default function USApp() {
   const date = selectedDate;
   const stories = edition?.edition.stories ?? [],
     complete = progress.days.includes(date);
+  function finishIntro(skipped: boolean) {
+    writeOnboarding(window.localStorage, {
+      version: ONBOARDING_VERSION,
+      completedAt: new Date().toISOString(),
+      skipped,
+    });
+    setIntro(false);
+    heading.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+  if (intro) {
+    return (
+      <div className="app-shell intro-mode">
+        <main id="main" className="app-main">
+          <OnboardingFlow
+            profile={profile}
+            settings={settings}
+            onDone={finishIntro}
+          />
+        </main>
+      </div>
+    );
+  }
   const nav: { view: View; label: string; icon: IconName }[] = [
     { view: "today", label: "Today", icon: "today" },
     { view: "archive", label: "Calendar", icon: "calendar" },
@@ -445,94 +480,19 @@ export default function USApp() {
         )}
         {busy && <GenerationProgress key={date} date={date} log={runLogs} />}
         {!loading && view === "today" && !busy && stories.length > 0 && (
-          <>
-            <section className="edition-cover">
-              <p className="issue-date">
-                {dateLabel(date, {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-                {date !== today && <span> · On this day</span>}
-              </p>
-              <h1>
-                {complete ? "An edition, well read." : "Your daily edition."}
-              </h1>
-              <p className="cover-introduction">
-                {complete
-                  ? "You’re caught up. Come back to a story whenever you like."
-                  : "A few stories. A little perspective. Then, on with your day."}
-              </p>
-              <p className="edition-facts">
-                {stories.length} stories <span>·</span> About{" "}
-                {readingMinutes(stories)} min to read
-              </p>
-              <div className="cover-actions">
-                <button
-                  className="primary"
-                  onClick={() => read(complete ? 0 : position)}
-                >
-                  {complete
-                    ? "Read again"
-                    : position > 0
-                      ? "Continue reading"
-                      : "Start reading"}
-                  <Icon name="next" />
-                </button>
-                <button
-                  className="listen-edition"
-                  onClick={() => read(0, true)}
-                >
-                  <Icon name="listen" />
-                  Listen
-                </button>
-              </div>
-            </section>
-            {stories.length > 0 && (
-              <>
-                <div className="section-title">
-                  <h2>In this edition</h2>
-                </div>
-                <div
-                  className="cover-grid"
-                  aria-label="Stories in this edition"
-                >
-                  {stories.map((story, i) => (
-                    <article className="cover-card" key={story.id}>
-                      <div className="cover-art">
-                        <StoryVisual story={story} />
-                        <span className="story-number">0{i + 1}</span>
-                      </div>
-                      <div className="cover-copy">
-                        <p className="eyebrow">{story.category}</p>
-                        <h3>
-                          <button onClick={() => read(i)}>
-                            {story.headline}
-                          </button>
-                        </h3>
-                        <p>{story.experience?.quick.text ?? story.summary}</p>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-                <button className="cover-mini" onClick={() => tab("mini")}>
-                  <span className="mini-cover-grid" aria-hidden="true">
-                    {Array.from({ length: 25 }, (_, i) => (
-                      <i
-                        key={i}
-                        className={
-                          [0, 1, 5, 19, 23, 24].includes(i) ? "block" : ""
-                        }
-                      />
-                    ))}
-                  </span>
-                  <h3>The Mini</h3>
-                  <span>Play today’s Mini ↗</span>
-                </button>
-              </>
-            )}
-          </>
+          <TodayHome
+            date={date}
+            today={today}
+            stories={stories}
+            storyboards={storyboards}
+            complete={complete}
+            position={position}
+            mode={settings.preferences.mode}
+            displayName={profile.user?.displayName}
+            onRead={(index) => read(index)}
+            onListen={() => read(0, true)}
+            onMini={() => tab("mini")}
+          />
         )}
         {!loading && view === "reader" && edition && (
           <>
@@ -590,6 +550,10 @@ export default function USApp() {
             profile={profile}
             settings={settings}
             onOpenJar={() => tab("you")}
+            onReplayIntro={() => {
+              clearOnboarding(window.localStorage);
+              setIntro(true);
+            }}
           />
         )}
         {view === "you" && (
