@@ -1,5 +1,7 @@
 import "server-only";
 import { PipelineError } from "./errors";
+import { editionDay, selectableDay } from "./daily";
+import { historicalQueries } from "../actors/news-receipts/core.mjs";
 import { getEditorSettings } from "./editor-settings";
 
 const APIFY_ENV = ["APIFY_API_TOKEN", "APIFY_ACTOR_ID"] as const;
@@ -30,6 +32,7 @@ export function getEditorConfig() {
 }
 
 export type AppConfig = {
+  editionDate?: string;
   editor: EditorConfig;
   apifyToken: string;
   actorId: string;
@@ -44,7 +47,14 @@ export type AppConfig = {
   receiptsActorId?: string;
 };
 
-export function getConfig(): AppConfig {
+export function getConfig(date?: string): AppConfig {
+  if (date && !selectableDay(date))
+    throw new PipelineError(
+      "INVALID_DATE",
+      "Choose a real date between 1900 and today.",
+      400,
+    );
+  const historical = date && date < editionDay() ? date : undefined;
   const settings = getEditorSettings(process.env);
   const missing = [...APIFY_ENV, settings.keyEnv].filter(
     (name) => !process.env[name]?.trim(),
@@ -64,6 +74,16 @@ export function getConfig(): AppConfig {
       503,
     );
   }
+  if (
+    historical &&
+    actorId !== "apify~rag-web-browser" &&
+    !/^[\w-]+(?:[~/][\w-]+)?$/.test(process.env.APIFY_RECEIPTS_ACTOR_ID ?? "")
+  )
+    throw new PipelineError(
+      "HISTORICAL_RETRIEVAL_UNSUPPORTED",
+      "Historical editions require the News Receipts Actor or apify/rag-web-browser. Configure one before choosing a past date.",
+      503,
+    );
   let actorInput: Record<string, unknown>;
   if (process.env.APIFY_ACTOR_INPUT_JSON?.trim()) {
     try {
@@ -97,11 +117,21 @@ export function getConfig(): AppConfig {
     );
   }
   return {
-    editor: getEditorConfig(),
+    editionDate: historical,
+    editor: { ...getEditorConfig(), editionDate: historical },
     apifyToken: process.env.APIFY_API_TOKEN!.trim(),
     actorId,
-    actorInput,
-    social: socialConfig(),
+    actorInput: historical
+      ? {
+          query: historicalQueries(historical).join(" OR "),
+          maxResults: 24,
+          outputFormats: ["markdown"],
+          requestTimeoutSecs: 90,
+        }
+      : actorInput,
+    social: historical
+      ? { enabled: false, actorId: "apify~reddit-scraper" }
+      : socialConfig(),
     articleImages: process.env.ARTICLE_IMAGES_ENABLED !== "false",
     receiptsEnabled:
       process.env.APIFY_RECEIPTS_ENABLED !== "false" &&
@@ -136,4 +166,6 @@ function socialConfig(): AppConfig["social"] {
   if (actorId !== "apify~reddit-scraper" && !input) return undefined;
   return { enabled: true, actorId, input };
 }
-export type EditorConfig = ReturnType<typeof getEditorConfig>;
+export type EditorConfig = ReturnType<typeof getEditorConfig> & {
+  editionDate?: string;
+};

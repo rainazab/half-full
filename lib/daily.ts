@@ -59,3 +59,14 @@ export function readingStreak(days: string[], today = editionDay()) {
   }
   return count;
 }
+
+/** Historical editions use an exact publication day, never a relabeled current batch. */
+export const FIRST_EDITION_DAY = "1900-01-01";
+export function selectableDay(day: string, today = editionDay()) {
+  return validDay(day) && day >= FIRST_EDITION_DAY && day <= today;
+}
+export function shiftDay(day: string, delta: number) {
+  const value = new Date(`${day}T12:00:00Z`);
+  value.setUTCDate(value.getUTCDate() + delta);
+  return value.toISOString().slice(0, 10);
+}

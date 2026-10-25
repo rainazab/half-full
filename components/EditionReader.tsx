@@ -4,6 +4,7 @@ import type { ApprovedStory } from "@/lib/types";
 import { originalDocuments } from "@/lib/documents";
 import Crossword from "./Crossword";
 import Charm from "./Charm";
+import StoryReactions from "./StoryReactions";
 import StoryVisual from "./StoryVisual";
 import AudioPlayer from "./AudioPlayer";
 import {
@@ -261,9 +262,9 @@ export default function EditionReader({
                   <div>
                     <h3>Original documents & advisories</h3>
                     <p className="note">
-                      Links found in retained passages. Sources retrieved for this
-                      edition are listed in the evidence trail below; other links
-                      are provided for further reading.
+                      Links found in retained passages. Sources retrieved for
+                      this edition are listed in the evidence trail below; other
+                      links are provided for further reading.
                     </p>
                     <ul>
                       {originalDocuments(story).map((doc) => (
@@ -422,29 +423,10 @@ export default function EditionReader({
                   </details>
                 ) : null}
               </details>
-              <div className="story-reactions">
-                <p>
-                  How did this land?
-                  <span>Just for you. Saved on this device.</span>
-                </p>
-                <div>
-                  {(
-                    ["Interesting", "Clearer", "Hopeful", "A lot"] as const
-                  ).map((mood, i) => (
-                    <button
-                      key={mood}
-                      aria-pressed={reactions[story.id] === mood}
-                      onClick={() => onReaction?.(story.id, mood)}
-                    >
-                      <Charm
-                        mood={(["blue", "mint", "yellow", "pink"] as const)[i]}
-                        small
-                      />
-                      {mood}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              <StoryReactions
+                value={reactions[story.id]}
+                onChange={(reaction) => onReaction?.(story.id, reaction)}
+              />
             </div>
           </article>
         ) : (

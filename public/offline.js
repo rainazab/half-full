@@ -3,22 +3,22 @@
   const el = (tag, text) => { const node = document.createElement(tag); if (text) node.textContent = text; return node; };
   const link = (title, url) => { const a = el('a', title); const parsed = new URL(url); if (['http:', 'https:'].includes(parsed.protocol)) a.href = parsed.href; a.target = '_blank'; a.rel = 'noopener noreferrer'; return a; };
   try {
-    const response = await fetch('/demo-edition.json');
-    if (!response.ok) throw Error('Unavailable');
-    const result = await response.json();
-    if (result.edition.mode !== 'demo') throw Error('Not a fixed demo');
+    const result = JSON.parse(localStorage.getItem('half-full-last-edition') || 'null');
+    if (!result || result.edition?.mode !== 'live' || !Array.isArray(result.edition.stories) || !result.edition.date) throw Error('No saved edition');
+    const requested = new URLSearchParams(location.search).get('date');
+    if (requested && requested !== result.edition.date) throw Error('Selected date is unavailable offline');
     const stories = result.edition.stories;
     let index = 0;
     const container = document.getElementById('story');
     const back = document.getElementById('back'), next = document.getElementById('next'), review = document.getElementById('review');
-    document.getElementById('date').textContent = `Fixed edition recorded ${result.edition.createdAt.slice(0,10)} (UTC). ${result.edition.demoInfo.notice}`;
+    document.getElementById('date').textContent = `Saved edition for ${result.edition.date}. Retrieved ${result.edition.createdAt.slice(0,10)} (UTC). Reconnect to choose another day.`;
     function render(focus = true) {
       container.querySelectorAll('audio').forEach((audio) => audio.pause());
       container.replaceChildren();
       const heading = el('h2', index === stories.length ? 'You’re caught up.' : stories[index].headline); heading.tabIndex = -1; container.append(heading);
       document.getElementById('progress').textContent = index === stories.length ? `Complete · ${stories.length} stories` : `${index + 1} of ${stories.length}`;
       back.disabled = index === 0; next.hidden = index === stories.length; next.disabled = false; next.textContent = index === stories.length - 1 ? 'Finish edition' : 'Next'; review.hidden = index !== stories.length;
-      if (index === stories.length) { container.append(el('p', `You’ve reached the end of ${stories.length} stories. Close the app and get on with your day.`)); if(window.usOfflinePuzzle) void window.usOfflinePuzzle(container); }
+      if (index === stories.length) { container.append(el('p', `You’ve reached the end of ${stories.length} stories. Close the app and get on with your day.`)); }
       else {
         const story = stories[index];
         const visual = (story.media || []).find((m) => m.rights === 'licensed' && /^\/media\/[a-zA-Z0-9_.-]+$/.test(m.url) && m.licenseUrl);
@@ -55,5 +55,5 @@
     audit.append(el('h3','Recorded generation log'));
     for (const entry of result.runLog) audit.append(el('p',`${entry.timestamp} · ${entry.step} (${entry.status}) — ${entry.message}`));
     render(false);
-  } catch { document.getElementById('error').textContent = 'The saved demo was not downloaded. Reconnect once and open half full to enable offline reading.'; }
+  } catch { document.getElementById('error').textContent = 'This date is not saved on this device. Reconnect to open its edition.'; }
 })();

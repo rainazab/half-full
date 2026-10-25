@@ -13,7 +13,7 @@ This Actor does not decide truth. A government domain is not proof; a primary-so
 
 ## Input
 
-No input: current news through three bounded topic lanes. Or `{"articleUrl":"https://..."}`, `{"claim":"the headline to investigate"}`, or `{"queries":["your search"],"maxResultsPerQuery":5,"investigate":true}`. Only public HTTPS direct URLs are accepted. Do not put API keys in the input. On Apify, the SDK provides `APIFY_TOKEN` server-side.
+No input: current news through three bounded topic lanes. `{"date":"2000-01-01"}` searches historical mastheads and publisher date paths; the app also supports passing the generated historical queries explicitly to an existing Actor build. The consuming editor must validate actual publication dates; retrieval alone does not establish a story’s date. Or `{"articleUrl":"https://..."}`, `{"claim":"the headline to investigate"}`, or `{"queries":["your search"],"maxResultsPerQuery":5,"investigate":true}`. Only public HTTPS direct URLs are accepted. Do not put API keys in the input. On Apify, the SDK provides `APIFY_TOKEN` server-side.
 
 ## Output
 

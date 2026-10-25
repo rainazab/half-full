@@ -1,298 +1,103 @@
 # half full
 
-A CalHacks MVP for a finite daily news edition: **3–5 evidence-reviewed stories, an explanation of why each matters, and one realistic action**. The existing app uses Next.js App Router, TypeScript, the official Anthropic and OpenAI SDKs, and the official Apify REST API. There is no authentication; published editions use Apify key-value storage.
+A finite news app for CalHacks: 3–5 visual, evidence-reviewed stories, optional Cartesia narration, four original reactions, and a compact 5×5 Mini. Apify retrieves reporting and original documents; Claude evaluates the retrieved evidence. Social discussion provides context, never proof.
 
-## Daily edition and demo
+## Run locally
 
-**half full** opens on a responsive daily cover with a focused visual reader, optional Cartesia narration, an archive calendar, a device-local reading jar, and an original 5×5 Mini with Across/Down clues, crossing letters, hardware/on-screen keyboards, letter checking, reveal, and saved progress.
-
-- `/` opens the published edition for the current Los Angeles calendar day. Generate only if that day is unpublished. Successful editions are reused; failed attempts remain retryable without lowering evidence standards.
-- With `APIFY_API_TOKEN` configured, `lib/daily-store.ts` saves published editions in Apify key-value storage and serializes publishers with an Apify request-queue lock. The existing `us-daily-editions` storage name is preserved across the rename. `EDITION_STORAGE=memory` is an explicit local-only override.
-- `/api/editions` lists published dates; `/api/editions/YYYY-MM-DD` retrieves a saved date. Run logs and generated live audio remain in process memory; published story/evidence records survive restarts.
-- `/demo` works without keys and includes saved reporting, five audio clips, receipts, and the Mini. The calendar includes three clearly labeled retrospective sample collections with original reporting dates.
-- News Receipts retrieves topic searches and original-document leads with run/dataset/item provenance. Claude reviews the retrieved material; social discussion remains context. See [Actor source and deployment instructions](actors/news-receipts/README.md).
-- The reusable Actor has been built privately. Public Actor Store publication and public app deployment are separate steps.
-
-
-## Install and run
-
-Use Node.js 22 or newer and npm.
+Node.js 22+ and npm:
 
 ```sh
-cd /Users/rainazab/Desktop/news
 npm ci
-# Only when you do not already have a local environment file:
+# Only if you do not already have an environment file:
 # cp .env.example .env.local
+npm run dev -- --port 3000
 ```
 
-Edit `.env` or `.env.local` locally (do not copy a blank template over an existing file). Next.js loads both; `.env.local` takes precedence for duplicate variables. For Claude:
+Open [localhost:3000](http://localhost:3000). The server binds to `0.0.0.0` for phone testing on the same network. Restart after changing environment variables. Never overwrite an existing environment file with the empty template.
+
+Required server-only values:
 
 ```dotenv
-ANTHROPIC_API_KEY=your-anthropic-key
-APIFY_API_TOKEN=your-apify-token
+APIFY_API_TOKEN=your-token
 APIFY_ACTOR_ID=apify/rag-web-browser
-# Optional:
-ANTHROPIC_MODEL=claude-sonnet-5-5
+ANTHROPIC_API_KEY=your-key
 LLM_PROVIDER=anthropic
 ```
 
-Get an Apify token in [Apify Console → Settings → Integrations](https://console.apify.com/settings/integrations) and use an Anthropic API key. No OpenAI key is required. Apify and the selected editor both need available API credits and access to the configured Actor/model.
+Optional: `ANTHROPIC_MODEL`, `CARTESIA_API_KEY` (existing `CARTESIA` is also supported), `CARTESIA_VOICE_ID`, `CARTESIA_MODEL_ID`, `ARTICLE_IMAGES_ENABLED`, and `APIFY_SOCIAL_ENABLED`. See `.env.example`. Keys are never prefixed with `NEXT_PUBLIC_` or sent to the browser. Claude is the default; there is no automatic provider fallback. An explicit `LLM_PROVIDER=openai` adapter remains available.
 
-Provider selection:
+## Pick a day
 
-- Claude is the default, regardless of whether an unused OpenAI key exists. `ANTHROPIC_MODEL` defaults to `claude-sonnet-5-5`.
-- `LLM_PROVIDER=anthropic` explicitly pins Claude. Missing or invalid Anthropic credentials fail visibly; the app never falls back to OpenAI.
-- `/api/health` reports Claude, the selected model and required variable names without returning keys. The frontend and run logs identify the editor used.
-- The earlier OpenAI adapter remains available only if deliberately configured with `LLM_PROVIDER=openai`; it is not used by the current setup.
+The date in the header opens the calendar. Pick a day or use the month/year controls for a birthday. Selecting a date loads its published edition or automatically prepares one. There is no Generate button or archive mode. `/demo` redirects to `/`.
 
-```sh
-npm run dev
-```
+- `/` automatically opens today using the shared `America/Los_Angeles` publishing day. An unpublished day triggers retrieval and review. A successfully published edition stays fixed for that date.
+- `/?date=2000-01-01` opens that date directly. The calendar supports real dates from 1900 through today; future and invalid dates are rejected before provider calls.
+- Today uses current reporting. Historical editions search old publisher URL structures and printed publication dates, then require each news candidate to have a publication date matching the selected UTC day. Evidence sources and editorial time are kept separate from the actual retrieval clock. Old news is never relabeled as current news, and later outcomes are not supplied from model memory.
+- Availability depends on accessible historical reporting. A date is not published unless at least three stories pass the evidence checks. Missing dates, blocked articles and insufficient evidence produce a visible failure with an audit. Failed attempts remain retryable; no sample edition is substituted.
+- Current Reddit enrichment is disabled for historical dates to avoid presenting today's discussion as conversation from that day.
+- The app checks for day rollover while open. When viewing today, it opens the new day's edition; selecting a historical date preserves that selection.
 
-Open <http://localhost:3000>. On an iPhone on the same Wi-Fi network, open `http://YOUR_COMPUTER_LAN_IP:3000`. The development server listens on `0.0.0.0`. Restart the server after changing environment variables.
+Published editions are saved in Apify key-value storage. The existing `us-daily-editions` storage name is intentionally preserved across the rename. A distributed Apify queue lock serializes publishers; other tabs wait for the saved result. `APIFY_EDITION_STORE_NAME` changes the storage namespace. `EDITION_STORAGE=memory` is an explicit local-only alternative that loses editions on restart.
 
-API keys stay in server-only modules. Do not prefix them with `NEXT_PUBLIC_`. `.env.local`, other secret environment files, generated output, and build artifacts are ignored by Git; `.env.example` contains no credentials.
+## News Receipts Actor
 
-## Trigger a real edition
+[Source and deployment instructions](actors/news-receipts/README.md).
 
-```sh
-curl --max-time 300 -sS -X POST http://localhost:3000/api/run
-```
+The reusable Actor performs bounded topic searches through `apify/rag-web-browser`, investigates links to original documents, and returns exact passages with Actor/run/dataset/item provenance and SHA-256 hashes. The app supplies historical queries explicitly, so the already built Actor can serve historical editions without a new deployment.
 
-If the current day is already published, this returns that same edition. Otherwise it starts a **real, billable Apify Actor run**, fetches its dataset, and sends the retrieved evidence to **the selected editor (OpenAI or Anthropic Claude)**. Live generation never substitutes mock data. The separate `/demo` route loads the clearly labeled fixed edition without external API calls. Missing the Apify token or the selected editor key prevents generation before paid work begins.
-
-Inspect configuration and the most recent edition:
+Set `APIFY_RECEIPTS_ACTOR_ID` to the built Actor's ID. Without it, the app can run the same retrieval engine server-side. `APIFY_RECEIPTS_ENABLED=false` restores the single-Actor retrieval path for current news. Custom Actors require their exact `APIFY_ACTOR_INPUT_JSON`; there is no universal third-party schema.
 
 ```sh
-curl -sS http://localhost:3000/api/health
-curl -sS http://localhost:3000/api/today
-curl -sS http://localhost:3000/api/run/RUN_ID
+node scripts/build-receipts-actor.mjs
+node scripts/check-receipts-build.mjs
 ```
 
-The browser requests `Accept: application/x-ndjson` to receive `run`, `log`, and final `result`/`error` events while generation proceeds. Streamed failures are terminal error events after HTTP 200, so clients must inspect the event type. Ordinary requests retain the existing JSON success/error bodies and HTTP statuses. Disconnecting does not launch a replacement job or discard its bounded background run; use the run ID or `/api/today` to check completion.
+These commands upload an explicit source allowlist and build a **private** Actor; they never upload environment files. Public Actor Store publication is a separate owner action.
 
-`POST /api/run` returns `X-Run-Id` and `Location` headers. On success the run ID is also `edition.id`; on failure it is `runId`. `curl -i` includes response headers and HTTP status. `/api/run/RUN_ID` includes stored logs, status, Apify IDs, rejection audit, and the result when successful.
-
-## Finite reader, demo and offline mode
-
-- `/` uses the live API. One story is visible at a time, in backend order. Swipe horizontally, use **Next / Back**, or focus a story heading and use left/right arrows. Vertical gestures scroll normally. The final step is **You're caught up**, with review and exclusions controls. Opening transparency preserves your place.
-- `/demo` is the **fixed demo**, requiring no API keys. Open it directly or choose **Open fixed demo** after a live failure. The banner, generation date, source publication dates and recorded audit identify its provenance. It never replaces `/api/today` or runs paid services. Reloading `/demo` stays in demo mode.
-- Expand **Sources and evidence** for attribution, editor-confidence limitations, exact retained passages, and field-to-passage links. Model confidence is an estimate, never a guarantee of truth. The exclusions screen separates insufficient evidence from editorial exclusions; publication limits do not imply falsity.
-- Buttons and headings support keyboard focus; controls have at least 44px targets. Reduced-motion preferences disable the brief transition. No reading analytics, infinite feed, accounts, or recommendations are added.
-
-The production app registers `/sw.js` on a secure origin (HTTPS, or localhost). It precaches only the manifest, icons, offline HTML/CSS/JS and **fixed demo JSON**. Navigation tries the network for up to four seconds, then displays the explicitly labeled offline/server-unavailable shell. API requests, POSTs, Authorization-bearing requests, external URLs, and live editions are never cached. A fresh offline installation without a previous successful online visit cannot download its shell.
-
-Use `npm run build && npm start` to test installation/offline behavior. Service-worker registration is disabled under `npm run dev`. On iPhone use Safari → Share → Add to Home Screen where available; an ordinary HTTP LAN address is suitable for testing the reader but not production PWA installation. Chrome may show **Install half full** when its browser criteria are met. No automatic installation or notification permission is requested. When changing the fixed demo/static shell, bump the cache version in `public/sw.js` so existing installations refresh their saved copy. Old app cache versions are removed on activation. To intentionally refresh the checked-in snapshot after a successful real run, save the JSON response and run `node --import tsx scripts/snapshot-demo.ts generated/debug/successful-edition.json`; this validates complete evidence records and updates the cache version automatically. Never pass a failure response or fabricate passages.
-
-The offline reader is intentionally a small standalone shell rather than a cached live Next.js page. It supports the fixed edition, source/evidence details, exclusions, audit, bounded navigation and ending screen even when the Node server is stopped.
-
-## Configure the Apify Actor
-
-Recommended: [`apify/rag-web-browser`](https://apify.com/apify/rag-web-browser). It searches Google and extracts article content as Markdown, providing stronger evidence than headline snippets. `APIFY_ACTOR_ID` accepts `owner/name`, `owner~name`, or an Actor ID.
-
-With the exact name `apify/rag-web-browser` and no `APIFY_ACTOR_INPUT_JSON`, the server builds this input at run time:
-
-```json
-{
-  "query": "(site:bbc.com/news/articles/ OR site:npr.org/YYYY/) after:YYYY-MM-DD news (education OR technology OR science OR economy OR climate OR health)",
-  "maxResults": 20,
-  "outputFormats": ["markdown"],
-  "requestTimeoutSecs": 90
-}
-```
-
-`YYYY-MM-DD` is replaced with the UTC date seven days before the run, and `YYYY` with the current year. The default search targets BBC and NPR article URL paths, which returned usable text in live testing; broad domains also returned service pages and blocked articles. Other publishers can be configured through the custom input below. Search results still need editorial verification; a recent search filter does not guarantee recent or reliable articles. Apify may be unable to retrieve paywalled or blocked articles. Known BBC weather/schedule/media service URLs are excluded during normalization.
-
-For any other Actor (including a numeric ID for the same Actor), set **`APIFY_ACTOR_INPUT_JSON` to its exact input object**. In Apify Console, open the Actor's Input tab, switch to JSON, test an input, and copy that JSON into this server variable. It replaces the built-in input completely. It is not wrapped in an `input` field and is not accepted from the browser. Example for the RAG Actor:
-
-```dotenv
-APIFY_ACTOR_INPUT_JSON='{"query":"recent education science climate news after:2026-10-17","maxResults":10,"outputFormats":["markdown"],"requestTimeoutSecs":60}'
-```
-
-Update dates in custom queries yourself. Other Actors may require `queries`, `startUrls`, country/language settings, or extraction options; there is no universal input schema. Their output must be in the run's default dataset. Consult the [RAG Actor input schema](https://apify.com/apify/rag-web-browser/input-schema).
-
-Supported result fields:
-
-| Internal field | Recognized Actor fields |
-| --- | --- |
-| Title | `title`, `headline`, `metadata.title`, flattened `metadata.title`, `searchResult.title` |
-| URL | `url`, `URL`, `link`, `metadata.url`, flattened `metadata.url`, `searchResult.url` |
-| Description | `description`, `snippet`, `summary`, metadata/search-result description |
-| Article text | `text`, `markdown`, string `content`, `articleText`, `body`, `extractedText` |
-| Publisher | string/object `source`, string/object `publisher`, metadata site name, matching Article JSON-LD publisher, then URL hostname |
-| Publication date | `publishedAt`, `publishedDate`, `publishedTime`, `publicationDate`, `datePublished`, `pubDate`, `date`, supported metadata fields, Open Graph `article:published_time`, matching Article JSON-LD `datePublished` |
-
-Nested `organicResults`, `newsResults`, `nonPromotedSearchResults`, `articles`, `results`, and `items` arrays are flattened. Relative dates such as “2 hours ago” remain unknown; crawl times are never used as publication dates. Invalid URLs, retrieval errors, missing content, duplicate URLs, and excess candidates appear in the rejection audit.
-
-The first 100 dataset rows are retrieved, and at most 20 usable unique candidates are sent to the selected editor. Each article's text is capped at 18,000 characters and its description at 3,000. If your Actor returns only snippets, the pipeline may correctly fail to produce three verified stories. Configure article extraction in that Actor or use the recommended one.
-
-## Full flow and editorial safeguards
-
-1. Browser calls `POST /api/run`; the server validates both provider configurations.
-2. Server starts the configured Actor through `POST https://api.apify.com/v2/actors/{actorId}/runs`, using the token in an Authorization header. It logs the run and dataset IDs, waits for success, and retrieves the dataset. See the [official Apify API](https://docs.apify.com/api/v2).
-3. Normalization produces candidates with stable IDs, title, URL, publisher, description, extracted article text, and nullable publication date.
-4. The selected provider's official SDK sends those candidates and the shared cautious editorial system prompt. The editor receives no browsing tools and must use supplied evidence only. Structured JSON output is followed by the same strict server validation for both providers.
-5. Every candidate must have exactly one decision. Malformed schemas or missing/duplicate candidate decisions fail the run with a specific error and an audit entry for every candidate. Unknown source/passage IDs or generated URLs exclude the affected story without discarding valid stories. The editor selects server-generated passage IDs; it cannot invent source quotations. Source metadata is constructed from the original Apify candidates, never from model-generated URLs.
-6. Every generated field (headline, summary, relevance, action) requires valid passage references. Source classifications distinguish actually retrieved primary material from journalism describing it. Unresolved contradictions exclude the story. Exact passages and field-to-evidence links are retained in the result. Single-group confidence is capped at 85%; multiple reporting groups at 90%; retrieved primary material plus multiple groups at 95%. These are conservative product ceilings, not empirical calibration. Same-publisher sources and model-identified syndications do not increase the independent-source count. Exact duplicate article text is removed before review.
-7. Verified decisions require confidence ≥ 0.8, hype ≤ 0.5, adequate support, no sensationalized framing, substantive article text (at least 300 characters), and a reference to a server-generated passage from the retrieved article. Known dates outside the seven-day window are excluded. Missing reliable publication metadata is conservatively marked uncertain. Invalid calendar dates are rejected, and relative/invalid date fields fall through to valid metadata where present. Timestamps without timezone offsets are not treated as reliable publication times.
-8. The server publishes only editions with 3–5 verified stories. Fewer than three returns HTTP 422 with exclusions and a run log; it does not replace the last successful edition. The frontend displays approved stories, exclusions, logs, and “You’re caught up.”
-
-“Verified” means the editor assessed the claim as supported by the supplied evidence and it passed server checks. It is **not independent fact-checking or a guarantee of truth**. Confidence is a model judgment, not a calibrated probability. Passage references are resolved against excerpts of the retrieved article, so the model does not have to reproduce Markdown as an exact quote. This checks provenance, not whether the passage logically proves the claim. The editor is responsible for semantic support, event deduplication, disputed claims, and retaining uncertainty. No positivity quota is applied.
-
-All unselected candidates appear in `rejectedStories`. Its added `verificationStatus` distinguishes `uncertain` (insufficient evidence) from `rejected` (failed checks, duplicates, stale items, or finite-edition limits). Approved stories have `verificationStatus: "verified"`, plus `centralClaim` and `verificationReason`. These are additive to the requested response shape. A candidate omitted solely by the five-story cap is explicitly identified as such.
-
-## API behavior
-
-| Endpoint | Response |
-| --- | --- |
-| `GET /api/health` | HTTP 200 liveness, readiness, environment-presence booleans, and safe configuration errors. Never returns secrets. Readiness checks configuration, not account credentials or provider availability. |
-| `POST /api/run` | HTTP 200 `{edition, rejectedStories, stats, runLog}`; a complete synchronous pipeline. Request bodies are unused. |
-| `GET /api/today` | Latest **successful** result, including its actual creation date, or 404 before one exists. It can be from an earlier day. |
-| `GET /api/run/:id` | Stored run record with status, logs, Apify IDs, audit, and optional result/error; 404 if unavailable. |
-
-Errors return `{runId, error: {code, message}, rejectedStories, stats, runLog}` for an attempted pipeline run. HTTP 503 means missing/invalid configuration; 502 means provider or response-validation failure; 504 means timeout/connectivity failure; 422 means fewer than three verified stories; 409 means another run is active. Invalid browser origins return 403. The failed stage is included in the run log. No raw SDK error payloads, credentials, or Actor input are returned.
-
-On a completed review, `candidatesFound = approved + rejected`, including normalization exclusions. After normalization, all candidates remain accounted for even if the editor fails: unevaluated candidates are marked uncertain. For a 422 failure, supported-but-unpublished stories are also audited with an explicit edition-too-small explanation, and `approved` is zero because nothing was published. Retrieval failures may have zero candidates because the dataset was never available.
-
-## Timeouts and storage
-
-- Actor execution timeout: 150 seconds; entire Apify retrieval deadline: 165 seconds. Individual Apify requests also have bounded timeouts. Transient GET failures get one retry within the original deadline; Actor-creation POSTs are never automatically retried, to avoid duplicate billable runs. If retrieval fails while a known Actor run is active, the server attempts to abort it within 5 seconds.
-- Editor request deadline: 105 seconds. OpenAI transient HTTP 429/502/503/504 errors get at most one retry within that same deadline. Anthropic SDK retries are disabled; its path uses medium effort and a 20,000-token cap to leave room for thinking and structured output. Truncated/refused output fails closed. There is no retry that silently changes models or weakens criteria.
-- Route duration allowance: 300 seconds; browser timeout: 295 seconds. Your host/proxy must allow at least 300 seconds for the synchronous request. If a host kills the process, its in-memory log cannot be retained.
-- `lib/store.ts` retains up to 30 recent run records in memory. `lib/daily-store.ts` persists published editions in Apify and prevents overlapping publishers across instances. A failed generation does not publish a date.
-- Use a long-running Node process for reliable live audio and streamed generation. Published editions and the publisher lock are shared through Apify. No scheduled generation is implemented; the button/API publishes an unpublished day.
-
-## Tests and production build
+## API
 
 ```sh
-npm test
-npm run typecheck
-npm run build
-npm start
-```
-
-The test suite covers navigation boundaries/order, swipe thresholds, fixed-demo schema and loading, explicit live-to-demo behavior, streamed result parsing, all four route contracts, concurrency, failure audit completion, provider errors, bounded retries, manifest PNG dimensions, service-worker API exclusions/offline navigation, common Actor shapes, date handling, invalid URLs, deduplication, limits, strict editorial schemas and provider selection, invented sources/passages/URLs, coverage, uncertainty, stale dates, confidence/hype thresholds, and the finite edition cap. Synthetic failure fixtures exist only in tests. Production demo mode loads an explicitly labeled snapshot under `public/demo-edition.json`; the live pipeline never imports that file. No linter is configured; TypeScript checks and production compilation are the code checks. Passing unit tests does not substitute for a live edition run with funded provider accounts.
-
-## Deploy
-
-For an existing Node server/VM, copy the project and lockfile, configure the environment on the server, then run:
-
-```sh
-npm ci
-npm run build
-PORT=3000 npm start
-```
-
-Or build and launch the included container on a Docker host:
-
-```sh
-docker build -t us-news .
-docker run -d --name us-news --restart unless-stopped -p 3000:3000 --env-file .env.local us-news
-docker logs -f us-news
-```
-
-Use unquoted JSON in `.env.local` when passing it to Docker's `--env-file` (Docker preserves quote characters; Next.js's dotenv parser removes them). The image excludes all real `.env*` files. Configure runtime environment variables through your host's secret settings when deploying remotely. Keep one replica and configure any reverse proxy's request/read timeout to at least 300 seconds. Put HTTPS in front of the server for remote use. Disable reverse-proxy buffering for streamed progress and set its read timeout to at least 300 seconds. The Docker runtime includes `public/` and `next.config.ts`, so icons, the fallback, the offline shell, and service-worker headers are available in production. No localhost URLs are embedded in API clients. Do not use a static-only export or a short-timeout serverless tier for live generation. Public deployment has not been performed by this task.
-
-The MVP intentionally has no accounts. Anyone who can reach `POST /api/run` can initiate paid work; same-origin browser checks and the per-process overlap guard are not access control. For a publicly shared hackathon URL, use your hosting platform's deployment protection or a private demo network.
-
-## Main files
-
-- `app/api/health/route.ts`, `app/api/run/route.ts`, `app/api/today/route.ts`, `app/api/run/[id]/route.ts`: JSON API.
-- `lib/apify.ts`, `lib/anthropic.ts`, `lib/openai.ts`, `lib/editor.ts`, `lib/editor-settings.ts`, `lib/editor-prompt.ts`, `lib/pipeline.ts`: real provider integrations and orchestration.
-- `lib/normalize.ts`, `lib/evidence.ts`, `lib/validation.ts`, `lib/types.ts`: data shapes and evidence validation.
-- `lib/config.ts`, `lib/errors.ts`, `lib/http.ts`, `lib/store.ts`: server configuration, safe errors, responses, storage boundary.
-- `components/USApp.tsx`, `EditionReader.tsx`, `Transparency.tsx`, `PWAStatus.tsx`: finite reader, mode switching, evidence/audit display, installation.
-- `app/page.tsx`, `app/demo/page.tsx`, `app/layout.tsx`, `app/globals.css`: responsive app routes and manifest metadata.
-- `lib/client.ts`, `lib/navigation.ts`, `lib/edition-schema.ts`: streamed API client, bounded navigation, shared result validation.
-- `public/manifest.webmanifest`, `public/sw.js`, `public/offline.*`, `public/icons/*`: safe PWA shell and standalone offline reader.
-- `public/demo-edition.json`: fixed, dated demo snapshot.
-- `scripts/generate-icons.mjs`: reproducible code-drawn app icons.
-- `tests/*.test.ts`: isolated normalization and validation tests.
-- `.env.example`, `Dockerfile`, `.dockerignore`, `package.json`, `package-lock.json`, `tsconfig.json`, `next.config.ts`: setup and deployment.
-
-The Claude output budget uses the documented [effort control](https://platform.claude.com/docs/en/build-with-claude/effort); its reasoning and final JSON share the output-token limit.
-
-## Visual + narrated upgrade (October 24, 2026)
-
-The existing Next.js/Claude pipeline is preserved. `LLM_PROVIDER=anthropic` remains the default; there is no automatic provider fallback. The older explicitly selectable OpenAI adapter is retained only for backward compatibility and is not used by the configured app.
-
-### Start and demonstrate
-
-```sh
-npm ci
-# Configure .env using .env.example; do not overwrite an existing .env.
-npm run dev
-```
-
-Open http://localhost:3000 for live mode or http://localhost:3000/demo for the explicitly archived demo. `/demo` needs no credentials and includes five real Cartesia MP3s, Claude explanations and definitions, a licensed contextual logo, sourced Reddit context, exclusions, receipts and a playable crossword. Its news and source dates remain October 24, 2026; it is never presented as fresh retrieval.
-
-```sh
-# Real generation (up to 295 seconds); JSON response:
-curl --max-time 295 -X POST http://localhost:3000/api/run
-# Streaming progress instead:
-curl -N --max-time 295 -X POST -H 'Accept: application/x-ndjson' http://localhost:3000/api/run
 curl http://localhost:3000/api/health
 curl http://localhost:3000/api/today
-# Replace RUN_ID with the actual response ID:
+curl http://localhost:3000/api/editions
+curl http://localhost:3000/api/editions/2000-01-01
 curl http://localhost:3000/api/run/RUN_ID
+
+# Reuses a saved date; otherwise performs real provider calls:
+curl --max-time 300 -N -X POST \
+  -H 'Accept: application/x-ndjson' \
+  'http://localhost:3000/api/run?date=2000-01-01'
 ```
 
-### Narration
+`POST /api/run` defaults to today. Published dates return `X-Edition-Reused: true`. Ordinary requests return JSON; streaming requests emit `run`, `log`, then `result` or `error`. An error event after HTTP 200 is still a failed generation. Stream disconnection does not replace or cancel the bounded server run. The app checks the saved date before retrying. Run logs are process-local; published editions survive restarts.
 
-Set `CARTESIA_API_KEY` on the server. The existing `CARTESIA` environment name is also accepted, so an existing key does not need to be copied or exposed. Optional `CARTESIA_VOICE_ID` defaults to the public voice used in Cartesia's Bytes example (`db6b0ed5-d5d3-463d-ae85-518a07d3c2b4`); `CARTESIA_MODEL_ID` defaults to `sonic-3.6`.
+## Reader, Mini, and reactions
 
-`lib/cartesia.ts` uses official `@cartesia/cartesia-js` v4: `tts.generate`, string voice ID, MP3 container, 44.1 kHz, 128 kbps. The SDK supplies its supported API version. Credentials only travel server-to-provider. Calls have a 35-second timeout, zero automatic retries, and a 3 MB response cap. The selected Bytes API does not provide timing alignment: the UI shows actual clip time, not fabricated word or section highlighting.
+The finite reader supports Next/Back, horizontal swipes and keyboard navigation, with a clear ending. Each story exposes source dates, exact passages, field references, source assessments and an Apify provenance trail. Model confidence is an editorial estimate, not independent fact-checking.
 
-`POST /api/audio/:editionId/:storyId` prepares a clip from a retained story, never arbitrary client text. `GET` on the same URL serves the already prepared clip, supports HTTP byte ranges for Safari seeking, and never invokes TTS. No key appears in a URL. The in-memory cache deduplicates pending work, allows two concurrent generations, holds at most 30 clips/24 MB for two hours, and cools failed keys down for 30 seconds. Clips disappear on restart; expired or evicted live clips can be prepared again. Audio is lazy and does not consume the edition generation budget. Browser controls include pause, replay, seek, speed and opt-in listen-through. Safari may require another explicit Play tap after asynchronous generation or between clips.
+Four original generated reaction characters represent Interesting, Insightful, Hopeful and Stressed. Select, switch or remove one reaction per story. No comments or public counts. Reading progress, reactions and Mini progress stay on the current device. [Artwork and prompts](public/reactions/README.md).
 
-Claude supplies short narration, quick/default/deeper explanations and contextual glossary definitions with evidence references in the existing editorial call. Optional presentation is independently schema/reference validated; malformed extras are omitted without discarding approved stories. Legacy stories narrate only their already reviewed summary, relevance and action. Reference validation establishes traceability, not independent semantic fact-checking or a guarantee that a model understood the source correctly.
+The Mini uses original validated 5×5 grids, Across/Down clues, crossing letters, hardware/on-screen keyboards, letter checking and reveal controls. Its layout is deterministic by edition date. Matching glossary terms can supply story-specific clues; the puzzle notice distinguishes general wordplay from news recall.
 
-### Optional Apify enrichment and visuals
+## Audio and images
 
-News Receipts now orchestrates topic discovery and original-document investigation through `apify/rag-web-browser`; the original single-search adapter remains available by configuration. After 3–5 stories pass the existing checks, `apify/reddit-scraper` receives one batched `searchQueries` array (at most five queries, three results each), `scrapeMode=posts`, `searchSort=relevance`, `searchTimeFilter=week`, `includeNsfw=false`. Posts must have a real Reddit ID, a valid recent timestamp and headline-level topic overlap. Duplicate, NSFW, stale and malformed records are dropped. A second, optional Claude check (at most 15 seconds within the same social budget) requires a specific topic connection and an exact quote from the retrieved post; uncertain matches or failed checks are omitted. Questions are literal excerpts; a few posts are not described as a population-wide consensus, and never contribute to confidence or verification. No comments or private/social-login data are requested.
+Cartesia audio is prepared on demand from a retained story, never arbitrary browser text. `POST /api/audio/:editionId/:storyId` prepares a clip; `GET` serves it with byte-range support. The bounded in-memory cache deduplicates work and expires on restart. Controls include pause, replay, seek, speed and opt-in listen-through. Safari may require an explicit Play gesture after preparing audio or between clips.
 
-`APIFY_SOCIAL_ENABLED=false` disables enrichment. `APIFY_SOCIAL_ACTOR_ID` selects another compatible Reddit Actor; non-default Actors also require `APIFY_SOCIAL_ACTOR_INPUT_JSON`. That adapter explicitly requires batched `searchQueries` and Reddit post output (id, title, body/selftext, url/permalink, createdAt/createdUtc, optional communityName). It does not assume TikTok/Instagram share that schema. Additional platforms are not implemented.
+Publisher share images are attributed link previews fetched from approved articles. A failed lookup falls back to an illustration. Their rights remain with the publisher. Original-source links remain available.
 
-Social work has at most 50 seconds, uses only time remaining before a 285-second pipeline deadline, and aborts unfinished runs. News retrieval's 165-second budget, Claude's 105-second budget and the 300-second route allowance remain unchanged. Optional failure is logged and leaves approved stories intact. Actor and dataset IDs are logged, never tokens.
+## PWA and offline
 
-**Article images.** After stories are approved (in parallel with Reddit enrichment, at most 12 seconds, never blocking the edition), `lib/article-image.ts` reads only the `<head>` of each approved story's primary article and takes the publisher's own share image (`og:image`, then `twitter:image`). It is shown as an attributed link preview, exactly like a link card on social platforms: hotlinked from the publisher with `no-referrer`, never downloaded, cached or edited, captioned with the publisher and a link to the original article. Only public HTTPS hosts are fetched; redirects are re-checked and IP/localhost/private targets are refused. A failed lookup or a broken image falls back to the illustration. `ARTICLE_IMAGES_ENABLED=false` turns it off. `scripts/prepare-images.ts` adds the same images to the archived demo (no API keys needed).
+Production registers `/sw.js` on HTTPS or localhost; development does not register a worker. The service worker caches only the static offline shell, manifest, icons and reactions. API responses, POSTs and live audio are not service-worker cached. The reader saves its last opened published edition in local storage; offline navigation shows that actual edition with its original date, or asks to reconnect if the requested date is unavailable. It never substitutes a fixed demo. First installation requires a successful online visit.
 
-Other article image/Open Graph metadata is normalized with attribution, original URL, rights status and retrieval time. Scraping is not a license. Unknown-rights images are linked at their original source, never embedded or downloaded by the browser. The displayed PHP logo is an unchanged, separately reviewed CC BY-SA 4.0 contextual asset, **not an event photograph or a newly scraped image**; see `public/media/ATTRIBUTION.md`. Other stories use labeled, code-generated neutral illustrations. Broken licensed assets fall back to those illustrations.
+Use Safari Share → Add to Home Screen on iPhone or the browser install action where supported. Physical-device installation and Safari playback still need device QA.
 
-### Crossword and receipts
-
-The optional Mini uses original, validated 5×5 grids selected deterministically by edition date, with every letter crossed and numbered Across/Down clues. When a grid answer matches an edition glossary term, its clue uses that definition. Check and reveal controls, hardware and on-screen keyboards, and device-local saved progress are supported. The puzzle notice distinguishes general wordplay from story-specific recall.
-
-“Show me the receipts” preserves original article links/dates, exact retrieved excerpts, field references, source classifications, limitations and capped confidence. Links to official advisories/PDFs are shown only when present in retained passages. Linked documents are clearly distinguished from fully retrieved evidence; no PDF preview, extracted page references or independent document verification is claimed.
-
-### Offline and deployment
-
-Production service workers cache only an explicit local archive allowlist: offline shell, demo JSON, validated demo puzzle, five bundled MP3s, licensed image and icons. Live APIs, live audio, POST, authenticated and cross-origin requests are excluded. Archived MP3 ranges are supported from cache. First visit must be online and cache installation must complete. The offline reader has native audio controls, explanations, glossary, receipts and an optional saved crossword. An update notice allows reloading newly cached assets. HTTPS (or localhost) is required for installation; physical Safari installation/playback still needs device QA.
-
-For a demo, use one long-running Node process so edition and audio memory are shared:
+## Validate and deploy
 
 ```sh
-npm ci
 npm test
 npm run typecheck
 npm run build
-npm start
-# Container path, on a host with Docker:
-docker build -t us-news .
-docker run --rm --env-file .env -p 3000:3000 us-news
+npm start -- --port 3000
 ```
 
-Deploy the existing Dockerfile or the build/start commands to a Node host with HTTPS and a request timeout of at least 300 seconds. Set the environment values in the host's secret manager, not in the image. Vercel can build this Next.js app, but its execution allowance must support `maxDuration=300`; memory is not shared between instances/route workers, so multi-instance/serverless live audio is not reliable without shared audio storage. Published history uses Apify storage. No public deployment was performed.
-
-Rebuild the **explicit archive** only deliberately; these commands incur provider calls except finalization:
-
-```sh
-node --env-file=.env --conditions=react-server --import tsx scripts/prepare-experience.ts
-node --env-file=.env --conditions=react-server --import tsx scripts/prepare-social.ts
-node --env-file=.env --conditions=react-server --import tsx scripts/prepare-audio.ts
-node --import tsx scripts/finalize-demo.ts
-```
-
-Run these sequentially. The source snapshot must already contain actual retained evidence. Finalization validates the schema, filters social relevance, builds the crossword and versions the offline cache. Audio files are reused by script hash; no generation happens on demo Play. New files are small bundled assets, not runtime writes to `public/`.
-
-Official integration references: [Cartesia SDK](https://github.com/cartesia-ai/cartesia-js), [Bytes TTS](https://docs.cartesia.ai/api-reference/tts/bytes), [audio formats](https://docs.cartesia.ai/build-with-cartesia/capability-guides/tts-output-audio-format), [Cartesia concurrency](https://docs.cartesia.ai/use-the-api/concurrency-limits-and-timeouts), [Apify Reddit Actor and schema](https://apify.com/apify/reddit-scraper/input-schema), [PHP logo permission](https://www.php.net/download-logos.php).
+Deploy with the existing Dockerfile or these build/start commands to a Node host with HTTPS and at least a 300-second request allowance. Store environment values in the host's secret manager. Published editions and the publisher lock are shared through Apify; live audio and detailed run logs are process-local. No public deployment has been performed.

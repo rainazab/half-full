@@ -14,12 +14,13 @@ export async function publishDaily(
     const result = await generateEdition(run, onLog, {
       ...pipelineDependencies,
       finishRun: () => undefined,
+      getConfig: () => pipelineDependencies.getConfig(date),
     });
     result.edition.date = date;
     const entry: RunLogEntry = {
       step: "archive.save",
       status: "completed",
-      message: `Edition assigned to ${date} (${editionDay() === date ? "today" : "the day generation began"}). Future requests reuse this edition.`,
+      message: `Edition assigned to ${date} (${editionDay() === date ? "today" : "the selected day"}). Future requests reuse this edition.`,
       timestamp: new Date().toISOString(),
     };
     result.runLog.push(entry);

@@ -103,6 +103,30 @@ export function defaultQueries(now = new Date()) {
     `(site:apnews.com/article/ OR site:bbc.com/news/articles/) after:${after} (research OR policy OR world)`,
   ];
 }
+/** Exact-day search lanes support old publisher URL structures, including BBC's pre-2008 site. */
+export function historicalQueries(day) {
+  if (
+    !/^\d{4}-\d{2}-\d{2}$/.test(day) ||
+    Number.isNaN(Date.parse(day)) ||
+    new Date(day).toISOString().slice(0, 10) !== day
+  )
+    throw Error("Use a valid edition date.");
+  const date = new Date(`${day}T12:00:00Z`);
+  const dayNumber = date.getUTCDate();
+  const month = date.toLocaleString("en-US", {
+    month: "long",
+    timeZone: "UTC",
+  });
+  const shortMonth = month.slice(0, 3).toLowerCase();
+  const year = date.getUTCFullYear();
+  // Old pages are often re-indexed today. Search their printed mastheads/canonical
+  // paths, then let the consumer check actual publication dates rather than crawl dates.
+  return [
+    `(site:news.bbc.co.uk/2/hi/ OR site:bbc.com/news OR site:bbc.co.uk/news) "${dayNumber} ${month}" "${year}" -inurl:static`,
+    `site:theguardian.com inurl:${year}/${shortMonth}/${day.slice(8)} news`,
+    `(site:cnn.com/${year}/ OR site:npr.org/${year}/) "${month} ${dayNumber}, ${year}"`,
+  ];
+}
 /** Official REST calls are bounded independently and by the entire retrieval budget. */
 export function actorRunner(token, log = () => {}, fetcher = fetch) {
   return async (actorId, input, budgetMs = 70000) => {
@@ -183,7 +207,9 @@ export async function gatherReceipts(input = {}, runActor, log = () => {}) {
         ? [publicUrl(input.articleUrl)]
         : input.claim
           ? [String(input.claim).slice(0, 400)]
-          : defaultQueries()
+          : input.date
+            ? historicalQueries(input.date)
+            : defaultQueries()
   )
     .filter((q) => typeof q === "string" && q.trim())
     .slice(0, 3);

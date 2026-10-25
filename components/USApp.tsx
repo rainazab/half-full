@@ -2,12 +2,13 @@
 import { useEffect, useRef, useState } from "react";
 import type { EditionResult, RejectedStory, RunLogEntry } from "@/lib/types";
 import { parseEdition } from "@/lib/edition-schema";
-import { LiveRunError, loadDemo, runLive } from "@/lib/client";
+import { LiveRunError, runLive } from "@/lib/client";
 import {
   dateLabel,
   editionDay,
   markRead,
   readingStreak,
+  selectableDay,
   type ArchiveEntry,
   type ReadingProgress,
 } from "@/lib/daily";
@@ -16,7 +17,7 @@ import Transparency, { RunLog } from "./Transparency";
 import PWAStatus from "./PWAStatus";
 import Charm from "./Charm";
 import StoryVisual from "./StoryVisual";
-import ArchiveCalendar from "./ArchiveCalendar";
+import DatePicker from "./DatePicker";
 import Crossword from "./Crossword";
 type View = "today" | "reader" | "archive" | "mini" | "you" | "receipts";
 type Health = {
@@ -25,13 +26,8 @@ type Health = {
   editor: { label: string; model: string } | null;
 };
 const moods = ["blue", "pink", "mint", "yellow", "blue"] as const;
-export default function USApp({
-  initialMode = "live",
-}: {
-  initialMode?: "live" | "demo";
-}) {
-  const [mode, setMode] = useState(initialMode),
-    [edition, setEdition] = useState<EditionResult | null>(null);
+export default function USApp() {
+  const [edition, setEdition] = useState<EditionResult | null>(null);
   const [audit, setAudit] = useState<RejectedStory[]>([]),
     [log, setLog] = useState<RunLogEntry[]>([]);
   const [health, setHealth] = useState<Health | null>(null),
@@ -47,163 +43,203 @@ export default function USApp({
       days: [],
       reactions: {},
     }),
-    [today, setToday] = useState("2026-10-24");
+    [today, setToday] = useState(editionDay);
+  const [selectedDate, setSelectedDate] = useState(editionDay);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const selectedDateRef = useRef(selectedDate);
   const generation = useRef(0);
   const heading = useRef<HTMLDivElement>(null);
   function display(result: EditionResult) {
     setEdition(result);
-    setMode(result.edition.mode === "demo" ? "demo" : "live");
+
     setAudit(result.rejectedStories);
     setLog(result.runLog);
     setRunId(result.edition.id);
     setStartIndex(0);
     setView("today");
+    try {
+      localStorage.setItem("half-full-last-edition", JSON.stringify(result));
+    } catch {}
   }
-  async function archive() {
-    const [saved, live] = await Promise.allSettled([
-      fetch("/archive/index.json").then(
-        (r) => r.json() as Promise<ArchiveEntry[]>,
-      ),
-      fetch("/api/editions", {
+  async function refreshDates() {
+    try {
+      const r = await fetch("/api/editions", {
         cache: "no-store",
         signal: AbortSignal.timeout(10000),
-      }).then(async (r) => (r.ok ? ((await r.json()) as ArchiveEntry[]) : [])),
-    ]);
-    const all = [
-      ...(saved.status === "fulfilled" ? saved.value : []),
-      ...(live.status === "fulfilled" ? live.value : []),
-    ];
-    setEntries([...new Map(all.map((e) => [e.date, e])).values()]);
+      });
+      if (r.ok) setEntries(await r.json());
+    } catch {
+      /* The picker also works before any editions have been saved. */
+    }
   }
   useEffect(() => {
-    setToday(editionDay());
+    const current = editionDay();
+    setToday(current);
     try {
       const p = JSON.parse(localStorage.getItem("us-reading-v1") ?? "null");
       if (p && Array.isArray(p.days) && p.reactions) setProgress(p);
     } catch {}
+    const requested = new URLSearchParams(window.location.search).get("date");
+    const day =
+      requested && selectableDay(requested, current) ? requested : current;
     const online = () => setOffline(!navigator.onLine);
     online();
     window.addEventListener("online", online);
     window.addEventListener("offline", online);
-    void archive();
-    void openMode(initialMode);
+    void refreshDates();
+    void fetch("/api/health", { signal: AbortSignal.timeout(10000) })
+      .then((r) => r.json())
+      .then(setHealth)
+      .catch(() => {});
+    void openDate(day);
+    let lastToday = current;
+    const rollover = () => {
+      const next = editionDay();
+      if (next !== lastToday) {
+        if (selectedDateRef.current === lastToday) void openDate(next);
+        lastToday = next;
+        setToday(next);
+      }
+    };
+    const timer = window.setInterval(rollover, 60000);
+    window.addEventListener("focus", rollover);
     return () => {
       generation.current++;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", rollover);
       window.removeEventListener("online", online);
       window.removeEventListener("offline", online);
     };
-    // Initial mode comes from the route; subsequent changes are explicit button actions.
+    // A date is loaded once on mount; date changes go through the picker.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialMode]);
-  async function openMode(next: "live" | "demo") {
+  }, []);
+  async function openDate(day: string) {
+    if (!selectableDay(day)) return;
     const version = ++generation.current;
+    const current = () => version === generation.current;
+    selectedDateRef.current = day;
+    setSelectedDate(day);
+    setPickerOpen(false);
     setLoading(true);
+    setBusy(false);
     setError(null);
-    setMode(next);
-    setView("today");
     setEdition(null);
     setAudit([]);
     setLog([]);
     setRunId(undefined);
-    try {
-      if (next === "demo") {
-        const result = await loadDemo();
-        if (version === generation.current) display(result);
-      } else {
-        const results = await Promise.allSettled([
-          fetch("/api/health", {
-            cache: "no-store",
-            signal: AbortSignal.timeout(10000),
-          }).then((r) => r.json() as Promise<Health>),
-          fetch("/api/today", {
-            cache: "no-store",
-            signal: AbortSignal.timeout(12000),
-          }).then(async (r) => {
-            if (r.status === 404) return null;
-            if (!r.ok) throw Error("The daily edition could not be reached.");
-            return parseEdition(await r.json());
-          }),
-        ]);
-        if (version !== generation.current) return;
-        if (results[0].status === "fulfilled") setHealth(results[0].value);
-        if (results[1].status === "fulfilled" && results[1].value)
-          display(results[1].value);
-        if (results.some((r) => r.status === "rejected"))
-          setError(
-            "The live edition is unavailable right now. The saved archive is ready to explore.",
-          );
-      }
-      window.history.replaceState(null, "", next === "demo" ? "/demo" : "/");
-    } catch (e) {
-      if (version === generation.current)
-        setError(e instanceof Error ? e.message : "Unable to open edition.");
-    } finally {
-      if (version === generation.current) setLoading(false);
-    }
-  }
-  async function generate() {
-    generation.current++;
-    setBusy(true);
-    setError(null);
-    setLog([]);
-    setAudit([]);
-    setRunId(undefined);
-    try {
-      const result = await runLive((event) => {
-        if (event.type === "run") setRunId(event.runId);
-        if (event.type === "log") setLog((l) => [...l, event.entry]);
+    setView("today");
+    window.history.replaceState(
+      null,
+      "",
+      day === editionDay() ? "/" : `/?date=${day}`,
+    );
+    const saved = async () => {
+      const r = await fetch(`/api/editions/${day}`, {
+        cache: "no-store",
+        signal: AbortSignal.timeout(20000),
       });
-      display(result);
-      void archive();
+      if (r.status === 404) return null;
+      if (!r.ok)
+        throw Error(
+          "This edition could not be reached. Try this date again shortly.",
+        );
+      const result = parseEdition(await r.json());
+      if (result.edition.date !== day || result.edition.mode !== "live")
+        throw Error("The returned edition did not match your selected date.");
+      return result;
+    };
+    try {
+      let result = await saved();
+      if (!current()) return;
+      if (!result) {
+        if (!navigator.onLine)
+          throw Error(
+            "Connect to the internet to prepare this date’s edition.",
+          );
+        setLoading(false);
+        setBusy(true);
+        const deadline = Date.now() + 360000;
+        while (!result && current()) {
+          try {
+            result = await runLive(
+              (event) => {
+                if (!current()) return;
+                if (event.type === "run") setRunId(event.runId);
+                if (event.type === "log") setLog((l) => [...l, event.entry]);
+              },
+              fetch,
+              day,
+            );
+          } catch (e) {
+            if (
+              !(e instanceof LiveRunError) ||
+              e.failure.error.code !== "RUN_IN_PROGRESS" ||
+              Date.now() >= deadline
+            )
+              throw e;
+            // Another tab/server already owns publication. Reuse its edition when ready.
+            await new Promise((resolve) => window.setTimeout(resolve, 5000));
+            if (!current()) return;
+            result = await saved();
+          }
+        }
+      }
+      if (result && current()) {
+        if (result.edition.date !== day)
+          throw Error("The generated edition did not match the selected date.");
+        display(result);
+        try {
+          localStorage.setItem(
+            "half-full-last-edition",
+            JSON.stringify(result),
+          );
+        } catch {}
+        void refreshDates();
+      }
     } catch (e) {
+      if (!current()) return;
       if (e instanceof LiveRunError) {
         setError(
-          e.failure.error.code === "INSUFFICIENT_VERIFIED_STORIES"
-            ? "Today’s batch didn’t contain enough well-supported stories. Nothing was published. You can read a saved edition while we leave the standards intact."
+          e.failure.error.code === "INSUFFICIENT_VERIFIED_STORIES" ||
+            e.failure.error.code === "NO_USABLE_CANDIDATES"
+            ? `We couldn’t retrieve enough well-supported reporting for ${dateLabel(day, { month: "long", day: "numeric", year: "numeric" })}. Nothing was published. Try another date.`
             : e.message,
         );
         setAudit(e.failure.rejectedStories ?? []);
         setLog(e.failure.runLog ?? []);
         setRunId(e.failure.runId);
-      } else
-        setError(
-          "The connection ended before we received an edition. Check today’s edition before trying again; the server may still be finishing.",
-        );
-    } finally {
-      setBusy(false);
-    }
-  }
-  async function openArchive(entry: ArchiveEntry) {
-    const version = ++generation.current;
-    setLoading(true);
-    setError(null);
-    try {
-      const r = await fetch(
-        entry.mode === "demo" ? entry.url! : `/api/editions/${entry.date}`,
-        {
-          cache: entry.mode === "demo" ? "default" : "no-store",
-          signal: AbortSignal.timeout(12000),
-        },
-      );
-      if (!r.ok)
-        throw Error("This saved edition is unavailable. Try another date.");
-      const result = parseEdition(await r.json());
-      if (version === generation.current) {
-        display(result);
-        window.history.replaceState(
-          null,
-          "",
-          result.edition.mode === "demo" ? "/demo" : "/",
-        );
+      } else {
+        // A dropped stream can still finish on the server. Check without starting another job.
+        try {
+          const recovered = await saved();
+          if (recovered && current()) {
+            display(recovered);
+            return;
+          }
+        } catch {}
+        if (current())
+          setError(
+            e instanceof Error
+              ? e.message
+              : "This edition isn’t available yet. Try the date again shortly.",
+          );
       }
-    } catch (e) {
-      if (version === generation.current)
-        setError(e instanceof Error ? e.message : "Archive unavailable.");
     } finally {
-      if (version === generation.current) setLoading(false);
+      if (current()) {
+        setLoading(false);
+        setBusy(false);
+      }
     }
   }
   function tab(next: View) {
+    if (next === "archive") {
+      setPickerOpen(true);
+      return;
+    }
+    if (next === "today" && selectedDate !== editionDay()) {
+      void openDate(editionDay());
+      return;
+    }
     setView(next);
     heading.current?.focus({ preventScroll: true });
     window.scrollTo({ top: 0, behavior: "instant" });
@@ -218,10 +254,9 @@ export default function USApp({
       localStorage.setItem("us-reading-v1", JSON.stringify(next));
     } catch {}
   }
-  const date =
-    edition?.edition.date ?? edition?.edition.createdAt.slice(0, 10) ?? today;
+  const date = selectedDate;
   const stories = edition?.edition.stories ?? [],
-    complete = progress.days.includes(date) && mode === "live";
+    complete = progress.days.includes(date);
   const nav: { view: View; label: string; icon: string }[] = [
     { view: "today", label: "Today", icon: "◒" },
     { view: "archive", label: "Calendar", icon: "▦" },
@@ -276,60 +311,60 @@ export default function USApp({
           >
             half full<span aria-hidden="true">◒</span>
           </button>
-          <div ref={heading} tabIndex={-1} className="topbar-date">
-            {dateLabel(date, {
-              weekday: "long",
-              month: "short",
-              day: "numeric",
-            })}
-            <span>
-              {mode === "demo"
-                ? "The archive collection"
-                : "Your daily edition"}
-            </span>
+          <div ref={heading} tabIndex={-1} className="date-picker-anchor">
+            <button
+              className="topbar-date date-trigger"
+              onClick={() => setPickerOpen(true)}
+              aria-haspopup="dialog"
+              aria-expanded={pickerOpen}
+            >
+              {dateLabel(date, {
+                weekday: "long",
+                month: "short",
+                day: "numeric",
+                ...(date !== today ? { year: "numeric" } : {}),
+              })}
+              <span>
+                {date === today
+                  ? "Your daily edition"
+                  : "Your edition, on this day"}{" "}
+                <i aria-hidden="true">⌄</i>
+              </span>
+            </button>
           </div>
-          <button
-            className="mode-pill"
-            disabled={busy || loading}
-            onClick={() => openMode(mode === "demo" ? "live" : "demo")}
-          >
+          <span className="mode-pill">
             <i />
-            {mode === "demo" ? "Archived demo" : "Live edition"}
-            <span>⌄</span>
-          </button>
+            Live edition
+          </span>
+          <DatePicker
+            open={pickerOpen}
+            date={date}
+            today={today}
+            entries={entries}
+            onClose={() => setPickerOpen(false)}
+            onSelect={openDate}
+          />
         </header>
         {offline && (
           <p className="status-banner" role="status">
-            You’re offline. Saved demo stories and downloaded audio are still
-            here.
+            You’re offline. Reconnect to open another date.
           </p>
-        )}
-        {mode === "demo" && edition && (
-          <div className="archive-banner">
-            <span>◷</span>
-            <p>
-              <strong>Saved archive, not breaking news.</strong>{" "}
-              {edition.edition.demoInfo?.notice}
-            </p>
-          </div>
         )}
         {error && (
           <div className="error" role="alert">
             <strong>A little pause.</strong>
             <p>{error}</p>
             <div className="buttons">
+              <button onClick={() => setPickerOpen(true)} disabled={busy}>
+                Choose another date
+              </button>
               <button
-                onClick={() => openMode("demo")}
-                disabled={loading || busy}
+                onClick={() => openDate(selectedDate)}
+                disabled={busy || offline}
               >
-                Read the saved edition
+                Try this date again
               </button>
               <button onClick={() => tab("receipts")}>See what happened</button>
-              {!busy && (
-                <button onClick={() => openMode("live")}>
-                  Check today’s edition
-                </button>
-              )}
             </div>
           </div>
         )}
@@ -343,7 +378,11 @@ export default function USApp({
           <section className="generation-card" role="status">
             <Charm mood="mint" />
             <p className="eyebrow">A little care goes into every edition</p>
-            <h2>Finding the stories worth your time.</h2>
+            <h2>
+              {date === today
+                ? "Finding the stories worth your time."
+                : `A little window into ${dateLabel(date, { month: "long", day: "numeric", year: "numeric" })}.`}
+            </h2>
             <div className="pipeline-steps">
               {["Discover", "Investigate", "Review", "Publish"].map(
                 (name, i) => (
@@ -365,14 +404,18 @@ export default function USApp({
                 ),
               )}
             </div>
-            <p>{log.at(-1)?.message ?? "Connecting to Apify…"}</p>
+            <p>
+              {date === today
+                ? "A few minutes of care. Once ready, today’s picks stay put."
+                : "Retrieving original reporting from this day. We’ll keep this edition for next time."}
+            </p>
             <details>
               <summary>Follow the evidence trail</summary>
               <RunLog log={log} />
             </details>
           </section>
         )}
-        {!loading && view === "today" && !busy && (
+        {!loading && view === "today" && !busy && stories.length > 0 && (
           <>
             <section className="daily-hero">
               <div>
@@ -399,26 +442,11 @@ export default function USApp({
                       ◷ About {Math.max(3, stories.length)} minutes
                     </span>
                   </div>
-                ) : (
-                  <div className="buttons">
-                    <button
-                      className="primary"
-                      disabled={offline}
-                      onClick={generate}
-                    >
-                      Prepare today’s edition ↗
-                    </button>
-                    <button onClick={() => openMode("demo")}>
-                      Explore the archive
-                    </button>
-                  </div>
-                )}
+                ) : null}
                 <p className="daily-promise">
-                  {stories.length
-                    ? mode === "live"
-                      ? "One edition for this date. No refresh rabbit hole."
-                      : "Real saved reporting. Original source dates preserved."
-                    : "Created once, saved for the day. Powered by Apify + Claude."}
+                  {date === today
+                    ? "One edition for today. Picked once, here whenever you are."
+                    : `Reporting from ${dateLabel(date, { month: "long", day: "numeric", year: "numeric" })}. Retrieved and reviewed today.`}
                 </p>
               </div>
               <div className="hero-art" aria-hidden="true">
@@ -507,11 +535,11 @@ export default function USApp({
               key={`${edition.edition.id}-${startIndex}`}
               stories={stories}
               editionId={edition.edition.id}
-              demo={mode === "demo"}
+              demo={false}
               date={date}
               initialIndex={startIndex}
               onComplete={() => {
-                if (mode === "live") saveProgress(markRead(progress, date));
+                saveProgress(markRead(progress, date));
               }}
               onReaction={(id, mood) =>
                 saveProgress({
@@ -523,13 +551,6 @@ export default function USApp({
               onTransparency={() => tab("receipts")}
             />
           </>
-        )}
-        {view === "archive" && (
-          <ArchiveCalendar
-            entries={entries}
-            today={today}
-            onSelect={openArchive}
-          />
         )}
         {view === "mini" && (
           <section className="mini-page">
@@ -543,14 +564,14 @@ export default function USApp({
                 key={edition.edition.id}
                 stories={stories}
                 date={date}
-                demo={mode === "demo"}
+                demo={false}
                 initialOpen
               />
             ) : (
               <div className="empty-card">
                 <p>Open an edition to get its Mini.</p>
-                <button onClick={() => openMode("demo")}>
-                  Try the archive Mini
+                <button onClick={() => openDate(today)}>
+                  Open today’s edition
                 </button>
               </div>
             )}
@@ -596,8 +617,7 @@ export default function USApp({
                 </div>
                 <p>
                   Saved on this device. No account, no leaderboard, no penalty
-                  for taking a break. Archived demos don’t count as today’s
-                  read.
+                  for taking a break. Past editions keep their original dates.
                 </p>
                 <button
                   onClick={() => (stories.length ? read() : tab("today"))}
@@ -633,7 +653,7 @@ export default function USApp({
               )}
             </div>
             <Transparency audit={audit} log={log} />
-            {runId && mode === "live" && (
+            {runId && (
               <a
                 className="note"
                 href={`/api/run/${runId}`}

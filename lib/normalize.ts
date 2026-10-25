@@ -86,6 +86,30 @@ function articleMetadata(metadata: Row, url: string | null): Row {
   );
 }
 
+function printedDate(day: string, month: string, year: string): string | null {
+  const index = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
+  ].indexOf(month.slice(0, 3).toLowerCase());
+  if (index < 0) return null;
+  const date = new Date(Date.UTC(Number(year), index, Number(day)));
+  return date.getUTCFullYear() === Number(year) &&
+    date.getUTCMonth() === index &&
+    date.getUTCDate() === Number(day)
+    ? date.toISOString()
+    : null;
+}
+
 function publishedDate(row: Row, metadata: Row, article: Row): string | null {
   const openGraph = Array.isArray(metadata.openGraph)
     ? metadata.openGraph.map(object)
@@ -130,6 +154,79 @@ function publishedDate(row: Row, metadata: Row, article: Row): string | null {
       continue;
     const timestamp = Date.parse(raw);
     if (Number.isFinite(timestamp)) return new Date(timestamp).toISOString();
+  }
+  // Old BBC/CNN pages put dates inside navigation tables and lack modern metadata.
+  // Match their explicit publication masthead, never an arbitrary date in the story.
+  const legacyText = String(row.markdown ?? row.text ?? row.content ?? "");
+  try {
+    const host = new URL(first(row.url, row.URL, row.link, metadata.url))
+      .hostname;
+    let printed: RegExpMatchArray | null = null;
+    if (/(^|\.)bbc\.co\.uk$/.test(host)) {
+      printed = legacyText.match(
+        /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+(\d{1,2})\s+([A-Za-z]+),\s+(\d{4}),\s+\d{1,2}:\d{2}\s+GMT/i,
+      );
+      if (!printed) {
+        const alternate = legacyText.match(
+          /(?:Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday),\s+([A-Za-z]+)\s+(\d{1,2}),\s+(\d{4})\s+Published at\s+\d{1,2}:\d{2}\s+GMT/i,
+        );
+        if (alternate)
+          printed = [
+            alternate[0],
+            alternate[2],
+            alternate[1],
+            alternate[3],
+          ] as RegExpMatchArray;
+      }
+    }
+    if (/(^|\.)cnn\.com$/.test(host)) {
+      const masthead = legacyText.match(
+        /([A-Za-z]+) (\d{1,2}), (\d{4})(?:[*_ \r\n]|<br\s*\/?>)*Web posted at:/i,
+      );
+      if (masthead)
+        printed = [
+          masthead[0],
+          masthead[2],
+          masthead[1],
+          masthead[3],
+        ] as RegExpMatchArray;
+    }
+    if (printed) {
+      const date = printedDate(printed[1], printed[2], printed[3]);
+      if (date) return date;
+    }
+  } catch {
+    /* Missing publisher masthead does not establish a date. */
+  }
+  // Legacy publisher pages often expose the publication masthead only in extracted text.
+  // Restrict this fallback to a weekday-led masthead or an explicit "Published" line near the top.
+  const text = String(row.markdown ?? row.text ?? row.content ?? "").slice(
+    0,
+    2200,
+  );
+  const masthead =
+    text.match(
+      /(?:^|\n)\s*(?:#{1,3}\s*)?(?:(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun)[a-z]*,?\s+)(\d{1,2})\s+([A-Za-z]{3,9}),?\s+(\d{4})/im,
+    ) ??
+    text.match(
+      /(?:^|\n)\s*Published(?:\s+on)?[:\s]+(\d{1,2})\s+([A-Za-z]{3,9}),?\s+(\d{4})/im,
+    );
+  if (masthead) {
+    const date = printedDate(masthead[1], masthead[2], masthead[3]);
+    if (date) return date;
+  }
+  // Guardian canonical article paths encode their original publication day.
+  try {
+    const url = new URL(first(row.url, row.URL, row.link, metadata.url));
+    if (/(^|\.)theguardian\.com$/.test(url.hostname)) {
+      const path = /\/(\d{4})\/([a-z]{3})\/(\d{2})\//.exec(url.pathname);
+      if (path) {
+        const date = printedDate(path[3], path[2], path[1]);
+        if (date) return date;
+      }
+    }
+  } catch {
+    /* An absent or malformed canonical URL provides no date evidence. */
   }
   return null;
 }

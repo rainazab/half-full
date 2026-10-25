@@ -1,1 +1,49 @@
-{"title":"US News Receipts","type":"object","schemaVersion":1,"properties":{"articleUrl":{"title":"Article URL","type":"string","description":"A public HTTPS article to investigate. Leave blank for automatic current-news discovery.","editor":"textfield"},"claim":{"title":"Headline or claim","type":"string","description":"Search for reporting and original sources about a claim. The Actor does not declare truth.","editor":"textfield"},"queries":{"title":"Custom discovery queries","type":"array","description":"Up to three search queries. Overrides the article URL, claim and built-in topic lanes.","editor":"stringList","items":{"type":"string"}},"maxResultsPerQuery":{"title":"Results per query","type":"integer","default":8,"minimum":3,"maximum":10,"description":"At most three queries and four original-evidence investigations."},"investigate":{"title":"Follow original-evidence leads","type":"boolean","default":true,"description":"Retrieve sources linked in the reporting, then use bounded original-source searches where necessary."}},"required":[]}
+{
+  "title": "US News Receipts",
+  "type": "object",
+  "schemaVersion": 1,
+  "properties": {
+    "articleUrl": {
+      "title": "Article URL",
+      "type": "string",
+      "description": "A public HTTPS article to investigate. Leave blank for automatic current-news discovery.",
+      "editor": "textfield"
+    },
+    "claim": {
+      "title": "Headline or claim",
+      "type": "string",
+      "description": "Search for reporting and original sources about a claim. The Actor does not declare truth.",
+      "editor": "textfield"
+    },
+    "queries": {
+      "title": "Custom discovery queries",
+      "type": "array",
+      "description": "Up to three search queries. Overrides the article URL, claim and built-in topic lanes.",
+      "editor": "stringList",
+      "items": {
+        "type": "string"
+      }
+    },
+    "maxResultsPerQuery": {
+      "title": "Results per query",
+      "type": "integer",
+      "default": 8,
+      "minimum": 3,
+      "maximum": 10,
+      "description": "At most three queries and four original-evidence investigations."
+    },
+    "investigate": {
+      "title": "Follow original-evidence leads",
+      "type": "boolean",
+      "default": true,
+      "description": "Retrieve sources linked in the reporting, then use bounded original-source searches where necessary."
+    },
+    "date": {
+      "title": "Edition date",
+      "type": "string",
+      "description": "Optional exact historical publication day, YYYY-MM-DD. Ignored if explicit queries, claim or article URL are supplied.",
+      "editor": "textfield"
+    }
+  },
+  "required": []
+}

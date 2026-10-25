@@ -73,13 +73,58 @@ export async function generateEdition(
       "Normalizing Actor results, removing duplicate URLs, and bounding evidence size.",
     );
     const packets = unpackReceipts(items);
-    const normalized = normalizeStories(packets.articles);
+    const normalized = normalizeStories(
+      packets.articles,
+      config.editionDate ? 100 : 20,
+    );
+    if (config.editionDate) {
+      const excluded = normalized.candidates.filter(
+        (c) => c.publishedAt?.slice(0, 10) !== config.editionDate,
+      );
+      const matching = normalized.candidates.filter(
+        (c) => c.publishedAt?.slice(0, 10) === config.editionDate,
+      );
+      normalized.candidates = matching.slice(0, 20);
+      normalized.rejectedStories.push(
+        ...matching
+          .slice(20)
+          .map((c) => ({
+            title: c.title,
+            url: c.url,
+            confidence: 0,
+            verificationStatus: "rejected" as const,
+            reason:
+              "Not evaluated: the bounded historical candidate limit is 20.",
+          })),
+      );
+      normalized.rejectedStories.push(
+        ...excluded.map((c) => ({
+          title: c.title,
+          url: c.url,
+          confidence: 0,
+          verificationStatus: "rejected" as const,
+          reason: c.publishedAt
+            ? `Published outside the selected day (${config.editionDate}).`
+            : "No reliable publication date was retrieved for this historical article.",
+        })),
+      );
+      log(
+        "edition.date",
+        "completed",
+        `Reviewing reporting published on ${config.editionDate}; articles from other dates are excluded.`,
+      );
+    }
     const supportingSources = normalizeStories(
       packets.sources,
       12,
     ).candidates.filter(
       (source) =>
-        !normalized.candidates.some((candidate) => candidate.id === source.id),
+        !normalized.candidates.some(
+          (candidate) => candidate.id === source.id,
+        ) &&
+        (!config.editionDate ||
+          !source.publishedAt ||
+          source.publishedAt.slice(0, 10) <= config.editionDate),
     );
     if (packets.sources.length)
       log(
@@ -134,7 +179,9 @@ export async function generateEdition(
       reviewed = assembleEditorialResult(
         response,
         normalized.candidates,
-        new Date(),
+        config.editionDate
+          ? new Date(`${config.editionDate}T23:59:59.999Z`)
+          : new Date(),
         supportingSources,
       );
     } catch (error) {

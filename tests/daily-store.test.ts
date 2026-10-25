@@ -31,6 +31,13 @@ test("daily store reuses a published date and releases a failed-attempt lock", a
   assert.equal((await s.list()).length, 1);
   await next();
   assert.equal(await s.get("2026-10-23"), null);
+  const birthday = fixture();
+  birthday.edition.id = "birthday-edition";
+  await s.publish(birthday, "2000-01-01");
+  assert.equal((await s.get("2026-10-24"))?.edition.id, original.edition.id);
+  assert.equal((await s.get("2000-01-01"))?.edition.id, "birthday-edition");
+  assert.equal((await s.list()).length, 2);
+
   await assert.rejects(s.get("2026-02-30"));
 });
 test("Apify-backed daily editions survive a new adapter instance; tokens stay in headers", async () => {

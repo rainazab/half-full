@@ -3,6 +3,7 @@ export function originalLinks(
   item: Record<string, unknown>,
 ): { title: string; url: string }[];
 export function extractPassages(text: string): { id: string; text: string }[];
+export function historicalQueries(day: string): string[];
 export function defaultQueries(now?: Date): string[];
 export function annotate(
   item: Record<string, unknown>,

@@ -8,7 +8,7 @@ import {
   assembleEditorialResult,
 } from "./validation";
 import { PipelineError } from "./errors";
-import { EDITOR_SYSTEM_PROMPT } from "./editor-prompt";
+import { EDITOR_SYSTEM_PROMPT, editionContext } from "./editor-prompt";
 import { EXPERIENCE_PROMPT } from "./experience";
 import { editorialCandidates } from "./evidence";
 
@@ -43,7 +43,7 @@ export async function reviewWithAnthropic(
           {
             role: "user",
             content: JSON.stringify({
-              currentUtcTime: new Date().toISOString(),
+              ...editionContext(config.editionDate),
               candidates: editorialCandidates(selected),
               supportingSources: editorialCandidates(sources),
               instruction,
@@ -86,7 +86,9 @@ export async function reviewWithAnthropic(
       const checked = assembleEditorialResult(
         raw,
         candidates,
-        new Date(),
+        config.editionDate
+          ? new Date(`${config.editionDate}T23:59:59.999Z`)
+          : new Date(),
         supportingSources,
       );
       const invalid = checked.rejectedStories.filter((s) =>

@@ -17,7 +17,7 @@ export async function retrieveReceipts(
   let first = true;
   try {
     return await gatherReceipts(
-      {},
+      config.editionDate ? { date: config.editionDate } : {},
       async (...args) => {
         const result = await runner(...args);
         if (first) {

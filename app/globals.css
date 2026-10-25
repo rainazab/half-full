@@ -970,27 +970,62 @@ blockquote cite {
   color: var(--muted);
 }
 .story-reactions > div {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+  max-width: 440px;
 }
 .story-reactions button {
+  position: relative;
   border: 1px solid transparent;
-  background: none;
+  border-radius: 18px;
+  background: transparent;
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.65rem;
-  padding: 6px 8px;
-  flex: 1;
+  gap: 7px;
+  font-size: 0.72rem;
+  padding: 10px 4px 12px;
+  min-width: 0;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.story-reactions button img {
+  display: block;
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  pointer-events: none;
+  transition: transform 180ms ease;
+}
+.story-reactions button:hover:not(:disabled) {
+  background: #f1f5f8;
+  border-color: var(--line);
+}
+.story-reactions button:hover img {
+  transform: translateY(-3px) rotate(-4deg);
 }
 .story-reactions button[aria-pressed="true"] {
-  border-color: #9bbdd4;
-  background: #edf5fa;
+  border-color: #7298b5;
+  background: #e8f1f7;
 }
-.story-reactions .charm {
-  width: 42px;
-  height: 42px;
-  margin-bottom: 6px;
+.story-reactions button[aria-pressed="true"] img {
+  transform: translateY(-3px);
+}
+.reaction-check {
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: white;
+  font-size: 10px;
+  line-height: 17px;
+  opacity: 0;
+}
+.story-reactions button[aria-pressed="true"] .reaction-check {
+  opacity: 1;
 }
 .story-navigation {
   justify-content: space-between;
@@ -1862,9 +1897,9 @@ blockquote cite {
     font-size: 0.6rem;
     padding: 5px;
   }
-  .story-reactions .charm {
-    width: 39px;
-    height: 39px;
+  .story-reactions button img {
+    width: 54px;
+    height: 54px;
   }
   .page-heading {
     padding: 20px 0 25px;
@@ -2102,10 +2137,10 @@ blockquote cite {
     font-size: 1.7rem;
   }
   .story-reactions > div {
-    gap: 0;
+    gap: 4px;
   }
   .story-reactions button {
-    font-size: 0.56rem;
+    font-size: 0.62rem;
   }
   .mini-page > .puzzle {
     padding: 16px;
@@ -2223,3 +2258,42 @@ blockquote cite {
     max-width: 130px;
   }
 }
+
+/* Date selection is the edition control, including birthday-sized jumps. */
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+.date-picker-anchor { flex:1; min-width:0; }
+.date-trigger { display:block; border:0; background:transparent; text-align:left; padding:7px 10px; margin-left:-10px; border-radius:12px; font-weight:650; }
+.date-trigger:hover:not(:disabled) { background:#eaf1f6; }
+.date-trigger span { display:block; font-weight:400; }
+.date-trigger span i { font-style:normal; margin-left:5px; color:var(--accent); }
+.date-picker { width:min(440px,calc(100vw - 28px)); max-height:calc(100dvh - 40px); padding:0; border:1px solid #dfe5e9; border-radius:28px; background:var(--cream); color:var(--ink); box-shadow:0 24px 100px #273b5030; overflow:auto; }
+.date-picker::backdrop { background:#273b5050; backdrop-filter:blur(5px); }
+.date-picker-content { padding:26px; }
+.date-picker-heading { display:flex; justify-content:space-between; gap:10px; align-items:flex-start; }
+.date-picker-heading h2 { font-size:1.45rem; line-height:1.2; letter-spacing:-.04em; margin:5px 0 0; }
+.date-picker-heading .eyebrow { margin:0; color:var(--accent); font-size:.63rem; }
+.date-picker-close { padding:0; min-width:36px; min-height:36px; border:0; background:#edf2f5; border-radius:50%; font-size:24px; }
+.date-picker-intro { font-size:.8rem; color:var(--muted); line-height:1.65; margin:15px 0 22px; }
+.date-month-controls { display:flex; gap:7px; align-items:center; margin-bottom:14px; }
+.date-month-controls > button { border:0; background:transparent; font-size:23px; padding:0; width:36px; }
+.date-month-controls label { flex:1; min-width:0; }
+.date-month-controls select { width:100%; border:1px solid var(--line); border-radius:12px; background:white; color:var(--ink); font-weight:600; font-size:.85rem; padding:10px 5px; min-height:44px; }
+.date-picker-grid { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+.date-picker-grid .weekday { text-align:center; color:var(--muted); font-size:.65rem; padding:6px 0 8px; }
+.date-picker-grid button { position:relative; min-height:44px; padding:7px 0; border:1px solid transparent; border-radius:13px; background:transparent; font-size:.8rem; }
+.date-picker-grid button.is-today { border-color:#9ab8ce; }
+.date-picker-grid button[aria-pressed="true"] { background:var(--ink); color:white; border-color:var(--ink); }
+.date-picker-grid button:hover:not(:disabled):not([aria-pressed="true"]) { background:#e5eef5; }
+.date-picker-grid button:disabled { opacity:.25; }
+.date-picker-grid button i { position:absolute; width:4px; height:4px; border-radius:50%; background:#7aa695; bottom:4px; left:calc(50% - 2px); }
+.date-picker-footer { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:15px 0; }
+.date-picker-footer > span { font-size:.6rem; color:var(--muted); }
+.date-picker-footer > span i { display:inline-block; width:5px; height:5px; border-radius:50%; background:#7aa695; margin-right:4px; }
+.date-picker-footer button { border:0; padding:4px 0; background:none; font-size:.72rem; font-weight:600; }
+.date-jump { padding-top:14px; border-top:1px solid var(--line); }
+.date-jump label { display:block; font-size:.68rem; font-weight:600; margin-bottom:8px; }
+.date-jump > div { display:flex; gap:8px; }
+.date-jump input { flex:1; min-width:0; background:white; border:1px solid var(--line); border-radius:12px; padding:10px; color:var(--ink); font-size:.85rem; min-height:44px; }
+.date-jump button { background:var(--blue); border-color:var(--blue); font-size:.8rem; }
+.date-picker-note { font-size:.63rem; line-height:1.65; color:var(--muted); margin:15px 0 0; }
+@media(max-width:420px) { .date-picker-content { padding:20px; } .date-picker-grid { gap:0; } .date-trigger { font-size:.66rem; padding-right:4px; } .date-trigger span { font-size:.57rem; } .app-topbar .mode-pill { font-size:.56rem; padding:9px 8px; } }

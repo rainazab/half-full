@@ -1,6 +1,6 @@
 import { publishDaily } from "@/lib/publication";
 import { dailyStore } from "@/lib/daily-store";
-import { editionDay } from "@/lib/daily";
+import { editionDay, selectableDay } from "@/lib/daily";
 import { createRun } from "@/lib/store";
 import { publicError } from "@/lib/errors";
 import { json } from "@/lib/http";
@@ -36,7 +36,17 @@ export async function POST(request: Request) {
   }
   let run: RunRecord | undefined;
   let release: (() => Promise<void>) | undefined;
-  const date = editionDay();
+  const date = new URL(request.url).searchParams.get("date") ?? editionDay();
+  if (!selectableDay(date))
+    return json(
+      {
+        error: {
+          code: "INVALID_DATE",
+          message: "Choose a real date between January 1, 1900 and today.",
+        },
+      },
+      400,
+    );
   try {
     const saved = await dailyStore.get(date);
     if (saved) return json(saved, 200, { "X-Edition-Reused": "true" });
