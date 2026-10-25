@@ -1,5 +1,5 @@
 export class PipelineError extends Error {
-  constructor(public code: string, message: string, public status = 502) {
+  constructor(public code: string, message: string, public status = 502, public retryAt?: string) {
     super(message);
     this.name = "PipelineError";
   }

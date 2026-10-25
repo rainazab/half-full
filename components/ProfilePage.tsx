@@ -49,6 +49,7 @@ export default function ProfilePage({
 }) {
   const { user, ready, signingIn, sync, error, login, logout, retry } = profile;
   const { preferences, update } = settings;
+  if(!ready)return <section className="library-screen library-profile" role="status">Restoring your account…</section>;
   return (
     <section className="library-screen library-profile" aria-label="Profile">
       <DitheredAtmosphere tone="lavender" intensity={0.08} />

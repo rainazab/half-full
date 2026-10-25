@@ -32,7 +32,7 @@ export const videoManifestSchema = z
       .object({
         scriptHash: z.string().regex(/^[a-f0-9]{64}$/),
         /** An explicitly authored visual loop. No inferred word-level alignment. */
-        mapping: z.literal("authored-loop"),
+        mapping: z.enum(["authored-loop", "authored-once"]),
         description: z.string().min(1).max(300),
       })
       .strict(),
@@ -270,11 +270,11 @@ export const parseVideoManifest = (value: unknown) => {
 export const videoPath = (date: string, storyId: string, clipId: string) =>
   `/api/videos/${encodeURIComponent(date)}/${encodeURIComponent(storyId)}/${encodeURIComponent(clipId)}`;
 
-/** Cartesia is the clock: pausing or seeking it pauses/seeks this authored loop. */
+/** Cartesia is the clock: play the short scene once, then hold its final frame. */
 export function videoTimeForNarration(seconds: number, durationSeconds = 5) {
   if (!Number.isFinite(seconds) || seconds < 0 || durationSeconds <= 0)
     return 0;
-  return seconds % durationSeconds;
+  return Math.min(seconds, Math.max(0, durationSeconds - 0.04));
 }
 
 /** Safari-compatible single byte ranges; no multipart allocations. */

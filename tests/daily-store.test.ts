@@ -138,7 +138,7 @@ test("generation budgets persist across server instances and fail closed on corr
     b = new DailyStore("token", "test", fetcher, false),
     now = new Date("2026-10-24T12:00:00Z");
   await a.admit("2024-04-10", now);
-  await assert.rejects(b.admit("2024-04-10", now), /ten minutes/);
+  await assert.rejects(b.admit("2024-04-10", now), /120 seconds/);
   records.set("GENERATION-BUDGET-2026-10-24", { corrupt: true });
   await assert.rejects(b.admit("2024-04-11", now));
 });
@@ -173,4 +173,31 @@ test("publisher renews its lock and refuses publication after a missing renewal"
   assert.throws(() => release.assertOwned?.(), /lock could not be renewed/);
   await release();
   t.mock.timers.reset();
+});
+
+test("concurrent generation reservations use one publisher lease and saved editions spend no attempt", async () => {
+  const store = new DailyStore(
+    undefined,
+    "concurrent-budget-test",
+    fetch,
+    true,
+  );
+  const now = new Date("2026-10-24T12:00:00Z");
+  const reserve = async () => {
+    const release = await store.lock();
+    try {
+      await store.admit("2026-10-24", now);
+    } finally {
+      await release();
+    }
+  };
+  const attempts = await Promise.allSettled([reserve(), reserve()]);
+  assert.equal(attempts.filter((x) => x.status === "fulfilled").length, 1);
+  assert.equal(attempts.filter((x) => x.status === "rejected").length, 1);
+  await store.publish(fixture(), "2026-10-24");
+  // The API checks publication before acquiring a lease/reserving a budget.
+  const saved = await store.get("2026-10-24");
+  assert.ok(saved);
+  assert.equal((await store.get("2026-10-24"))?.edition.id, saved.edition.id);
+  await assert.rejects(store.admit("2026-10-24", now), /120 seconds/);
 });

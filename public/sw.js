@@ -1,5 +1,5 @@
 /* Only static shell assets are cached. The last opened live edition is saved by the reader on this device. Never cache API requests. */
-const CACHE = "us-shell-atmosphere20261024-v4";
+const CACHE = "us-shell-native20261025-v5";
 const SHELL = [
   "/offline.html",
   "/offline.js",
@@ -72,7 +72,7 @@ self.addEventListener("fetch", (event) => {
     );
     return;
   }
-  if (SHELL.includes(url.pathname) && !url.search) {
+  if (SHELL.includes(url.pathname) && (!url.search || url.search === "?v=logo-20261025")) {
     event.respondWith(
       (async () => {
         const cached = await caches.match(url.pathname);

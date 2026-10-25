@@ -116,7 +116,7 @@ test("the intro shows once per device, never on a date deep link, and can be rep
   store.set("half-full-onboarding-v1", "{broken");
   assert.equal(readOnboarding(storage), null);
   writeOnboarding(storage, { version: 0, completedAt: "x", skipped: false });
-  assert.equal(shouldShowOnboarding(readOnboarding(storage), ""), true);
+  assert.equal(shouldShowOnboarding(readOnboarding(storage), ""), false);
   clearOnboarding(storage);
   assert.equal(readOnboarding(storage), null);
 });

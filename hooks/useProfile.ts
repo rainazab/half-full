@@ -13,7 +13,7 @@ import {
   runTransaction,
   serverTimestamp,
 } from "firebase/firestore";
-import { firebaseClient } from "@/lib/firebase-client";
+import { firebaseClient, persistentAuth } from "@/lib/firebase-client";
 import {
   applyProgress,
   authMessage,
@@ -274,6 +274,7 @@ export default function useProfile() {
       if (!client) throw Error("Missing configuration");
       const provider = new GoogleAuthProvider();
       provider.setCustomParameters({ prompt: "select_account" });
+      await persistentAuth();
       await signInWithPopup(client.auth, provider);
     } catch (e) {
       const code = (e as { code?: string }).code;

@@ -30,11 +30,11 @@ import TodayHome from "./TodayHome";
 import OnboardingFlow from "./OnboardingFlow";
 import HandoffScreen from "./HandoffScreen";
 import {
-  clearOnboarding,
+  resetOnboarding,
+  restoreOnboarding,
+  persistOnboarding,
   ONBOARDING_VERSION,
-  readOnboarding,
   shouldShowOnboarding,
-  writeOnboarding,
 } from "@/lib/onboarding";
 import type { StoryboardIndex } from "@/lib/storyboard";
 import { mergeRunLogs } from "@/lib/generation-progress";
@@ -42,6 +42,14 @@ type View = "today" | "reader" | "archive" | "mini" | "you" | "profile";
 export default function USApp() {
   const [edition, setEdition] = useState<EditionResult | null>(null);
   const [runLogs, setRunLogs] = useState<RunLogEntry[]>([]);
+  const [retryAt, setRetryAt] = useState<string | null>(null);
+  const [retryNow, setRetryNow] = useState(Date.now);
+  useEffect(() => {
+    if (!retryAt) return;
+    const timer = setInterval(() => setRetryNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [retryAt]);
+  const retryBlocked = !!retryAt && Date.parse(retryAt) > retryNow;
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(true),
@@ -55,6 +63,7 @@ export default function USApp() {
   const [intro, setIntro] = useState<boolean | null>(null);
   // After the intro, a short hand-off covers the app until the edition is ready.
   const [handoff, setHandoff] = useState(false);
+  const initialSearch = useRef<string | null>(null);
   const [entries, setEntries] = useState<ArchiveEntry[]>([]),
     [startIndex, setStartIndex] = useState(0);
   const profile = useProfile();
@@ -71,10 +80,19 @@ export default function USApp() {
     setStoryboards({});
     setVideos({});
     const displayVersion = generation.current;
-    fetch(`/api/videos?date=${result.edition.date}`, {signal:AbortSignal.timeout(15000)})
-      .then(r=>r.ok?r.json():null).then(value=>{
-        if (generation.current === displayVersion && value?.date===result.edition.date && value.videos) setVideos(value.videos);
-      }).catch(()=>{});
+    fetch(`/api/videos?date=${result.edition.date}`, {
+      signal: AbortSignal.timeout(15000),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((value) => {
+        if (
+          generation.current === displayVersion &&
+          value?.date === result.edition.date &&
+          value.videos
+        )
+          setVideos(value.videos);
+      })
+      .catch(() => {});
     // Existing illustrations are read-only presentation data; this never generates any.
     if (result.edition.date)
       fetch(`/api/illustrations/${result.edition.date}`, {
@@ -82,7 +100,11 @@ export default function USApp() {
       })
         .then((r) => (r.ok ? r.json() : null))
         .then((value) => {
-          if (generation.current === displayVersion && value?.date === result.edition.date && value.storyboards)
+          if (
+            generation.current === displayVersion &&
+            value?.date === result.edition.date &&
+            value.storyboards
+          )
             setStoryboards(value.storyboards as StoryboardIndex);
         })
         .catch(() => {});
@@ -105,12 +127,7 @@ export default function USApp() {
     }
   }
   useEffect(() => {
-    setIntro(
-      shouldShowOnboarding(
-        readOnboarding(window.localStorage),
-        window.location.search,
-      ),
-    );
+    initialSearch.current = window.location.search;
     const current = editionDay();
     setToday(current);
     const requested = new URLSearchParams(window.location.search).get("date");
@@ -187,6 +204,7 @@ export default function USApp() {
     setLoading(true);
     setBusy(false);
     setError(null);
+    setRetryAt(null);
     setEdition(null);
     setView("today");
     window.history.replaceState(
@@ -261,6 +279,8 @@ export default function USApp() {
     } catch (e) {
       if (!current()) return;
       if (e instanceof LiveRunError) {
+        setRetryAt(e.failure.error.retryAt ?? null);
+        setRetryNow(Date.now());
         setError(
           e.failure.error.code === "INSUFFICIENT_VERIFIED_STORIES" ||
             e.failure.error.code === "NO_USABLE_CANDIDATES"
@@ -355,19 +375,56 @@ export default function USApp() {
     },
     [edition, profile.user?.uid],
   );
+  const introInitialized = useRef(false);
+  const [storageNotice, setStorageNotice] = useState("");
+  useEffect(() => {
+    if (!profile.ready || introInitialized.current) return;
+    let alive = true;
+    void restoreOnboarding().then((record) => {
+      if (!alive) return;
+      introInitialized.current = true;
+      setIntro(
+        !profile.user &&
+          shouldShowOnboarding(
+            record,
+            initialSearch.current ?? window.location.search,
+          ),
+      );
+    });
+    return () => {
+      alive = false;
+    };
+  }, [profile.ready, profile.user]);
   const date = selectedDate;
   const stories = edition?.edition.stories ?? [],
     complete = progress.days.includes(date);
-  function finishIntro(skipped: boolean) {
-    writeOnboarding(window.localStorage, {
+  async function finishIntro(skipped: boolean) {
+    const persisted = await persistOnboarding({
       version: ONBOARDING_VERSION,
       completedAt: new Date().toISOString(),
       skipped,
     });
+    if (!persisted)
+      setStorageNotice(
+        "This browser could not save your intro preference. Allow website storage to remember it next time.",
+      );
     setIntro(false);
+    setView("today");
     setHandoff(true);
     window.scrollTo({ top: 0, behavior: "instant" });
   }
+  if (intro === null || !profile.ready)
+    return (
+      <div className="app-shell intro-mode">
+        <main id="main" className="app-main">
+          <div className="device-initializing" role="status">
+            <DitheredAtmosphere tone="lavender" />
+            <span>half full</span>
+            <p>Opening your day…</p>
+          </div>
+        </main>
+      </div>
+    );
   if (intro) {
     return (
       <div className="app-shell intro-mode">
@@ -388,8 +445,23 @@ export default function USApp() {
     { view: "you", label: "Your jar", icon: "jar" },
   ];
   return (
-    <div className={`app-shell view-${view} ${view === "reader" ? "reading-mode" : ""}`}>
-      {view !== "reader" && <DitheredAtmosphere tone={view === "you" ? "mint" : view === "mini" ? "butter" : view === "profile" || view === "archive" ? "lavender" : "home"} intensity={0.1}/>}
+    <div
+      className={`app-shell view-${view} ${view === "reader" ? "reading-mode" : ""}`}
+    >
+      {view !== "reader" && (
+        <DitheredAtmosphere
+          tone={
+            view === "you"
+              ? "mint"
+              : view === "mini"
+                ? "butter"
+                : view === "profile" || view === "archive"
+                  ? "lavender"
+                  : "home"
+          }
+          intensity={0.1}
+        />
+      )}
       <aside className="app-sidebar">
         <button
           className="wordmark"
@@ -451,6 +523,11 @@ export default function USApp() {
             onSelect={openDate}
           />
         </header>
+        {storageNotice && (
+          <p role="status" className="status-banner">
+            {storageNotice}
+          </p>
+        )}
         {offline && (
           <p className="status-banner" role="status">
             You’re offline. Reconnect to open another date.
@@ -460,13 +537,25 @@ export default function USApp() {
           <div className="error" role="alert">
             <strong>Edition unavailable</strong>
             <p>{error}</p>
+            {retryBlocked && (
+              <p role="status">
+                Available after{" "}
+                {new Date(retryAt!).toLocaleString([], {
+                  month: "short",
+                  day: "numeric",
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+                .
+              </p>
+            )}
             <div className="buttons">
               <button onClick={() => setPickerOpen(true)} disabled={busy}>
                 Choose another date
               </button>
               <button
                 onClick={() => openDate(selectedDate)}
-                disabled={busy || offline}
+                disabled={busy || offline || retryBlocked}
               >
                 Try this date again
               </button>
@@ -527,7 +616,16 @@ export default function USApp() {
             />
           </>
         )}
-        {view === "archive" && <ArchiveCalendar entries={entries} today={today} date={date} completedDays={progress.days} onOpenDate={openDate} onPickDate={()=>setPickerOpen(true)}/>}
+        {view === "archive" && (
+          <ArchiveCalendar
+            entries={entries}
+            today={today}
+            date={date}
+            completedDays={progress.days}
+            onOpenDate={openDate}
+            onPickDate={() => setPickerOpen(true)}
+          />
+        )}
         {view === "mini" && (
           <section className="mini-page">
             {edition ? (
@@ -554,12 +652,21 @@ export default function USApp() {
             settings={settings}
             onOpenJar={() => tab("you")}
             onReplayIntro={() => {
-              clearOnboarding(window.localStorage);
-              setIntro(true);
+              void resetOnboarding().then(() => setIntro(true));
             }}
           />
         )}
-        {view === "you" && <JarExperience profile={profile} today={today} entries={entries} selectedDate={date} onOpenDate={openDate} onOpenToday={()=>openDate(today)} onOpenProfile={()=>tab("profile")}/>}
+        {view === "you" && (
+          <JarExperience
+            profile={profile}
+            today={today}
+            entries={entries}
+            selectedDate={date}
+            onOpenDate={openDate}
+            onOpenToday={() => openDate(today)}
+            onOpenProfile={() => tab("profile")}
+          />
+        )}
 
         <PWAStatus />
       </main>

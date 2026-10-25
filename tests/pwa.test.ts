@@ -12,7 +12,7 @@ test("manifest has installable icons with real matching PNG dimensions", () => {
   assert.equal(manifest.scope, "/");
   assert.ok(manifest.name && manifest.short_name && manifest.id);
   for (const icon of manifest.icons) {
-    const png = readFileSync(`public${icon.src}`);
+    const png = readFileSync(`public${icon.src.split("?")[0]}`);
     const [width, height] = icon.sizes.split("x").map(Number);
     assert.equal(png.readUInt32BE(16), width);
     assert.equal(png.readUInt32BE(20), height);

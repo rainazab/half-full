@@ -175,7 +175,7 @@ test("Runway uses the verified five-second contract and never retries a task POS
 test("video preparation requires an approved story and exact retained keyframe references", async () => {
   const f = fixture();
   const prepared = await prepareVideo(request, f.deps);
-  assert.equal(prepared.manifest.narration.mapping, "authored-loop");
+  assert.equal(prepared.manifest.narration.mapping, "authored-once");
   assert.equal(prepared.manifest.clips[0].source.assetKey, "ASSET-test");
   assert.equal(f.submissions(), 0);
   f.storyboard.scenes[0].evidence[0].passageId = "invented";
@@ -324,7 +324,7 @@ test("video manifest requires a real task and cached MP4 before ready, and serve
   broken.status = "ready";
   broken.clips[0].status = "ready";
   assert.equal(parseVideoManifest(broken), null);
-  assert.equal(videoTimeForNarration(13.5), 3.5);
+  assert.equal(videoTimeForNarration(13.5), 4.96);
   assert.equal(videoTimeForNarration(NaN), 0);
   const response = videoResponse(mp4, "bytes=0-3");
   assert.equal(response.status, 206);

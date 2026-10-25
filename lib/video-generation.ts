@@ -160,7 +160,7 @@ export async function prepareVideo(
     disclosure: "AI-generated illustration, not documentary footage.",
     narration: {
       scriptHash,
-      mapping: "authored-loop",
+      mapping: "authored-once",
       description:
         "A five-second illustrated visual loop follows the narration clock. Pause and seek follow audio; this is not word-level synchronization.",
     },

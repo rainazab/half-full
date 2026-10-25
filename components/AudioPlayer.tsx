@@ -24,6 +24,7 @@ export type PlaybackController = {
   currentTime: () => number;
   duration: () => number;
   isPlaying: () => boolean;
+  playbackRate?: () => number;
 };
 export default function AudioPlayer({
   story,
@@ -190,6 +191,7 @@ export default function AudioPlayer({
       currentTime: () => audio.current?.currentTime ?? 0,
       duration: () => duration,
       isPlaying: () => !!audio.current && !audio.current.paused,
+      playbackRate: () => audio.current?.playbackRate ?? 1,
     };
     return () => {
       controller.current = null;

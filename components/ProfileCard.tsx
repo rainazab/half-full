@@ -18,6 +18,7 @@ export function ProfileAvatar({ profile }: { profile: ProfileState }) {
 }
 export default function ProfileCard({ profile }: { profile: ProfileState }) {
   const { user, ready, signingIn, sync, error, login, logout, retry } = profile;
+  if(!ready)return <section className="profile-inline-account" role="status">Restoring your account…</section>;
   return (
     <section className="profile-inline-account" aria-label="Your profile">
       {user ? (

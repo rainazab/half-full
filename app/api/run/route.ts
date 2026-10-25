@@ -64,7 +64,9 @@ export async function POST(request: Request) {
       finishRun(run);
       throw error;
     }
+    release.assertOwned?.();
     await dailyStore.admit(date);
+    release.assertOwned?.();
     run = createRun(date);
     if (request.headers.get("accept")?.includes("application/x-ndjson")) {
       const record = run;
@@ -96,7 +98,11 @@ export async function POST(request: Request) {
                 type: "error",
                 failure: {
                   runId: record.id,
-                  error: { code: safe.code, message: safe.message },
+                  error: {
+                    code: safe.code,
+                    message: safe.message,
+                    retryAt: safe.retryAt,
+                  },
                   rejectedStories: record.rejectedStories ?? [],
                   stats: record.stats,
                   runLog: record.runLog,
@@ -144,7 +150,11 @@ export async function POST(request: Request) {
             type: "error",
             failure: {
               runId: run.id,
-              error: { code: safe.code, message: safe.message },
+              error: {
+                code: safe.code,
+                message: safe.message,
+                retryAt: safe.retryAt,
+              },
               rejectedStories: [],
               runLog: run.runLog,
             },
@@ -163,13 +173,29 @@ export async function POST(request: Request) {
     return json(
       {
         runId: run?.id,
-        error: { code: safe.code, message: safe.message },
+        error: {
+          code: safe.code,
+          message: safe.message,
+          retryAt: safe.retryAt,
+        },
         rejectedStories: run?.rejectedStories ?? [],
         stats: run?.stats ?? { candidatesFound: 0, approved: 0, rejected: 0 },
         runLog: run?.runLog ?? [],
       },
       safe.status,
-      run ? { "X-Run-Id": run.id, Location: `/api/run/${run.id}` } : undefined,
+      {
+        ...(run ? { "X-Run-Id": run.id, Location: `/api/run/${run.id}` } : {}),
+        ...(safe.retryAt
+          ? {
+              "Retry-After": String(
+                Math.max(
+                  1,
+                  Math.ceil((Date.parse(safe.retryAt) - Date.now()) / 1000),
+                ),
+              ),
+            }
+          : {}),
+      },
     );
   }
 }

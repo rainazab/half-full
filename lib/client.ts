@@ -3,7 +3,7 @@ import type { EditionResult, RejectedStory, RunLogEntry } from "./types";
 
 export interface RunFailure {
   runId?: string;
-  error: { code: string; message: string };
+  error: { code: string; message: string; retryAt?: string };
   rejectedStories?: RejectedStory[];
   runLog?: RunLogEntry[];
 }

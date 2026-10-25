@@ -64,3 +64,13 @@ export function progressLabel(index: number, count: number) {
     ? `Complete · ${count} stories`
     : `${index + 1} of ${count}`;
 }
+
+/** Continuous edition position, including a drag between stories and the ending. */
+export function editionProgress(
+  offset: number,
+  width: number,
+  stories: number,
+) {
+  if (!(width > 0) || !(stories > 0) || !Number.isFinite(offset)) return 0;
+  return Math.max(0, Math.min(1, -offset / (width * stories)));
+}

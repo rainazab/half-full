@@ -93,8 +93,8 @@ references, narration script hash, requested five-second duration, ratio,
 durable asset size/hash and timestamp. Provider-reported estimates are labeled
 as estimates. Actual charges stay absent unless actually supplied.
 
-Playback uses an explicitly authored visual loop. Cartesia is the playback clock:
-`videoTimeForNarration(audio.currentTime)` maps it onto the five-second clip.
+Playback plays the short scene once and holds its last frame. Cartesia is the playback clock:
+`videoTimeForNarration(audio.currentTime)` clamps it to the five-second clip; it never loops to fill the narration. Legacy manifests remain readable.
 Audio pause, seek and story exit must pause/seek video. This provides consistent
 transport controls; it does not pretend to be word-level or verified semantic
 alignment. Silent watching can use the real video's own transport. Every clip

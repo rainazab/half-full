@@ -113,7 +113,9 @@ export default function OnboardingFlow({
     >
       <DitheredAtmosphere tone="lavender" intensity={0.18} />
       <header className="intro-masthead">
-        <p className="onboarding-wordmark">half full</p>
+        <p className="onboarding-wordmark">
+          <img src="/icon.png" alt="" width={28} height={28} /> half full
+        </p>
         {step !== "welcome" && (
           <button className="intro-back" onClick={back}>
             <Icon name="back" size={15} />
@@ -278,9 +280,11 @@ export default function OnboardingFlow({
       </div>
       {step !== "welcome" && (
         <div className="intro-step-indicator" aria-hidden="true">
-          {steps.slice(1).map((item) => (
-            <i key={item} className={item === step ? "active" : ""} />
-          ))}
+          <i
+            style={{
+              transform: `scaleX(${steps.indexOf(step) / (steps.length - 1)})`,
+            }}
+          />
         </div>
       )}
     </section>

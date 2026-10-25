@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { miniInputLetter } from "@/lib/mini-input";
 import type { ApprovedStory } from "@/lib/types";
 import { crosswordComplete, type Entry } from "@/lib/crossword";
 import { dailyMini, entryCells } from "@/lib/mini";
@@ -70,6 +71,7 @@ export default function Crossword({
   const [finalCell, setFinalCell] = useState<string | null>(null);
   const [flash, setFlash] = useState(false);
   const [celebrate, setCelebrate] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -167,9 +169,8 @@ export default function Crossword({
   }, [open, done, started, commitTimer]);
   const focus = (value: string) => {
     setCell(value);
-    gridRef.current
-      ?.querySelector<HTMLButtonElement>(`[data-cell="${value}"]`)
-      ?.focus({ preventScroll: true });
+    inputRef.current?.focus({ preventScroll: true });
+    inputRef.current?.setSelectionRange(0, 1);
   };
   function choose(entry: Entry) {
     setSelected(entry);
@@ -223,6 +224,7 @@ export default function Crossword({
       completedAt: new Date(now).toISOString(),
     });
     setValues(next);
+    inputRef.current?.blur();
     setDone(true);
     setChecked(false);
     setFinalCell(via);
@@ -430,6 +432,47 @@ export default function Crossword({
                   }
                 }}
               >
+                {!done && (
+                  <input
+                    ref={inputRef}
+                    className="mini-cell-input"
+                    type="text"
+                    inputMode="text"
+                    autoCapitalize="characters"
+                    autoComplete="off"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    aria-label={`Letter for row ${Number(cell.split(",")[0]) + 1}, column ${Number(cell.split(",")[1]) + 1}. ${selected.number} ${selected.direction}: ${selected.clue}`}
+                    aria-describedby="mini-input-help"
+                    value=" "
+                    placeholder={values[cell] || ""}
+                    style={{
+                      left: `${Number(cell.split(",")[1]) * 20}%`,
+                      top: `${Number(cell.split(",")[0]) * 20}%`,
+                    }}
+                    onFocus={(event) =>
+                      event.currentTarget.setSelectionRange(0, 1)
+                    }
+                    onClick={() => cellClick(cell)}
+                    onChange={(event) => {
+                      const text = event.currentTarget.value;
+                      const letter = miniInputLetter(text);
+                      if (letter) type(letter);
+                      else if (text === "") type("⌫");
+                      event.currentTarget.value = " ";
+                      event.currentTarget.setSelectionRange(0, 1);
+                    }}
+                    onBeforeInput={(event) => {
+                      if (
+                        (event.nativeEvent as InputEvent).inputType ===
+                        "deleteContentBackward"
+                      ) {
+                        event.preventDefault();
+                        type("⌫");
+                      }
+                    }}
+                  />
+                )}
                 {puzzle.grid.flatMap((row, r) =>
                   row.map((letter, c) => {
                     const id = `${r},${c}`,
@@ -440,7 +483,7 @@ export default function Crossword({
                       <button
                         key={id}
                         data-cell={id}
-                        tabIndex={cell === id ? 0 : -1}
+                        tabIndex={done && cell === id ? 0 : -1}
                         aria-label={`Row ${r + 1}, column ${c + 1}${start ? `, ${start.number}` : ""}: ${values[id] || "empty"}`}
                         aria-pressed={cell === id}
                         className={`crossword-cell ${entryCells(selected).includes(id) ? "selected" : ""} ${cell === id ? "current" : ""} ${checked && values[id] && values[id] !== letter ? "incorrect" : ""} ${finalCell === id ? "settle" : ""}`}
@@ -459,6 +502,9 @@ export default function Crossword({
                   }),
                 )}
               </div>
+              <p id="mini-input-help" className="mini-input-help">
+                Tap a square to type. Tap it again to switch direction.
+              </p>
               <div className="mini-assists">
                 <button
                   disabled={done}
@@ -481,23 +527,6 @@ export default function Crossword({
                   Close
                 </button>
               </div>
-              {!done && (
-                <div className="mini-keyboard" aria-label="Letter keyboard">
-                  {["QWERTYUIOP", "ASDFGHJKL", "ZXCVBNM⌫"].map((row) => (
-                    <div key={row}>
-                      {[...row].map((letter) => (
-                        <button
-                          key={letter}
-                          aria-label={letter === "⌫" ? "Delete letter" : letter}
-                          onClick={() => type(letter)}
-                        >
-                          {letter}
-                        </button>
-                      ))}
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
             <details className="mini-clue-library">
               <summary>All clues</summary>

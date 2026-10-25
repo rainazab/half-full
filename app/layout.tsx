@@ -12,7 +12,6 @@ export const metadata: Metadata = {
   description: "Your daily news, in perspective.",
   manifest: "/manifest.webmanifest",
   appleWebApp: { capable: true, statusBarStyle: "default", title: "half full" },
-  icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
 };
 export const viewport: Viewport = {
   width: "device-width",

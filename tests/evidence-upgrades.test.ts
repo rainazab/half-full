@@ -200,17 +200,17 @@ test("global budgets reserve room for today, apply retry cooldowns, cap each dat
   let ledger = admitGeneration(null, "2026-10-01", today, 0);
   assert.throws(
     () => admitGeneration(ledger, "2026-10-01", today, 1),
-    /ten minutes/,
+    /120 seconds/,
   );
   ledger = admitGeneration(ledger, "2026-10-01", today, 600001);
-  ledger = admitGeneration(ledger, "2026-10-01", today, 1200002);
+  for(let i=2;i<6;i++) ledger = admitGeneration(ledger, "2026-10-01", today, i*600001);
   assert.throws(
-    () => admitGeneration(ledger, "2026-10-01", today, 1800003),
+    () => admitGeneration(ledger, "2026-10-01", today, 4000000),
     /generation limit/,
   );
   ledger = {
     day: today,
-    attempts: Array.from({ length: 8 }, (_, i) => ({
+    attempts: Array.from({ length: 40 }, (_, i) => ({
       date: `2026-09-${String(i + 1).padStart(2, "0")}`,
       at: 0,
     })),
@@ -221,7 +221,7 @@ test("global budgets reserve room for today, apply retry cooldowns, cap each dat
   );
   assert.equal(
     admitGeneration(ledger, today, today, 999999).attempts.length,
-    9,
+    41,
   );
   assert.equal(
     admitGeneration(ledger, today, "2026-10-25", 999999).attempts.length,

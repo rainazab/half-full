@@ -1,6 +1,22 @@
 "use client";
 import { getApp, getApps, initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  getAuth,
+  setPersistence,
+  browserLocalPersistence,
+} from "firebase/auth";
+let persistence: Promise<void> | undefined;
+export function persistentAuth() {
+  const client = firebaseClient();
+  if (!client) return Promise.resolve();
+  return (persistence ??= setPersistence(
+    client.auth,
+    browserLocalPersistence,
+  ).catch((error) => {
+    persistence = undefined;
+    throw error;
+  }));
+}
 import { getFirestore } from "firebase/firestore";
 
 // These are Firebase's public web-app identifiers, never Admin SDK credentials.

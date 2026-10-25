@@ -28,6 +28,7 @@ import AudioPlayer, {
 } from "./AudioPlayer";
 import IllustratedStoryPlayer from "./IllustratedStoryPlayer";
 import {
+  editionProgress,
   DECK_ELASTIC,
   DECK_SPRING,
   isInteractiveTarget,
@@ -136,8 +137,8 @@ export default function EditionReader({
           ? previous
           : { ...previous, [i]: state };
       }));
-  const [silentVideos,setSilentVideos] = useState<Record<string,boolean>>({});
-  const [brokenVideos,setBrokenVideos] = useState<string[]>([]);
+  const [silentVideos, setSilentVideos] = useState<Record<string, boolean>>({});
+  const [brokenVideos, setBrokenVideos] = useState<string[]>([]);
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [arrived, setArrived] = useState(false);
   const completed = useRef(false);
@@ -159,7 +160,10 @@ export default function EditionReader({
     x,
     blend((item) => item.glow),
   );
-  const tint = useTransform(x, blend(item=>item.tint));
+  const tint = useTransform(
+    x,
+    blend((item) => item.tint),
+  );
   // The deck owns the viewport while reading: the document itself must not scroll.
   useEffect(() => {
     document.documentElement.classList.add("deck-open");
@@ -182,7 +186,8 @@ export default function EditionReader({
   const goTo = useCallback(
     (target: number, immediate = false) => {
       const next = Math.max(0, Math.min(count - 1, target));
-      if(next !== indexRef.current) controllers.current[indexRef.current]?.pause();
+      if (next !== indexRef.current)
+        controllers.current[indexRef.current]?.pause();
       indexRef.current = next;
       setIndex(next);
       const offset = pageOffset(next, deck.current?.clientWidth ?? width);
@@ -238,34 +243,41 @@ export default function EditionReader({
       }),
     );
   }
+  const editionFill = useTransform(x, (value) =>
+    editionProgress(value, width, stories.length),
+  );
   const finished = index >= stories.length;
   return (
     <motion.section
       className="edition-reader story-deck-reader"
       aria-label="Finite edition"
-      style={{
-        ...themeVariables(themes[Math.min(index, themes.length - 1)]),
-        "--story-top":top, "--story-glow":glow,"--story-tint":tint,
-      } as MotionStyle}
+      style={
+        {
+          ...themeVariables(themes[Math.min(index, themes.length - 1)]),
+          "--story-top": top,
+          "--story-glow": glow,
+          "--story-tint": tint,
+        } as MotionStyle
+      }
     >
-      <DitheredAtmosphere tone="story" intensity={0.14}/>
+      <DitheredAtmosphere tone="story" intensity={0.14} />
       <header className="deck-top">
         <div
           className={`deck-progress${finished ? " complete" : ""}`}
           role="progressbar"
-          aria-valuemin={1}
-          aria-valuemax={stories.length}
-          aria-valuenow={Math.min(index + 1, stories.length)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={Math.round(
+            (index / Math.max(1, stories.length)) * 100,
+          )}
+          aria-valuetext={
+            index < stories.length
+              ? `Story ${progressLabel(index, stories.length)}`
+              : progressLabel(index, stories.length)
+          }
           aria-label={progressLabel(index, stories.length)}
         >
-          {stories.map((s, i) => (
-            <i
-              key={s.id}
-              className={
-                i < index || finished ? "done" : i === index ? "now" : ""
-              }
-            />
-          ))}
+          <motion.i style={{ scaleX: editionFill }} />
         </div>
         <div className="deck-topbar">
           <button
@@ -301,7 +313,10 @@ export default function EditionReader({
           dragElastic={DECK_ELASTIC}
           dragConstraints={{ left: pageOffset(count - 1, width), right: 0 }}
           onDragEnd={onDragEnd}
-          onDirectionLock={(direction)=>{if(direction==="x") controllers.current[indexRef.current]?.pause();}}
+          onDirectionLock={(direction) => {
+            if (direction === "x")
+              controllers.current[indexRef.current]?.pause();
+          }}
           onPointerDown={(event) => {
             if (reduced || isInteractiveTarget(event.target)) return;
             controls.start(event);
@@ -315,7 +330,10 @@ export default function EditionReader({
               displayableScenes(storyboard).length > 0 &&
               !unavailable.includes(story.id);
             const video = videos[story.id];
-            const realVideo = !!video?.clips.some(clip=>clip.status==="ready" && clip.asset) && !brokenVideos.includes(story.id);
+            const realVideo =
+              !!video?.clips.some(
+                (clip) => clip.status === "ready" && clip.asset,
+              ) && !brokenVideos.includes(story.id);
             const silent = !!silentVideos[story.id];
             return (
               <DeckPage
@@ -339,7 +357,24 @@ export default function EditionReader({
                   <h2 id={`story-${i + 1}-title`} tabIndex={-1}>
                     {story.headline}
                   </h2>
-                  {realVideo ? <StoryVideoStage manifest={video} active={active && i===index} playback={playback[i]} getController={()=>controllers.current[i] ?? null} silent={silent} onSilentChange={value=>setSilentVideos(previous=>({...previous,[story.id]:value}))} onUnavailable={()=>setBrokenVideos(previous=>[...previous,story.id])}/> : illustrated ? (
+                  {realVideo ? (
+                    <StoryVideoStage
+                      manifest={video}
+                      active={active && i === index}
+                      playback={playback[i]}
+                      getController={() => controllers.current[i] ?? null}
+                      silent={silent}
+                      onSilentChange={(value) =>
+                        setSilentVideos((previous) => ({
+                          ...previous,
+                          [story.id]: value,
+                        }))
+                      }
+                      onUnavailable={() =>
+                        setBrokenVideos((previous) => [...previous, story.id])
+                      }
+                    />
+                  ) : illustrated ? (
                     <IllustratedStoryPlayer
                       key={`illustrated-${story.id}`}
                       manifest={storyboard!}
@@ -354,33 +389,55 @@ export default function EditionReader({
                   ) : (
                     <StoryVisual story={story} />
                   )}
-                  <div className="narration-controls" hidden={realVideo && silent}>
-                  <AudioPlayer
-                    key={story.id}
-                    story={story}
-                    editionId={editionId}
-                    demo={demo}
-                    active={active && i === index && !(realVideo && silent)}
-                    through={through}
-                    onThrough={setThrough}
-                    autoPlay={autoPlayIndex === i}
-                    preferences={preferences}
-                    onPreferences={onPreferences}
-                    onPlayback={playbackHandler(i)}
-                    controller={controllerRef(i)}
-                    onPrevious={i > 0 ? () => goTo(i - 1) : undefined}
-                    onNext={() => goTo(i + 1)}
-                    transportLabel={
-                      i + 1 < stories.length ? "Next story" : "Finish"
-                    }
-                    onEnded={() => {
-                      // Listen-through is the only mode that turns the page by itself.
-                      if (i + 1 < stories.length) setAutoPlayIndex(i + 1);
-                      goTo(i + 1);
-                    }}
-                  />
+                  <div
+                    className="narration-controls"
+                    hidden={realVideo && silent}
+                  >
+                    <AudioPlayer
+                      key={story.id}
+                      story={story}
+                      editionId={editionId}
+                      demo={demo}
+                      active={active && i === index && !(realVideo && silent)}
+                      through={through}
+                      onThrough={setThrough}
+                      autoPlay={autoPlayIndex === i}
+                      preferences={preferences}
+                      onPreferences={onPreferences}
+                      onPlayback={playbackHandler(i)}
+                      controller={controllerRef(i)}
+                      onPrevious={i > 0 ? () => goTo(i - 1) : undefined}
+                      onNext={() => goTo(i + 1)}
+                      transportLabel={
+                        i + 1 < stories.length ? "Next story" : "Finish"
+                      }
+                      onEnded={() => {
+                        // Listen-through is the only mode that turns the page by itself.
+                        if (i + 1 < stories.length) setAutoPlayIndex(i + 1);
+                        goTo(i + 1);
+                      }}
+                    />
                   </div>
-                  {realVideo && silent && <div className="silent-transport"><button onClick={()=>goTo(i-1)} disabled={i===0} aria-label="Previous story"><Icon name="back" size={20}/></button><span>Silent viewing</span><button onClick={()=>goTo(i+1)} aria-label={i+1<stories.length?"Next story":"Finish"}><Icon name="next" size={20}/></button></div>}
+                  {realVideo && silent && (
+                    <div className="silent-transport">
+                      <button
+                        onClick={() => goTo(i - 1)}
+                        disabled={i === 0}
+                        aria-label="Previous story"
+                      >
+                        <Icon name="back" size={20} />
+                      </button>
+                      <span>Silent viewing</span>
+                      <button
+                        onClick={() => goTo(i + 1)}
+                        aria-label={
+                          i + 1 < stories.length ? "Next story" : "Finish"
+                        }
+                      >
+                        <Icon name="next" size={20} />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="story-sheet">
                   <FollowAlong
@@ -500,14 +557,32 @@ export default function EditionReader({
               className={`ending${arrived ? " arrived" : ""}`}
               aria-label="End of the edition"
             >
-              <BrandWorldArtwork variant="completion" className="ending-art"/>
-              <p className="ending-kicker">A little perspective. A whole day ahead.</p>
+              <BrandWorldArtwork variant="completion" className="ending-art" />
+              <p className="ending-kicker">
+                A little perspective. A whole day ahead.
+              </p>
               <h2 tabIndex={-1}>You’re caught up.</h2>
               <p>{stories.length} stories. Your edition is complete.</p>
               <div className="ending-actions">
-                <button className="primary ending-cover" onClick={onExit}>Back to your day<Icon name="next" size={18}/></button>
-                {onMini && <button className="ending-mini" onClick={onMini}><Icon name="mini" size={18}/>Try the Mini</button>}
-                <button className="ending-reread" onClick={()=>{setArrived(false);goTo(0);}}>Read again</button>
+                <button className="primary ending-cover" onClick={onExit}>
+                  Back to your day
+                  <Icon name="next" size={18} />
+                </button>
+                {onMini && (
+                  <button className="ending-mini" onClick={onMini}>
+                    <Icon name="mini" size={18} />
+                    Try the Mini
+                  </button>
+                )}
+                <button
+                  className="ending-reread"
+                  onClick={() => {
+                    setArrived(false);
+                    goTo(0);
+                  }}
+                >
+                  Read again
+                </button>
               </div>
             </article>
           </DeckPage>
@@ -537,7 +612,12 @@ function DeckPage({
   children: React.ReactNode;
 }) {
   const page = useRef<HTMLElement>(null);
-  useEffect(()=>{if(active) page.current?.querySelector<HTMLElement>("h2")?.focus({preventScroll:true});},[active]);
+  useEffect(() => {
+    if (active)
+      page.current
+        ?.querySelector<HTMLElement>("h2")
+        ?.focus({ preventScroll: true });
+  }, [active]);
   const scale = useTransform(
     x,
     (value) => neighbourStyle(value, index, width).scale,
