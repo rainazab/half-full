@@ -1,0 +1,108 @@
+/* Original half full micro-pigment system. A single static 512px tile supplies
+   1px tonal detail; gradients carry the color. No canvas or runtime SVG filters. */
+.dithered-atmosphere {
+  --atmosphere-default-base: #f9f7f2;
+  --atmosphere-default-accent: #ccb9ff;
+  --atmosphere-default-secondary: #e4dcff;
+  --atmosphere-default-grain: .17;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  isolation: isolate;
+  contain: paint;
+  background: var(--atmosphere-base, var(--atmosphere-default-base));
+}
+.dithered-atmosphere[data-tone="home"] {
+  --atmosphere-default-accent: #d3c5f5;
+  --atmosphere-default-secondary: #d3ebd8;
+}
+.dithered-atmosphere[data-tone="mint"] {
+  --atmosphere-default-accent: #b8dbcc;
+  --atmosphere-default-secondary: #dfd6f5;
+}
+.dithered-atmosphere[data-tone="butter"] {
+  --atmosphere-default-base: #fbf7e9;
+  --atmosphere-default-accent: #f1dea3;
+  --atmosphere-default-secondary: #ddd1f5;
+}
+.dithered-atmosphere[data-tone="peach"] {
+  --atmosphere-default-accent: #c7b1f1;
+  --atmosphere-default-secondary: #f4c7b6;
+}
+.dithered-atmosphere[data-tone="forest"] {
+  --atmosphere-default-base: #193b31;
+  --atmosphere-default-accent: #426a59;
+  --atmosphere-default-secondary: #a59cbd;
+  --atmosphere-default-grain: .12;
+}
+.dithered-atmosphere[data-tone="story"] {
+  --atmosphere-default-base: var(--story-top, #31465e);
+  --atmosphere-default-accent: var(--story-glow, #c4b6e8);
+  --atmosphere-default-secondary: var(--story-tint, #e4dcff);
+  --atmosphere-default-grain: .15;
+}
+.atmosphere-fields,
+.atmosphere-pigment,
+.atmosphere-light {
+  position: absolute;
+  inset: 0;
+}
+.atmosphere-fields {
+  /* Three unequal ellipses dissolve toward the paper; no straight ramp. */
+  background:
+    radial-gradient(ellipse 92% 83% at var(--atmosphere-glow-x, 96%) var(--atmosphere-glow-y, 86%),
+      var(--atmosphere-accent, var(--atmosphere-default-accent)) 0%,
+      color-mix(in srgb, var(--atmosphere-accent, var(--atmosphere-default-accent)) 57%, transparent) 35%,
+      transparent 77%),
+    radial-gradient(ellipse 81% 63% at var(--atmosphere-secondary-x, 74%) var(--atmosphere-secondary-y, 12%),
+      color-mix(in srgb, var(--atmosphere-secondary, var(--atmosphere-default-secondary)) 89%, transparent) 0%,
+      color-mix(in srgb, var(--atmosphere-secondary, var(--atmosphere-default-secondary)) 38%, transparent) 44%,
+      transparent 81%),
+    radial-gradient(ellipse 66% 49% at 0% 53%,
+      color-mix(in srgb, var(--atmosphere-secondary, var(--atmosphere-default-secondary)) 40%, transparent),
+      transparent 79%);
+}
+.atmosphere-pigment {
+  background-image: url("/textures/half-full-pigment.png");
+  background-repeat: repeat;
+  background-size: var(--atmosphere-grain-size, 512px);
+  /* Soft-light colors the pigment from the underlying field. A radial mask
+     gives the cream paper a clean rest area instead of a dirty noise blanket. */
+  mix-blend-mode: soft-light;
+  opacity: var(--atmosphere-grain, var(--atmosphere-default-grain));
+  mask-image:
+    radial-gradient(ellipse 108% 91% at var(--atmosphere-glow-x, 96%) var(--atmosphere-glow-y, 86%), #000 14%, #000b 59%, #0002 100%);
+  -webkit-mask-image:
+    radial-gradient(ellipse 108% 91% at var(--atmosphere-glow-x, 96%) var(--atmosphere-glow-y, 86%), #000 14%, #000b 59%, #0002 100%);
+}
+.atmosphere-light {
+  background:
+    radial-gradient(ellipse 81% 70% at -8% -8%,
+      color-mix(in srgb, var(--atmosphere-base, var(--atmosphere-default-base)) 95%, transparent) 4%,
+      transparent 82%);
+}
+.dithered-atmosphere[data-tone="story"] .atmosphere-fields {
+  background:
+    radial-gradient(ellipse 92% 68% at var(--atmosphere-glow-x, 96%) var(--atmosphere-glow-y, 65%),
+      color-mix(in srgb, var(--atmosphere-accent, var(--atmosphere-default-accent)) 83%, transparent),
+      transparent 77%),
+    radial-gradient(ellipse 86% 59% at 6% 78%,
+      color-mix(in srgb, var(--atmosphere-secondary, var(--atmosphere-default-secondary)) 59%, transparent),
+      transparent 88%);
+}
+/* Texture is static at every motion setting. If a parent opts into a gentle
+   color transition, reduced-motion explicitly removes that transition. */
+@media (prefers-reduced-motion: reduce) {
+  .dithered-atmosphere,
+  .dithered-atmosphere > div {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+.dithered-atmosphere[data-reduced-motion] > div {
+  transition: none !important;
+  animation: none !important;
+}

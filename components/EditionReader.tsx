@@ -4,7 +4,6 @@ import {
   animate,
   motion,
   useDragControls,
-  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useTransform,
@@ -12,10 +11,13 @@ import {
   type PanInfo,
 } from "motion/react";
 import FollowAlong from "./FollowAlong";
+import DitheredAtmosphere from "./DitheredAtmosphere";
+import BrandWorldArtwork from "./BrandWorldArtwork";
+import StoryVideoStage from "./StoryVideoStage";
+import type { VideoIndex } from "@/lib/video";
+import type { MotionStyle } from "motion/react";
 import { narrationFor } from "@/lib/narration";
 import type { ApprovedStory } from "@/lib/types";
-import Crossword from "./Crossword";
-import Charm from "./Charm";
 import StoryReceipts from "./StoryReceipts";
 import Icon from "./Icon";
 import StoryReactions from "./StoryReactions";
@@ -69,6 +71,8 @@ export default function EditionReader({
   preferences = defaultPreferences(),
   onPreferences = () => {},
   storyboards = {},
+  videos = {},
+  onMini,
 }: {
   initialListen?: boolean;
   onExit?: () => void;
@@ -85,6 +89,8 @@ export default function EditionReader({
   preferences?: ListeningPreferences;
   onPreferences?: (patch: Partial<ListeningPreferences>) => void;
   storyboards?: StoryboardIndex;
+  videos?: VideoIndex;
+  onMini?: () => void;
 }) {
   const count = stories.length + 1;
   const [index, setIndex] = useState(
@@ -130,6 +136,8 @@ export default function EditionReader({
           ? previous
           : { ...previous, [i]: state };
       }));
+  const [silentVideos,setSilentVideos] = useState<Record<string,boolean>>({});
+  const [brokenVideos,setBrokenVideos] = useState<string[]>([]);
   const [unavailable, setUnavailable] = useState<string[]>([]);
   const [arrived, setArrived] = useState(false);
   const completed = useRef(false);
@@ -151,8 +159,7 @@ export default function EditionReader({
     x,
     blend((item) => item.glow),
   );
-  const sheet = useTransform(glow, (value) => mixColor(value, "#ffffff", 0.82));
-  const background = useMotionTemplate`linear-gradient(180deg, ${top} 0%, ${glow} 42%, ${sheet} 100%)`;
+  const tint = useTransform(x, blend(item=>item.tint));
   // The deck owns the viewport while reading: the document itself must not scroll.
   useEffect(() => {
     document.documentElement.classList.add("deck-open");
@@ -175,6 +182,7 @@ export default function EditionReader({
   const goTo = useCallback(
     (target: number, immediate = false) => {
       const next = Math.max(0, Math.min(count - 1, target));
+      if(next !== indexRef.current) controllers.current[indexRef.current]?.pause();
       indexRef.current = next;
       setIndex(next);
       const offset = pageOffset(next, deck.current?.clientWidth ?? width);
@@ -236,10 +244,11 @@ export default function EditionReader({
       className="edition-reader story-deck-reader"
       aria-label="Finite edition"
       style={{
-        backgroundImage: background,
         ...themeVariables(themes[Math.min(index, themes.length - 1)]),
-      }}
+        "--story-top":top, "--story-glow":glow,"--story-tint":tint,
+      } as MotionStyle}
     >
+      <DitheredAtmosphere tone="story" intensity={0.14}/>
       <header className="deck-top">
         <div
           className={`deck-progress${finished ? " complete" : ""}`}
@@ -292,6 +301,7 @@ export default function EditionReader({
           dragElastic={DECK_ELASTIC}
           dragConstraints={{ left: pageOffset(count - 1, width), right: 0 }}
           onDragEnd={onDragEnd}
+          onDirectionLock={(direction)=>{if(direction==="x") controllers.current[indexRef.current]?.pause();}}
           onPointerDown={(event) => {
             if (reduced || isInteractiveTarget(event.target)) return;
             controls.start(event);
@@ -304,6 +314,9 @@ export default function EditionReader({
               date !== undefined &&
               displayableScenes(storyboard).length > 0 &&
               !unavailable.includes(story.id);
+            const video = videos[story.id];
+            const realVideo = !!video?.clips.some(clip=>clip.status==="ready" && clip.asset) && !brokenVideos.includes(story.id);
+            const silent = !!silentVideos[story.id];
             return (
               <DeckPage
                 key={story.id}
@@ -326,7 +339,7 @@ export default function EditionReader({
                   <h2 id={`story-${i + 1}-title`} tabIndex={-1}>
                     {story.headline}
                   </h2>
-                  {illustrated ? (
+                  {realVideo ? <StoryVideoStage manifest={video} active={active && i===index} playback={playback[i]} getController={()=>controllers.current[i] ?? null} silent={silent} onSilentChange={value=>setSilentVideos(previous=>({...previous,[story.id]:value}))} onUnavailable={()=>setBrokenVideos(previous=>[...previous,story.id])}/> : illustrated ? (
                     <IllustratedStoryPlayer
                       key={`illustrated-${story.id}`}
                       manifest={storyboard!}
@@ -341,12 +354,13 @@ export default function EditionReader({
                   ) : (
                     <StoryVisual story={story} />
                   )}
+                  <div className="narration-controls" hidden={realVideo && silent}>
                   <AudioPlayer
                     key={story.id}
                     story={story}
                     editionId={editionId}
                     demo={demo}
-                    active={active && i === index}
+                    active={active && i === index && !(realVideo && silent)}
                     through={through}
                     onThrough={setThrough}
                     autoPlay={autoPlayIndex === i}
@@ -365,6 +379,8 @@ export default function EditionReader({
                       goTo(i + 1);
                     }}
                   />
+                  </div>
+                  {realVideo && silent && <div className="silent-transport"><button onClick={()=>goTo(i-1)} disabled={i===0} aria-label="Previous story"><Icon name="back" size={20}/></button><span>Silent viewing</span><button onClick={()=>goTo(i+1)} aria-label={i+1<stories.length?"Next story":"Finish"}><Icon name="next" size={20}/></button></div>}
                 </div>
                 <div className="story-sheet">
                   <FollowAlong
@@ -484,34 +500,15 @@ export default function EditionReader({
               className={`ending${arrived ? " arrived" : ""}`}
               aria-label="End of the edition"
             >
-              <div className="ending-charm">
-                <Charm mood="mint" />
-                <span className="ending-halo" aria-hidden="true" />
-              </div>
+              <BrandWorldArtwork variant="completion" className="ending-art"/>
+              <p className="ending-kicker">A little perspective. A whole day ahead.</p>
               <h2 tabIndex={-1}>You’re caught up.</h2>
-              <p>
-                {stories.length} {stories.length === 1 ? "story" : "stories"}{" "}
-                read. That’s the whole edition.
-              </p>
-              <p className="ending-note">
-                Nothing more to swipe. Come back tomorrow, or take a minute with
-                the Mini.
-              </p>
+              <p>{stories.length} stories. Your edition is complete.</p>
               <div className="ending-actions">
-                <button className="ending-cover" onClick={onExit}>
-                  Back to your edition
-                </button>
-                <button
-                  className="quiet"
-                  onClick={() => {
-                    setArrived(false);
-                    goTo(0);
-                  }}
-                >
-                  Read again ↗
-                </button>
+                <button className="primary ending-cover" onClick={onExit}>Back to your day<Icon name="next" size={18}/></button>
+                {onMini && <button className="ending-mini" onClick={onMini}><Icon name="mini" size={18}/>Try the Mini</button>}
+                <button className="ending-reread" onClick={()=>{setArrived(false);goTo(0);}}>Read again</button>
               </div>
-              <Crossword stories={stories} demo={demo} date={date} />
             </article>
           </DeckPage>
         </motion.div>
@@ -539,6 +536,8 @@ function DeckPage({
   theme: StoryTheme;
   children: React.ReactNode;
 }) {
+  const page = useRef<HTMLElement>(null);
+  useEffect(()=>{if(active) page.current?.querySelector<HTMLElement>("h2")?.focus({preventScroll:true});},[active]);
   const scale = useTransform(
     x,
     (value) => neighbourStyle(value, index, width).scale,
@@ -550,6 +549,7 @@ function DeckPage({
   return (
     <motion.article
       id={id}
+      ref={page}
       className={`deck-page theme-${theme.id}${active ? " is-current" : ""}`}
       style={{ scale, opacity, ...themeVariables(theme) }}
       aria-label={label}

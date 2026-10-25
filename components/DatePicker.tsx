@@ -1,5 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import DitheredAtmosphere from "./DitheredAtmosphere";
+import Icon from "./Icon";
 import {
   dateLabel,
   earliestEditionDay,
@@ -13,6 +15,7 @@ export default function DatePicker({
   date,
   today,
   entries,
+  completedDays = [],
   onClose,
   onSelect,
 }: {
@@ -20,6 +23,7 @@ export default function DatePicker({
   date: string;
   today: string;
   entries: ArchiveEntry[];
+  completedDays?: string[];
   onClose: () => void;
   onSelect: (day: string) => void;
 }) {
@@ -77,6 +81,7 @@ export default function DatePicker({
       }}
     >
       <div className="date-picker-content">
+        <DitheredAtmosphere tone="lavender" intensity={0.09} />
         <div className="date-picker-heading">
           <div>
             <h2 id="date-picker-title">Pick a day.</h2>
@@ -91,7 +96,7 @@ export default function DatePicker({
           </button>
         </div>
         <p className="date-picker-intro">
-          Daily editions from the last ten years.
+          Open a little window into another day.
         </p>
         <div className="date-month-controls">
           <button
@@ -185,6 +190,7 @@ export default function DatePicker({
           ))}
           {Array.from({ length: days }, (_, i) => {
             const day = `${month}-${String(i + 1).padStart(2, "0")}`;
+            const completed = completedDays.includes(day);
             const saved = entries.some(
               (e) => e.date === day && e.mode === "live",
             );
@@ -194,10 +200,10 @@ export default function DatePicker({
                 key={day}
                 data-day={day}
                 disabled={!selectableDay(day, today)}
-                aria-label={`${dateLabel(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${saved ? ", saved edition" : ""}`}
+                aria-label={`${dateLabel(day, { weekday: "long", month: "long", day: "numeric", year: "numeric" })}${completed ? ", finished edition" : saved ? ", published edition" : ", not prepared yet"}`}
                 aria-pressed={date === day}
                 aria-current={day === today ? "date" : undefined}
-                className={`${saved ? "saved" : ""} ${day === today ? "is-today" : ""}`}
+                className={`${saved ? "saved" : ""} ${completed ? "completed" : ""} ${day === today ? "is-today" : ""}`}
                 onClick={() => pick(day)}
                 onKeyDown={(event) => {
                   const delta = {
@@ -230,6 +236,29 @@ export default function DatePicker({
             Today
           </button>
         </div>
+        <div className="date-current-edition">
+          <Icon name="calendar" size={21} />
+          <div>
+            <strong>
+              {dateLabel(date, {
+                weekday: "short",
+                month: "short",
+                day: "numeric",
+                year: "numeric",
+              })}
+            </strong>
+            <small>
+              {completedDays.includes(date)
+                ? "Finished · in your jar"
+                : entries.some(
+                      (entry) => entry.date === date && entry.mode === "live",
+                    )
+                  ? "Published edition"
+                  : "Not prepared yet"}
+              . Choose a date to open it.
+            </small>
+          </div>
+        </div>
         <form
           className="date-jump"
           onSubmit={(event) => {
@@ -249,7 +278,7 @@ export default function DatePicker({
               required
             />
             <button type="submit" disabled={!selectableDay(jump, today)}>
-              Go ↗
+              Open ↗
             </button>
           </div>
         </form>

@@ -1,9 +1,11 @@
 "use client";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useId } from "react";
+import DitheredAtmosphere from "./DitheredAtmosphere";
 import { formatClock } from "@/lib/mini-timer";
 
 /** Original celebrating half full character; same blob family as the reaction stickers. */
 export function CelebrationCharm() {
+  const gradient = `celebration-${useId().replace(/:/g, "")}`;
   return (
     <svg
       className="celebration-charm"
@@ -12,7 +14,7 @@ export function CelebrationCharm() {
       focusable="false"
     >
       <defs>
-        <radialGradient id="celebration-body" cx="35%" cy="25%" r="80%">
+        <radialGradient id={gradient} cx="35%" cy="25%" r="80%">
           <stop stopColor="#e7fbe9" />
           <stop offset="1" stopColor="#a7dbc4" />
         </radialGradient>
@@ -47,7 +49,7 @@ export function CelebrationCharm() {
         />
         <path
           d="M46 58C44 36 64 30 80 36c18-8 38 0 36 22 14 6 16 28 4 38 2 20-18 34-40 30-24 6-46-8-42-30-12-10-10-32 8-38Z"
-          fill="url(#celebration-body)"
+          fill={`url(#${gradient})`}
           stroke="white"
           strokeWidth="2.5"
         />
@@ -149,8 +151,9 @@ export default function MiniCelebration({
       }}
     >
       <div className="mini-celebration-panel">
+        <DitheredAtmosphere tone="peach" intensity={0.18} />
         <p className="eyebrow">The Mini</p>
-        <h2 id="mini-celebration-title">Mini complete!</h2>
+        <h2 id="mini-celebration-title">A little win.</h2>
         <CelebrationCharm />
         <div id="mini-celebration-result">
           {ms !== null && (
@@ -166,7 +169,7 @@ export default function MiniCelebration({
           </p>
         </div>
         <button ref={done} className="primary celebration-done" onClick={close}>
-          Done
+          Back to my Mini
         </button>
       </div>
     </dialog>

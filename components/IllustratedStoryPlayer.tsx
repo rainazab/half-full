@@ -186,7 +186,6 @@ export default function IllustratedStoryPlayer({
     if (audioDriven) getController?.()?.seekFraction(cues[index].startFraction);
     else scene.current?.restart();
   }
-  const legend = composition?.explains ?? [];
   return (
     <figure
       className={`illustrated-story tone-${manifest.tone}${composition ? " authored" : " flat"}`}
@@ -310,17 +309,7 @@ export default function IllustratedStoryPlayer({
             {motionOn ? "Pause motion" : "Resume motion"}
           </button>
         </div>
-        {legend.length > 0 && (
-          <ul className="scene-legend">
-            {legend.map((item) => (
-              <li key={item}>{item}</li>
-            ))}
-          </ul>
-        )}
-        <p className="scene-note">
-          Illustrations drawn from the reviewed story
-          {audioDriven ? " · following the narration" : ""}. Not photographs.
-        </p>
+
       </figcaption>
     </figure>
   );

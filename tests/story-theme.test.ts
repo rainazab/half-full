@@ -7,6 +7,8 @@ import {
   mixColor,
   STORY_THEMES,
   themeForCategory,
+  themeGradient,
+  themeVariables,
 } from "../lib/story-theme";
 import {
   clearOnboarding,
@@ -77,6 +79,20 @@ test("colour mixing follows the drag position between two atmospheres", () => {
   assert.equal(mixColor("#000000", "#ffffff", 0.5), "#808080");
   assert.equal(mixColor("#1d4ed8", "#c2410c", 2), "#c2410c");
   assert.equal(mixColor("#1d4ed8", "#c2410c", -1), "#1d4ed8");
+});
+test("every drag blend preserves contrast and the reusable gradients have unequal ambient fields", () => {
+  for (const from of [...STORY_THEMES, ENDING_THEME]) {
+    for (const to of [...STORY_THEMES, ENDING_THEME]) {
+      for (const fraction of [0, .25, .5, .75, 1]) {
+        assert.ok(contrastRatio("#ffffff", mixColor(from.top, to.top, fraction)) >= 4.5);
+        assert.ok(contrastRatio(from.ink, mixColor(from.tint, to.tint, fraction)) >= 7);
+      }
+    }
+    const gradient = themeGradient(from.top, from.glow);
+    assert.equal(gradient.match(/radial-gradient/g)?.length, 2);
+    assert.equal(themeVariables(from)["--story-top"], from.top);
+    assert.equal(themeVariables(from)["--story-surface"], "#f9f7f2");
+  }
 });
 test("the intro shows once per device, never on a date deep link, and can be replayed", () => {
   const store = new Map<string, string>();

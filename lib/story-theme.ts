@@ -1,7 +1,7 @@
 import type { ApprovedStory } from "./types";
 
 /**
- * Story atmospheres. Each is a saturated hue pair: `top` is deep enough for
+ * Story atmospheres. Each is an art-directed pigment pair: `top` is deep enough for
  * white text (≥ 4.5:1), `glow` is the bright end of the gradient behind the
  * artwork and player, and the article sheet below is white with ink. Themes
  * are picked from the story's category, so a story always gets the same
@@ -39,27 +39,27 @@ const theme = (
   glow,
   tint,
   accent,
-  ink: "#17202a",
-  muted: "#55606c",
+  ink: "#20241f",
+  muted: "#596159",
   background: tint,
-  surface: "#ffffff",
+  surface: "#f9f7f2",
 });
 export const STORY_THEMES: StoryTheme[] = [
-  theme("cobalt", "Cobalt", "#1d4ed8", "#60a5fa", "#dbeafe", "#1d4ed8"),
-  theme("ember", "Ember", "#c2410c", "#fb923c", "#ffedd5", "#c2410c"),
-  theme("forest", "Forest", "#15803d", "#4ade80", "#dcfce7", "#15803d"),
-  theme("violet", "Violet", "#6d28d9", "#c084fc", "#ede9fe", "#6d28d9"),
-  theme("ochre", "Ochre", "#a16207", "#facc15", "#fef3c7", "#a16207"),
-  theme("magenta", "Magenta", "#be185d", "#f472b6", "#fce7f3", "#be185d"),
+  theme("cobalt", "Blue hour", "#293d61", "#b6b5ee", "#e7e4f7", "#3c4778"),
+  theme("ember", "Apricot", "#783f35", "#e5b29e", "#f5e3d5", "#8b4232"),
+  theme("forest", "Jade", "#245347", "#9fcbb0", "#e2eddf", "#245347"),
+  theme("violet", "Lilac", "#4c385c", "#c7b1e8", "#eee4f3", "#6b497e"),
+  theme("ochre", "Butter", "#5d5030", "#dfc682", "#f6ecd2", "#766134"),
+  theme("magenta", "Rose", "#703f57", "#e4b3bc", "#f4e3e8", "#8d4862"),
 ];
-/** The ending page rests on the brand green. */
+/** The journey resolves into lilac and the deep forest brand ink. */
 export const ENDING_THEME: StoryTheme = theme(
   "brand",
   "Brand",
-  "#2f5d4a",
-  "#8fd3b4",
-  "#dcebd9",
-  "#2f5d4a",
+  "#193b31",
+  "#bca8e1",
+  "#eadef3",
+  "#315447",
 );
 const CATEGORY_THEMES: [RegExp, string][] = [
   [/tech|software|digital|cyber|internet|ai\b|security/i, "cobalt"],
@@ -149,7 +149,8 @@ export function themeVariables(item: StoryTheme) {
     "--story-surface": item.surface,
   } as Record<string, string>;
 }
-/** Gradient behind a story: deep at the top, bright glow, then the sheet. */
+/** Broad color fields for non-component consumers; pigment lives in the shared
+ * DitheredAtmosphere so theme interpolation never regenerates its texture. */
 export function themeGradient(top: string, glow: string) {
-  return `linear-gradient(180deg, ${top} 0%, ${glow} 46%, ${mixColor(glow, "#ffffff", 0.55)} 100%)`;
+  return `radial-gradient(ellipse 100% 80% at 100% 75%, ${glow} 0%, transparent 78%), radial-gradient(ellipse 90% 60% at 8% 94%, ${mixColor(glow, "#f9f7f2", 0.65)} 0%, transparent 86%), linear-gradient(${top}, ${top})`;
 }

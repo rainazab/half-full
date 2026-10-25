@@ -1,78 +1,57 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import Charm from "./Charm";
+import DitheredAtmosphere from "./DitheredAtmosphere";
+import BrandWorldArtwork from "./BrandWorldArtwork";
 
-const STAGES = [
-  "Gathering today’s stories",
-  "Checking the receipts",
-  "Setting the mood",
-  "Ready when you are",
-];
-/**
- * The breath between the intro and the app. It covers the home screen while
- * the first edition request is still in flight, holds for a minimum beat so
- * the change of scene never feels like a hard cut, then fades away to reveal
- * the home already rendered beneath it. Copy describes real stages of the
- * pipeline without claiming more than "getting ready".
- */
+/** A short visual handoff, not an invented provider progress meter. */
 export default function HandoffScreen({
   ready,
   onDone,
+  status,
 }: {
-  /** True once the edition behind the screen has finished loading. */
   ready: boolean;
   onDone: () => void;
+  /** An actual loading message supplied by the caller, when available. */
+  status?: string;
 }) {
   const reduced = useReducedMotion();
-  const [stage, setStage] = useState(0);
   const [elapsed, setElapsed] = useState(false);
-  const minimumMs = reduced ? 600 : 1900;
   useEffect(() => {
-    const timer = window.setTimeout(() => setElapsed(true), minimumMs);
-    const ticker = window.setInterval(
-      () => setStage((value) => Math.min(STAGES.length - 1, value + 1)),
-      reduced ? 200 : 520,
+    const timer = window.setTimeout(
+      () => setElapsed(true),
+      reduced ? 300 : 950,
     );
-    return () => {
-      window.clearTimeout(timer);
-      window.clearInterval(ticker);
-    };
-  }, [minimumMs, reduced]);
+    return () => window.clearTimeout(timer);
+  }, [reduced]);
   const leaving = ready && elapsed;
   return (
     <motion.div
-      className="handoff"
+      className="library-handoff"
       role="status"
       aria-live="polite"
       initial={reduced ? false : { opacity: 0 }}
       animate={{ opacity: leaving ? 0 : 1 }}
-      transition={{
-        duration: reduced ? 0.15 : leaving ? 0.7 : 0.35,
-        ease: "easeInOut",
-      }}
+      transition={{ duration: reduced ? 0.1 : leaving ? 0.45 : 0.25 }}
       onAnimationComplete={() => {
         if (leaving) onDone();
       }}
       style={{ pointerEvents: leaving ? "none" : "auto" }}
     >
-      <motion.div
-        className="handoff-charm"
-        animate={reduced ? {} : { y: [0, -8, 0], rotate: [-2, 2, -2] }}
-        transition={{ duration: 2.6, repeat: Infinity, ease: "easeInOut" }}
-      >
-        <Charm mood="mint" />
-      </motion.div>
-      <p className="handoff-wordmark">half full</p>
-      <p className="handoff-stage" key={stage}>
-        {STAGES[Math.min(stage, ready ? STAGES.length - 1 : STAGES.length - 2)]}
-      </p>
-      <div className="handoff-bar" aria-hidden="true">
-        <motion.span
-          initial={{ scaleX: 0 }}
-          animate={{ scaleX: leaving ? 1 : 0.2 + stage * 0.22 }}
-          transition={{ duration: reduced ? 0.1 : 0.6, ease: "easeOut" }}
-        />
+      <DitheredAtmosphere tone="lavender" intensity={0.18} />
+      <div className="handoff-content">
+        <BrandWorldArtwork variant="handoff" />
+        <p className="handoff-wordmark">half full</p>
+        <p className="handoff-stage">
+          {ready ? "Your edition is ready." : status || "Opening your edition…"}
+        </p>
+        {!ready && (
+          <div className="handoff-indeterminate" aria-hidden="true">
+            <i />
+            <i />
+            <i />
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ApprovedStory } from "@/lib/types";
 import { crosswordComplete, type Entry } from "@/lib/crossword";
 import { dailyMini, entryCells } from "@/lib/mini";
-import { editionDay } from "@/lib/daily";
+import { editionDay, dateLabel } from "@/lib/daily";
+import DitheredAtmosphere from "./DitheredAtmosphere";
+import Icon from "./Icon";
 import {
   cleanTimer,
   elapsedMs,
@@ -280,9 +282,10 @@ export default function Crossword({
   return (
     <section
       ref={sectionRef}
-      className={`puzzle${done ? " is-solved" : ""}`}
+      className={`library-screen puzzle mini-experience${done ? " is-solved" : ""}`}
       aria-label="Optional news crossword"
     >
+      <DitheredAtmosphere tone="butter" intensity={0.16} />
       {!open ? (
         <div className="mini-invite">
           <div className="mini-icon" aria-hidden="true">
@@ -305,14 +308,22 @@ export default function Crossword({
         </div>
       ) : (
         <>
-          <div className="mini-heading">
+          <div className="mini-game-header">
             <div>
               <p className="eyebrow">
-                The half full Mini · {demo ? "archive" : date}
+                {demo
+                  ? "Practice edition"
+                  : dateLabel(date, {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}{" "}
+                · A little brain break
               </p>
               <h2 ref={titleRef} tabIndex={-1}>
-                {puzzle.title}
+                The Mini
               </h2>
+              <p className="mini-puzzle-name">{puzzle.title}</p>
               {done && completed && (
                 <p className="mini-solved-line" role="status">
                   Solved{assisted ? " with help" : ""} · {completed.message}
@@ -355,10 +366,10 @@ export default function Crossword({
           </div>
 
           <div className="mini-play">
-            <div>
+            <div className="mini-board">
               <div className="selected-clue" aria-live="polite">
                 <button aria-label="Previous clue" onClick={() => nextClue(-1)}>
-                  ‹
+                  <Icon name="back" size={16} />
                 </button>
                 <p>
                   <strong>
@@ -368,7 +379,7 @@ export default function Crossword({
                   {selected.clue}
                 </p>
                 <button aria-label="Next clue" onClick={() => nextClue()}>
-                  ›
+                  <Icon name="next" size={16} />
                 </button>
               </div>
               <div
@@ -488,26 +499,29 @@ export default function Crossword({
                 </div>
               )}
             </div>
-            <div className="clue-columns">
-              {(["across", "down"] as const).map((direction) => (
-                <div key={direction}>
-                  <h3>{direction === "across" ? "Across" : "Down"}</h3>
-                  {ordered
-                    .filter((e) => e.direction === direction)
-                    .map((entry) => (
-                      <button
-                        className={`clue ${selected === entry ? "active" : ""}`}
-                        key={`${entry.number}${direction}`}
-                        aria-pressed={selected === entry}
-                        onClick={() => choose(entry)}
-                      >
-                        <strong>{entry.number}</strong>
-                        <span>{entry.clue}</span>
-                      </button>
-                    ))}
-                </div>
-              ))}
-            </div>
+            <details className="mini-clue-library">
+              <summary>All clues</summary>
+              <div className="clue-columns">
+                {(["across", "down"] as const).map((direction) => (
+                  <div key={direction}>
+                    <h3>{direction === "across" ? "Across" : "Down"}</h3>
+                    {ordered
+                      .filter((e) => e.direction === direction)
+                      .map((entry) => (
+                        <button
+                          className={`clue ${selected === entry ? "active" : ""}`}
+                          key={`${entry.number}${direction}`}
+                          aria-pressed={selected === entry}
+                          onClick={() => choose(entry)}
+                        >
+                          <strong>{entry.number}</strong>
+                          <span>{entry.clue}</span>
+                        </button>
+                      ))}
+                  </div>
+                ))}
+              </div>
+            </details>
           </div>
           {checked && !done && (
             <p role="status" className="mini-check-note">

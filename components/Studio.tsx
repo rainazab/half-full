@@ -19,6 +19,8 @@ import { RunLog } from "./Transparency";
 import { parseCoverageMessage } from "@/lib/historical-coverage";
 import type { StoryboardIndex } from "@/lib/storyboard";
 import { ILLUSTRATION_STYLE } from "@/lib/illustration-style";
+import { parseVideoManifest, type VideoIndex } from "@/lib/video";
+import DitheredAtmosphere from "./DitheredAtmosphere";
 
 function SourcePacket({
   story,
@@ -110,6 +112,358 @@ function SourcePacket({
   );
 }
 
+function ProductionTimeline({
+  state,
+  storyboards,
+  videos,
+}: {
+  state: StudioState;
+  storyboards: StoryboardIndex;
+  videos: VideoIndex;
+}) {
+  const log = state.result?.runLog ?? state.run?.runLog ?? [];
+  const retrieval = flowStages.filter((stage) =>
+    ["discovery", "investigation", "extraction"].includes(stage.id),
+  );
+  const retrievalStates = retrieval.map((stage) =>
+    stageState(stage, log, state.status),
+  );
+  const review = flowStages.find((stage) => stage.id === "editorial")!;
+  const publication = flowStages.find((stage) => stage.id === "publication")!;
+  const images = Object.values(storyboards);
+  const scenes = images.flatMap((manifest) => manifest.scenes);
+  const readyScenes = scenes.filter(
+    (scene) => scene.status === "ready" && scene.asset,
+  ).length;
+  const movies = Object.values(videos);
+  const clips = movies.flatMap((manifest) => manifest.clips);
+  const readyClips = clips.filter(
+    (clip) => clip.status === "ready" && clip.asset,
+  ).length;
+  const steps = [
+    {
+      id: "retrieval",
+      title: "Apify · Reporting discovery",
+      status: retrievalStates.includes("running")
+        ? "running"
+        : retrievalStates.includes("failed")
+          ? "failed"
+          : retrievalStates.includes("limited")
+            ? "limited"
+            : retrievalStates.includes("completed")
+              ? "completed"
+              : "not recorded",
+      description: state.result
+        ? `${state.result.stats.candidatesFound} candidate records were retrieved for this edition.`
+        : "Original reporting and supporting documents, with a retained retrieval trail.",
+    },
+    {
+      id: "review",
+      title: "Claude · Editorial review",
+      status: stageState(review, log, state.status),
+      description: state.result
+        ? `${state.result.edition.stories.length} stories passed the edition’s evidence and editorial checks.`
+        : "Claims are compared against the retrieved source passages.",
+    },
+    {
+      id: "artwork",
+      title: "Recraft · Visual artwork",
+      status: readyScenes
+        ? images.some(
+            (image) => image.status === "partial" || image.status === "failed",
+          )
+          ? "limited"
+          : "completed"
+        : images.some((image) => image.status === "generating")
+          ? "running"
+          : images.some((image) => image.status === "failed")
+            ? "failed"
+            : images.some((image) => image.status === "planned")
+              ? "planned"
+              : "unavailable",
+      description: readyScenes
+        ? `${readyScenes} original illustrated scenes stored beside the edition.`
+        : "Optional illustrations are separate from the published reporting.",
+    },
+    {
+      id: "video",
+      title: "Runway · Illustrated footage",
+      status: readyClips
+        ? "completed"
+        : clips.some((clip) =>
+              ["pending", "processing", "preparing"].includes(clip.status),
+            )
+          ? "processing"
+          : clips.length
+            ? "failed"
+            : "unavailable",
+      description: readyClips
+        ? `${readyClips} real generated MP4 ${readyClips === 1 ? "clip is" : "clips are"} cached for playback.`
+        : "No playable generated video is stored for this edition.",
+    },
+    {
+      id: "narration",
+      title: "Cartesia · Narration",
+      status: "on demand",
+      description:
+        "Prepared when a reader presses play. Audio playback is not recorded in this edition.",
+    },
+    {
+      id: "publication",
+      title: "half full · Published edition",
+      status: stageState(publication, log, state.status),
+      description:
+        state.status === "completed"
+          ? "The shared edition is saved. Presentation assets never replace its reporting."
+          : "An edition is published only after its evidence checks pass.",
+    },
+  ];
+  return (
+    <section aria-labelledby="production-timeline-title">
+      <div className="studio-production-heading">
+        <h2 id="production-timeline-title">How this day came together</h2>
+        <p>
+          Saved records show what ran. Optional media stays separate from the
+          news.
+        </p>
+      </div>
+      <ol className="production-timeline">
+        {steps.map((step, index) => (
+          <li key={step.id} data-status={step.status}>
+            <span className="production-step-number" aria-hidden="true">
+              {String(index + 1).padStart(2, "0")}
+            </span>
+            <details className="production-step">
+              <summary>
+                <div className="production-step-title">
+                  <h3>{step.title}</h3>
+                  <span>
+                    {step.status === "unrecorded"
+                      ? "Not recorded"
+                      : step.status}
+                  </span>
+                </div>
+                <p>{step.description}</p>
+              </summary>
+              {step.id === "retrieval" && (
+                <ul className="production-records">
+                  {retrieval.map((stage) => {
+                    const latest = log
+                      .filter((event) => stage.match.test(event.step))
+                      .at(-1);
+                    return (
+                      <li key={stage.id}>
+                        <strong>
+                          {stage.label} · {stageState(stage, log, state.status)}
+                        </strong>
+                        {latest
+                          ? ` — ${latest.message}`
+                          : " — No stage record retained."}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+              {step.id === "review" && (
+                <ul className="production-records">
+                  {log
+                    .filter((event) => review.match.test(event.step))
+                    .slice(-5)
+                    .map((event, i) => (
+                      <li key={`${event.timestamp}-${i}`}>
+                        <strong>
+                          {event.step} · {event.status}
+                        </strong>{" "}
+                        — {event.message}
+                      </li>
+                    ))}
+                  {!log.some((event) => review.match.test(event.step)) && (
+                    <li>No detailed review event retained.</li>
+                  )}
+                </ul>
+              )}
+              {step.id === "artwork" && (
+                <ul className="production-records">
+                  {images.map((manifest) => (
+                    <li key={manifest.storyId}>
+                      <strong>
+                        {manifest.provider.model} · {manifest.status}
+                      </strong>{" "}
+                      —{" "}
+                      {
+                        manifest.scenes.filter(
+                          (scene) => scene.status === "ready",
+                        ).length
+                      }
+                      /{manifest.scenes.length} scenes;{" "}
+                      {manifest.usage.imageCalls} image calls
+                      {typeof manifest.usage.creditsUsed === "number"
+                        ? `; ${manifest.usage.creditsUsed} reported API units`
+                        : ""}
+                      .
+                    </li>
+                  ))}
+                  {!images.length && (
+                    <li>No illustration manifest retained.</li>
+                  )}
+                </ul>
+              )}
+              {step.id === "video" && (
+                <>
+                  {movies.map((manifest) => (
+                    <article
+                      className="video-production-record"
+                      key={manifest.storyId}
+                    >
+                      <h4>
+                        {state.result?.edition.stories.find(
+                          (story) => story.id === manifest.storyId,
+                        )?.headline || manifest.storyId}
+                      </h4>
+                      <p>{manifest.disclosure}</p>
+                      <p>{manifest.narration.description}</p>
+                      {manifest.clips.map((clip) => (
+                        <div key={clip.id}>
+                          <dl>
+                            <dt>Provider / model</dt>
+                            <dd>
+                              {manifest.provider.name} /{" "}
+                              {manifest.provider.model}
+                            </dd>
+                            <dt>Task / status</dt>
+                            <dd>
+                              {clip.taskId || "Not submitted"} · {clip.status} ·
+                              attempt {clip.attempt}
+                            </dd>
+                            <dt>Source image</dt>
+                            <dd>
+                              <a
+                                href={clip.poster}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                              >
+                                Stored Recraft keyframe ↗
+                              </a>{" "}
+                              · {clip.source.assetKey}
+                            </dd>
+                            <dt>Evidence</dt>
+                            <dd>
+                              {clip.source.evidence
+                                .map(
+                                  (ref) => `${ref.sourceId}/${ref.passageId}`,
+                                )
+                                .join(", ")}
+                            </dd>
+                            <dt>Output</dt>
+                            <dd>
+                              {clip.durationSeconds}s · {clip.ratio}
+                              {clip.asset
+                                ? ` · ${clip.asset.bytes.toLocaleString()} bytes`
+                                : " · No cached MP4"}
+                            </dd>
+                            {clip.asset && (
+                              <>
+                                <dt>Durable video</dt>
+                                <dd>
+                                  <a
+                                    href={clip.asset.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                  >
+                                    Open generated MP4 ↗
+                                  </a>
+                                </dd>
+                                <dt>SHA-256</dt>
+                                <dd>{clip.asset.sha256}</dd>
+                                <dt>Cached</dt>
+                                <dd>{clip.asset.cachedAt}</dd>
+                              </>
+                            )}
+                            <dt>Visual review</dt>
+                            <dd>
+                              {manifest.review?.status || "Not recorded"}
+                              {manifest.review?.notes
+                                ? ` · ${manifest.review.notes}`
+                                : ""}
+                            </dd>
+                            {clip.asset?.processing && (
+                              <>
+                                <dt>Output treatment</dt>
+                                <dd>
+                                  White margins cropped from the provider
+                                  output; original MP4 retained.{" "}
+                                  {clip.asset.processing.tool}
+                                </dd>
+                              </>
+                            )}
+                            <dt>Cost</dt>
+                            <dd>
+                              {typeof clip.cost.actualCredits === "number"
+                                ? `${clip.cost.actualCredits} provider-reported credits`
+                                : `${clip.cost.estimatedCredits} credits / $${clip.cost.estimatedUsd.toFixed(2)} estimated from list pricing; actual charge not reported`}
+                            </dd>
+                          </dl>
+                          {clip.error && (
+                            <p>
+                              {clip.error.code}: {clip.error.message}
+                            </p>
+                          )}
+                          <details>
+                            <summary>Motion prompt & source hash</summary>
+                            <p>{clip.prompt}</p>
+                            <p>
+                              Source prompt SHA-256: {clip.source.promptHash}
+                            </p>
+                          </details>
+                        </div>
+                      ))}
+                      {manifest.previousAttempts?.map((attempt) => (
+                        <details key={attempt.taskId || attempt.attempt}>
+                          <summary>
+                            Earlier attempt {attempt.attempt} · {attempt.status}
+                          </summary>
+                          <p>
+                            Task {attempt.taskId || "not submitted"}.{" "}
+                            {attempt.error?.code}: {attempt.error?.message}
+                          </p>
+                          <p>
+                            {attempt.estimatedCredits} estimated credits; actual
+                            charge not reported.
+                          </p>
+                        </details>
+                      ))}
+                    </article>
+                  ))}
+                  {!movies.length && (
+                    <p className="studio-muted">
+                      No video job record for this day. Opening Studio never
+                      starts generation.
+                    </p>
+                  )}
+                </>
+              )}
+              {step.id === "narration" && (
+                <p className="studio-muted">
+                  The reader uses the selected verified voice and approved story
+                  copy. This production record does not claim that anyone has
+                  listened.
+                </p>
+              )}
+              {step.id === "publication" && (
+                <p className="studio-muted">
+                  {state.result
+                    ? `Edition ${state.result.edition.id} · ${state.result.edition.createdAt}`
+                    : "No published edition exists in this record."}
+                </p>
+              )}
+            </details>
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 export default function Studio() {
   const [date, setDate] = useState(editionDay);
   const [ready, setReady] = useState(false);
@@ -120,6 +474,7 @@ export default function Studio() {
   const [storyId, setStoryId] = useState("");
   const [refresh, setRefresh] = useState(0);
   const [storyboards, setStoryboards] = useState<StoryboardIndex>({});
+  const [videos, setVideos] = useState<VideoIndex>({});
   const [illustrating, setIllustrating] = useState(false);
   const [illustrationNote, setIllustrationNote] = useState("");
   useEffect(() => {
@@ -137,6 +492,43 @@ export default function Studio() {
       })
       .catch(() => {});
     return () => controller.abort();
+  }, [date, ready, refresh]);
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    setVideos({});
+    async function loadVideos() {
+      try {
+        const response = await fetch(`/api/videos?date=${date}`, {
+          cache: "no-store",
+          signal: controller.signal,
+        });
+        if (!response.ok) return;
+        const value = await response.json();
+        if (value?.date !== date || controller.signal.aborted) return;
+        const retained: VideoIndex = {};
+        for (const [story, raw] of Object.entries(value.videos ?? {})) {
+          const manifest = parseVideoManifest(raw);
+          if (manifest && manifest.date === date && manifest.storyId === story)
+            retained[story] = manifest;
+        }
+        setVideos(retained);
+        if (
+          Object.values(retained).some((manifest) =>
+            ["preparing", "pending", "processing"].includes(manifest.status),
+          )
+        )
+          timer = setTimeout(loadVideos, 10000);
+      } catch {
+        /* Video production is optional; the evidence record stays available. */
+      }
+    }
+    void loadVideos();
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
   }, [date, ready, refresh]);
   async function illustrate() {
     setIllustrating(true);
@@ -252,20 +644,22 @@ export default function Studio() {
     history.replaceState(null, "", `/studio?date=${day}`);
   }
   return (
-    <main id="main" className="studio-shell">
+    <main id="main" className="studio-shell library-studio">
+      <DitheredAtmosphere tone="forest" intensity={0.12} />
       <header className="studio-header">
         <a className="studio-brand" href="/">
           half full
         </a>
-        <span>Editorial studio</span>
+        <span>The production notes</span>
         <a href={date === editionDay() ? "/" : `/?date=${date}`}>
           Open edition ↗
         </a>
       </header>
       <div className="studio-title">
         <div>
-          <p className="eyebrow">Generation record</p>
-          <h1>From source to story.</h1>
+          <p className="eyebrow">half full studio</p>
+          <h1>Behind the story.</h1>
+          <p>Follow the reporting, the decisions and the craft.</p>
         </div>
         <button
           className="studio-date"
@@ -297,7 +691,7 @@ export default function Studio() {
         </p>
       )}
       {state && (
-        <>
+        <div className="studio-workspace">
           <div className="studio-status">
             <span className={`process-status ${state.status}`}>
               <i />
@@ -325,6 +719,11 @@ export default function Studio() {
               </button>
             )}
           </div>
+          <ProductionTimeline
+            state={state}
+            storyboards={storyboards}
+            videos={videos}
+          />
           {result && <EvidenceQuality result={result} />}
           <details className="studio-details" open={!result}>
             <summary>Recorded audit totals</summary>
@@ -359,25 +758,6 @@ export default function Studio() {
               </div>
             </div>
           </details>
-          <section className="studio-flow" aria-label="Generation pipeline">
-            {flowStages.map((stage, i) => {
-              const status = stageState(stage, log, state.status);
-              const latest = log
-                .filter((entry) => stage.match.test(entry.step))
-                .at(-1);
-              return (
-                <article key={stage.id} className={`flow-node ${status}`}>
-                  <span className="flow-number">0{i + 1}</span>
-                  <span className="flow-owner">{stage.owner}</span>
-                  <h2>{stage.label}</h2>
-                  <span className="flow-state">
-                    {status === "unrecorded" ? "Not recorded" : status}
-                  </span>
-                  {latest && <p>{latest.message}</p>}
-                </article>
-              );
-            })}
-          </section>
           {state.run?.error && (
             <div className="studio-failure">
               <strong>{state.run.error.code}</strong>
@@ -504,7 +884,7 @@ export default function Studio() {
                                 <li key={scene.id}>
                                   <em>{scene.id}</em> {scene.status}
                                   {scene.animation
-                                    ? ` · animated (${scene.animation.layers.length} layers, ${scene.animation.durationSeconds}s)`
+                                    ? ` · authored SVG motion (${scene.animation.layers.length} layers, ${scene.animation.durationSeconds}s; not generated video)`
                                     : " · flat"}
                                   : {scene.purpose}
                                   {scene.error ? ` — ${scene.error}` : ""}
@@ -728,7 +1108,7 @@ export default function Studio() {
             confidence and source classifications are model judgments, not
             independent fact-checking.
           </p>
-        </>
+        </div>
       )}
     </main>
   );

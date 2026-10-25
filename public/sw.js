@@ -1,9 +1,10 @@
 /* Only static shell assets are cached. The last opened live edition is saved by the reader on this device. Never cache API requests. */
-const CACHE = "us-shell-editorial20261025-v3";
+const CACHE = "us-shell-atmosphere20261024-v4";
 const SHELL = [
   "/offline.html",
   "/offline.js",
   "/offline.css",
+  "/textures/half-full-pigment.png",
   "/media/php-logo.png",
   "/manifest.webmanifest",
   "/icons/icon-192.png",

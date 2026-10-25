@@ -2,6 +2,8 @@
 import type { ProfileState } from "./ProfileCard";
 import { ProfileAvatar } from "./ProfileCard";
 import NarratorPicker from "./NarratorPicker";
+import DitheredAtmosphere from "./DitheredAtmosphere";
+import Icon from "./Icon";
 import type { PreferencesState } from "@/hooks/usePreferences";
 import { SPEEDS, type CatchUpMode } from "@/lib/preferences";
 
@@ -28,12 +30,12 @@ export function GoogleMark() {
   );
 }
 
-/** Account management and listening preferences. Reading history lives in Your jar. */
 const MODE_LABELS: Record<CatchUpMode, string> = {
-  read: "I like to read",
-  listen: "I like to listen",
+  read: "Read",
+  listen: "Listen",
   both: "A little of both",
 };
+/** Identity and presentation preferences. The shared reporting never changes. */
 export default function ProfilePage({
   profile,
   settings,
@@ -48,34 +50,31 @@ export default function ProfilePage({
   const { user, ready, signingIn, sync, error, login, logout, retry } = profile;
   const { preferences, update } = settings;
   return (
-    <section className="profile-page" aria-label="Profile">
-      <section className="profile-hero" aria-label="Account">
+    <section className="library-screen library-profile" aria-label="Profile">
+      <DitheredAtmosphere tone="lavender" intensity={0.08} />
+      <section className="profile-identity-scenery" aria-label="Your account">
         <div className="profile-identity">
           <div className="profile-avatar">
             <ProfileAvatar profile={profile} />
           </div>
           <div>
-            <p className="eyebrow">Profile</p>
-            <h1>
-              {user ? user.displayName || "Your account" : "Reading as a guest"}
-            </h1>
+            <p className="eyebrow">Your little corner</p>
+            <h1>{user ? user.displayName || "Your profile" : "Hello, you."}</h1>
             <p>
               {user
                 ? user.email
-                : "Your progress stays on this device until you sign in."}
+                : "You’re here as a guest. Make yourself at home."}
             </p>
           </div>
         </div>
         {user ? (
-          <div className="profile-actions">
+          <div className="profile-account-controls">
             <span className={`profile-sync ${sync}`} role="status">
               {sync === "saved"
-                ? "Reads and reactions synced"
+                ? "Jar synced"
                 : sync === "syncing"
-                  ? "Syncing…"
-                  : sync === "error"
-                    ? "Saved on this device"
-                    : "Saved on this device"}
+                  ? "Syncing your jar…"
+                  : "Saved on this device"}
             </span>
             <button className="quiet" onClick={() => void logout()}>
               Sign out
@@ -106,52 +105,19 @@ export default function ProfilePage({
           </div>
         )}
       </section>
-      <div className="profile-panels">
-        <section className="preference-block" aria-labelledby="mode-heading">
-          <h2 id="mode-heading">How you catch up</h2>
-          <p className="preference-note">
-            Shapes the home screen and listening defaults. Never changes which
-            stories are in an edition.
-          </p>
-          <div
-            className="mode-picker"
-            role="radiogroup"
-            aria-label="How you catch up"
-          >
-            {(Object.keys(MODE_LABELS) as CatchUpMode[]).map((mode) => (
-              <button
-                key={mode}
-                type="button"
-                role="radio"
-                aria-checked={preferences.mode === mode}
-                className={`mode-option${preferences.mode === mode ? " selected" : ""}`}
-                onClick={() => update({ mode })}
-              >
-                {MODE_LABELS[mode]}
-              </button>
-            ))}
-          </div>
-        </section>
-        <section
-          className="preference-block"
-          aria-labelledby="narrator-heading"
-        >
-          <h2 id="narrator-heading">Narrator</h2>
-          <p className="preference-note">
-            Who reads the stories aloud. Applies to the next clip you play.
-          </p>
-          <NarratorPicker
-            value={preferences.narrator}
-            onChange={(narrator) => update({ narrator })}
-          />
-        </section>
-        <section
-          className="preference-block"
-          aria-labelledby="listening-heading"
-        >
-          <h2 id="listening-heading">Listening</h2>
+      <section
+        className="listening-style"
+        aria-labelledby="listening-style-title"
+      >
+        <h2 id="listening-style-title">Your listening style</h2>
+        <p>A familiar voice. A pace that feels right.</p>
+        <NarratorPicker
+          value={preferences.narrator}
+          onChange={(narrator) => update({ narrator })}
+        />
+        <div className="listening-controls">
           <div className="preference-row">
-            <label htmlFor="preference-speed">Speed</label>
+            <label htmlFor="preference-speed">Playback speed</label>
             <select
               id="preference-speed"
               value={String(preferences.speed)}
@@ -169,7 +135,7 @@ export default function ProfilePage({
             </select>
           </div>
           <label className="preference-row">
-            <span>Autoplay the next story</span>
+            <span>Keep listening between stories</span>
             <input
               type="checkbox"
               role="switch"
@@ -180,25 +146,51 @@ export default function ProfilePage({
               }
             />
           </label>
-        </section>
-        <section className="preference-block" aria-labelledby="data-heading">
-          <h2 id="data-heading">Your data</h2>
-          <p className="preference-note">
-            Completed editions and reactions{" "}
-            {user ? "sync through your Google account" : "stay on this device"}.
-            Narrator and listening preferences stay on this device. Reactions
-            are private and never change which stories everyone sees.
-          </p>
-          <button className="quiet link-like" onClick={onOpenJar}>
-            Open Your jar ↗
-          </button>
-          {onReplayIntro && (
-            <button className="quiet link-like" onClick={onReplayIntro}>
-              See the intro again ↗
+        </div>
+      </section>
+      <section
+        className="profile-format"
+        aria-labelledby="profile-format-title"
+      >
+        <h2 id="profile-format-title">How do you like to catch up?</h2>
+        <div
+          className="mode-picker"
+          role="radiogroup"
+          aria-label="How you catch up"
+        >
+          {(Object.keys(MODE_LABELS) as CatchUpMode[]).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              role="radio"
+              aria-checked={preferences.mode === mode}
+              className={`mode-option${preferences.mode === mode ? " selected" : ""}`}
+              onClick={() => update({ mode })}
+            >
+              {MODE_LABELS[mode]}
             </button>
-          )}
-        </section>
+          ))}
+        </div>
+      </section>
+      <div className="profile-library-links">
+        <button onClick={onOpenJar}>
+          Your jar <Icon name="next" size={16} />
+        </button>
+        {onReplayIntro && (
+          <button onClick={onReplayIntro}>
+            A little hello again <Icon name="next" size={16} />
+          </button>
+        )}
       </div>
+      <details className="profile-data-note">
+        <summary>Your progress & preferences</summary>
+        <p>
+          Finished editions and reactions{" "}
+          {user ? "sync with your Google account" : "stay on this device"}.
+          Voice, speed, Mini progress and listening preferences stay on this
+          device. Your preferences never change the shared news edition.
+        </p>
+      </details>
     </section>
   );
 }

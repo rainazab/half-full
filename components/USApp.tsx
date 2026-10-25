@@ -7,7 +7,6 @@ import {
   dateLabel,
   editionDay,
   markRead,
-  readingStreak,
   selectableDay,
   type ArchiveEntry,
 } from "@/lib/daily";
@@ -15,6 +14,10 @@ import EditionReader from "./EditionReader";
 import PWAStatus from "./PWAStatus";
 import Charm from "./Charm";
 import DatePicker from "./DatePicker";
+import ArchiveCalendar from "./ArchiveCalendar";
+import JarExperience from "./JarExperience";
+import DitheredAtmosphere from "./DitheredAtmosphere";
+import type { VideoIndex } from "@/lib/video";
 import Crossword from "./Crossword";
 import useProfile from "@/hooks/useProfile";
 import usePreferences from "@/hooks/usePreferences";
@@ -36,15 +39,6 @@ import {
 import type { StoryboardIndex } from "@/lib/storyboard";
 import { mergeRunLogs } from "@/lib/generation-progress";
 type View = "today" | "reader" | "archive" | "mini" | "you" | "profile";
-const moods = ["blue", "pink", "mint", "yellow", "blue"] as const;
-const reactionArt = [
-  { label: "Interesting", image: "interesting" },
-  { label: "Insightful", image: "insightful" },
-  { label: "Hopeful", image: "hopeful" },
-  { label: "Stressed", image: "stressed" },
-] as const;
-const normalizeMood = (mood: string) =>
-  mood === "Clearer" ? "Insightful" : mood === "A lot" ? "Stressed" : mood;
 export default function USApp() {
   const [edition, setEdition] = useState<EditionResult | null>(null);
   const [runLogs, setRunLogs] = useState<RunLogEntry[]>([]);
@@ -56,6 +50,7 @@ export default function USApp() {
   const [position, setPosition] = useState(0);
   const [listenFirst, setListenFirst] = useState(false);
   const [storyboards, setStoryboards] = useState<StoryboardIndex>({});
+  const [videos, setVideos] = useState<VideoIndex>({});
   // First-run intro: decided once from device storage and the URL, never from the edition.
   const [intro, setIntro] = useState<boolean | null>(null);
   // After the intro, a short hand-off covers the app until the edition is ready.
@@ -74,6 +69,12 @@ export default function USApp() {
   function display(result: EditionResult) {
     setEdition(result);
     setStoryboards({});
+    setVideos({});
+    const displayVersion = generation.current;
+    fetch(`/api/videos?date=${result.edition.date}`, {signal:AbortSignal.timeout(15000)})
+      .then(r=>r.ok?r.json():null).then(value=>{
+        if (generation.current === displayVersion && value?.date===result.edition.date && value.videos) setVideos(value.videos);
+      }).catch(()=>{});
     // Existing illustrations are read-only presentation data; this never generates any.
     if (result.edition.date)
       fetch(`/api/illustrations/${result.edition.date}`, {
@@ -81,7 +82,7 @@ export default function USApp() {
       })
         .then((r) => (r.ok ? r.json() : null))
         .then((value) => {
-          if (value?.date === result.edition.date && value.storyboards)
+          if (generation.current === displayVersion && value?.date === result.edition.date && value.storyboards)
             setStoryboards(value.storyboards as StoryboardIndex);
         })
         .catch(() => {});
@@ -290,10 +291,6 @@ export default function USApp() {
     }
   }
   function tab(next: View) {
-    if (next === "archive") {
-      setPickerOpen(true);
-      return;
-    }
     if (next === "today" && selectedDate !== editionDay()) {
       void openDate(editionDay());
       return;
@@ -391,7 +388,8 @@ export default function USApp() {
     { view: "you", label: "Your jar", icon: "jar" },
   ];
   return (
-    <div className={`app-shell ${view === "reader" ? "reading-mode" : ""}`}>
+    <div className={`app-shell view-${view} ${view === "reader" ? "reading-mode" : ""}`}>
+      {view !== "reader" && <DitheredAtmosphere tone={view === "you" ? "mint" : view === "mini" ? "butter" : view === "profile" || view === "archive" ? "lavender" : "home"} intensity={0.1}/>}
       <aside className="app-sidebar">
         <button
           className="wordmark"
@@ -448,6 +446,7 @@ export default function USApp() {
             date={date}
             today={today}
             entries={entries}
+            completedDays={progress.days}
             onClose={() => setPickerOpen(false)}
             onSelect={openDate}
           />
@@ -495,6 +494,7 @@ export default function USApp() {
             onRead={(index) => read(index)}
             onListen={() => read(0, true)}
             onMini={() => tab("mini")}
+            onCalendar={() => setPickerOpen(true)}
           />
         )}
         {!loading && view === "reader" && edition && (
@@ -522,14 +522,14 @@ export default function USApp() {
               preferences={settings.preferences}
               onPreferences={settings.update}
               storyboards={storyboards}
+              videos={videos}
+              onMini={() => tab("mini")}
             />
           </>
         )}
+        {view === "archive" && <ArchiveCalendar entries={entries} today={today} date={date} completedDays={progress.days} onOpenDate={openDate} onPickDate={()=>setPickerOpen(true)}/>}
         {view === "mini" && (
           <section className="mini-page">
-            <div className="page-heading">
-              <h1>The Mini</h1>
-            </div>
             {edition ? (
               <Crossword
                 key={edition.edition.id}
@@ -559,127 +559,8 @@ export default function USApp() {
             }}
           />
         )}
-        {view === "you" && (
-          <section className="you-page">
-            <div className="jar-hero">
-              <div className="jar-hero-copy">
-                <p className="eyebrow">Your jar</p>
-                <h1>
-                  {progress.days.length
-                    ? `${progress.days.length} ${progress.days.length === 1 ? "edition" : "editions"} in the jar.`
-                    : "Your jar is waiting."}
-                </h1>
-                <p>
-                  {profile.user
-                    ? "Every finished edition lands here and follows you across devices."
-                    : "Every finished edition lands here. Sign in to keep it across devices."}
-                </p>
-                <div className="jar-stats">
-                  <div>
-                    <strong>{progress.days.length}</strong>
-                    <span>read</span>
-                  </div>
-                  <div>
-                    <strong>{readingStreak(progress.days, today)}</strong>
-                    <span>day streak</span>
-                  </div>
-                  <div>
-                    <strong>
-                      {Object.values(progress.reactions).filter(Boolean).length}
-                    </strong>
-                    <span>reactions</span>
-                  </div>
-                </div>
-                <button
-                  className="jar-cta"
-                  onClick={() =>
-                    stories.length
-                      ? read(complete ? 0 : position)
-                      : tab("today")
-                  }
-                >
-                  {complete ? "Read today again" : "Open today’s edition"}
-                </button>
-              </div>
-              <div className="glass-jar">
-                <span className="jar-rim" />
-                <div className="jar-charms">
-                  {Array.from(
-                    { length: Math.min(12, progress.days.length) },
-                    (_, i) => (
-                      <Charm key={i} mood={moods[i % 5]} />
-                    ),
-                  )}
-                </div>
-                <span className="jar-label">½</span>
-              </div>
-            </div>
-            <div className="jar-grid">
-              <section className="jar-panel" aria-labelledby="jar-reactions">
-                <h2 id="jar-reactions">How the news landed</h2>
-                <div className="reaction-tallies">
-                  {reactionArt.map((item) => {
-                    const count = Object.values(progress.reactions).filter(
-                      (mood) => normalizeMood(mood) === item.label,
-                    ).length;
-                    return (
-                      <div key={item.label} className={count ? "" : "empty"}>
-                        <img
-                          src={`/reactions/${item.image}.webp`}
-                          width={48}
-                          height={48}
-                          alt=""
-                        />
-                        <strong>{count}</strong>
-                        <span>{item.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <p className="jar-empty">
-                  Reactions stay private and never change the news.
-                </p>
-              </section>
-              <section className="jar-panel" aria-labelledby="jar-history">
-                <h2 id="jar-history">Finished editions</h2>
-                {progress.days.length ? (
-                  <ul className="reading-history">
-                    {[...progress.days]
-                      .reverse()
-                      .slice(0, 30)
-                      .map((day) => (
-                        <li key={day}>
-                          <button
-                            onClick={() =>
-                              day === selectedDate
-                                ? tab("today")
-                                : openDate(day)
-                            }
-                          >
-                            <span>
-                              {dateLabel(day, {
-                                weekday: "short",
-                                month: "long",
-                                day: "numeric",
-                                ...(day.slice(0, 4) !== today.slice(0, 4)
-                                  ? { year: "numeric" }
-                                  : {}),
-                              })}
-                            </span>
-                            <Icon name="check" size={16} />
-                          </button>
-                        </li>
-                      ))}
-                  </ul>
-                ) : (
-                  <p className="jar-empty">
-                    Finish an edition and it lands in the jar.
-                  </p>
-                )}
-              </section>
-            </div>
-          </section>
-        )}
+        {view === "you" && <JarExperience profile={profile} today={today} entries={entries} selectedDate={date} onOpenDate={openDate} onOpenToday={()=>openDate(today)} onOpenProfile={()=>tab("profile")}/>}
+
         <PWAStatus />
       </main>
       {handoff && (
