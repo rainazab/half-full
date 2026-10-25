@@ -138,6 +138,12 @@ Production registers `/sw.js` on HTTPS or localhost; development does not regist
 
 Installation remains available through the browser. The app does not show install prompts, installation instructions, provider badges, or a promotional footer. Physical-device installation and Safari playback still need device QA.
 
+## Deploying on Vercel
+
+`vercel.json` declares one Vercel service, `app`, which is this Next.js application at the repository root; the catch-all rewrite sends all public traffic to it. There are no other services and no bindings: the private News Receipts Actor in `actors/news-receipts` is an Apify Actor (it uses the Apify SDK, runs once per job and exits), is deployed to Apify with `node scripts/build-receipts-actor.mjs`, and is invoked by the app through the Apify REST API using `APIFY_API_TOKEN` and `APIFY_RECEIPTS_ACTOR_ID`, never over a URL of its own. It must not be deployed as a Vercel container service.
+
+Set the same server-only environment variables on the Vercel project as in `.env.example` (`ANTHROPIC_API_KEY`, `APIFY_API_TOKEN`, `APIFY_ACTOR_ID`, `APIFY_RECEIPTS_ACTOR_ID`, `LLM_PROVIDER`, `CARTESIA_API_KEY`, `RECRAFT_API_KEY`, the `NEXT_PUBLIC_FIREBASE_*` identifiers). Two routes export `maxDuration = 300` (`/api/run`, `/api/illustrations/:date`), so the project needs a plan whose function duration allows 300 seconds; the published editions, generation lock, budgets and illustration assets live in Apify storage and are shared across instances, while live audio clips and in-process run logs are process-local (as documented above) and are prepared on demand. Add the production domain to Firebase Authentication's authorized domains before enabling Google sign-in there. `vercel dev` runs the service locally.
+
 ## Validate and deploy
 
 ```sh
