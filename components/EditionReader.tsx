@@ -571,7 +571,7 @@ export default function EditionReader({
                 {onMini && (
                   <button className="ending-mini" onClick={onMini}>
                     <Icon name="mini" size={18} />
-                    Try the Mini
+                    Try Brain Break
                   </button>
                 )}
                 <button

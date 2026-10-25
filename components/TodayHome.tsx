@@ -61,7 +61,7 @@ export default function TodayHome({ date, today, stories, storyboards, complete,
           <span className="inside-copy"><span className="inside-meta">{story.category}</span><span className="inside-title">{story.headline}</span></span><Icon name="next" size={17}/>
         </button></li>)}</ol>
       </section>
-      <button className="home-mini" onClick={onMini}><span className="mini-cover-grid" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} className={[0,1,5,19,23,24].includes(i)?"block":""}/>)}</span><span className="home-mini-copy"><strong>A little brain break</strong><span>The Mini · 5 × 5</span></span><Icon name="next" size={18}/></button>
+      <button className="home-mini" onClick={onMini}><span className="mini-cover-grid" aria-hidden="true">{Array.from({length:25},(_,i)=><i key={i} className={[0,1,5,19,23,24].includes(i)?"block":""}/>)}</span><span className="home-mini-copy"><strong>A little brain break</strong><span>Brain Break</span></span><Icon name="next" size={18}/></button>
     </section>
   );
 }

@@ -77,12 +77,12 @@ export function recordSolve(
     first,
     message: solve.assisted
       ? first
-        ? "Your first Mini, with a little help."
+        ? "Your first Brain Break, with a little help."
         : personalBest
           ? "Your quickest assisted solve yet!"
           : "Solved with a little help."
       : first
-        ? "Your first Mini. Nicely done."
+        ? "Your first Brain Break. Nicely done."
         : personalBest
           ? "Your quickest one yet!"
           : "Solved.",

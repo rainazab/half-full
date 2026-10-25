@@ -188,7 +188,7 @@ export default function ProfilePage({
         <p>
           Finished editions and reactions{" "}
           {user ? "sync with your Google account" : "stay on this device"}.
-          Voice, speed, Mini progress and listening preferences stay on this
+          Voice, speed, Brain Break progress and listening preferences stay on this
           device. Your preferences never change the shared news edition.
         </p>
       </details>

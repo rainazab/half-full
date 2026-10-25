@@ -441,7 +441,7 @@ export default function USApp() {
   const nav: { view: View; label: string; icon: IconName }[] = [
     { view: "today", label: "Today", icon: "today" },
     { view: "archive", label: "Calendar", icon: "calendar" },
-    { view: "mini", label: "The Mini", icon: "mini" },
+    { view: "mini", label: "Brain Break", icon: "mini" },
     { view: "you", label: "Your jar", icon: "jar" },
   ];
   return (
@@ -638,7 +638,7 @@ export default function USApp() {
               />
             ) : (
               <div className="empty-card">
-                <p>Open an edition to get its Mini.</p>
+                <p>Open an edition to get its Brain Break.</p>
                 <button onClick={() => openDate(today)}>
                   Open today’s edition
                 </button>

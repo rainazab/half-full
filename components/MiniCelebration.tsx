@@ -152,7 +152,7 @@ export default function MiniCelebration({
     >
       <div className="mini-celebration-panel">
         <DitheredAtmosphere tone="peach" intensity={0.18} />
-        <p className="eyebrow">The Mini</p>
+        <p className="eyebrow">Brain Break</p>
         <h2 id="mini-celebration-title">A little win.</h2>
         <CelebrationCharm />
         <div id="mini-celebration-result">
@@ -169,7 +169,7 @@ export default function MiniCelebration({
           </p>
         </div>
         <button ref={done} className="primary celebration-done" onClick={close}>
-          Back to my Mini
+          Back to Brain Break
         </button>
       </div>
     </dialog>

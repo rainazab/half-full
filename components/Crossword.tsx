@@ -297,14 +297,14 @@ export default function Crossword({
           </div>
           <div>
             <p className="eyebrow">Take a break</p>
-            <h3>The Mini</h3>
+            <h3>Brain Break</h3>
             <p>A little brain break.</p>
             <button
               ref={inviteRef}
               className="primary"
               onClick={() => setOpen(true)}
             >
-              {done ? "See your solved Mini" : "Play the Mini"} <span>↗</span>
+              {done ? "See your solved Brain Break" : "Play Brain Break"} <span>↗</span>
             </button>
           </div>
         </div>
@@ -323,7 +323,7 @@ export default function Crossword({
                 · A little brain break
               </p>
               <h2 ref={titleRef} tabIndex={-1}>
-                The Mini
+                Brain Break
               </h2>
               <p className="mini-puzzle-name">{puzzle.title}</p>
               {done && completed && (
@@ -388,7 +388,7 @@ export default function Crossword({
                 className={`crossword-grid${flash ? " solved-flash" : ""}${done ? " solved" : ""}`}
                 ref={gridRef}
                 role="group"
-                aria-label="Mini crossword grid"
+                aria-label="Brain Break grid"
                 onAnimationEnd={(event) => {
                   if (event.target === gridRef.current) setFlash(false);
                 }}
