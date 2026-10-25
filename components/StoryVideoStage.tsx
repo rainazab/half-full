@@ -14,6 +14,7 @@ export default function StoryVideoStage({
   silent,
   onSilentChange,
   onUnavailable,
+  thumbnail,
 }: {
   manifest: VideoManifest;
   active: boolean;
@@ -22,11 +23,13 @@ export default function StoryVideoStage({
   silent: boolean;
   onSilentChange: (silent: boolean) => void;
   onUnavailable: () => void;
+  thumbnail?: { src: string; alt: string };
 }) {
   const video = useRef<HTMLVideoElement>(null);
   const clockRef = useRef(getController);
   clockRef.current = getController;
   const [blocked, setBlocked] = useState(false);
+  const [started, setStarted] = useState(false);
   const clip = manifest.clips.find(
     (item) => item.status === "ready" && item.asset,
   );
@@ -108,6 +111,15 @@ export default function StoryVideoStage({
         </button>
       </div>
       <div className="video-stage">
+        {!silent && !started && (
+          <img
+            className="video-thumbnail"
+            src={thumbnail?.src ?? clip.poster}
+            alt={thumbnail?.alt ?? clip.alt}
+            loading="lazy"
+            decoding="async"
+          />
+        )}
         <video
           ref={video}
           src={clip.asset.url}
@@ -116,19 +128,12 @@ export default function StoryVideoStage({
           muted
           playsInline
           controls={silent}
+          onPlay={() => setStarted(true)}
           onError={onUnavailable}
           aria-label={clip.alt}
         />
-        {!silent && !playback?.playing && (
-          <span className="video-ready-label">
-            Illustrated video · 0:{String(Math.round(clip.durationSeconds)).padStart(2, "0")}
-          </span>
-        )}
       </div>
-      <figcaption>
-        AI-generated illustration, not documentary footage.
-        {blocked && !silent ? " Tap Watch silently to play the scene." : ""}
-      </figcaption>
+      {blocked && !silent && <p className="video-play-note">Tap Watch silently to play the scene.</p>}
     </figure>
   );
 }

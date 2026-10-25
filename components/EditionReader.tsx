@@ -22,6 +22,7 @@ import StoryReceipts from "./StoryReceipts";
 import Icon from "./Icon";
 import StoryReactions from "./StoryReactions";
 import StoryVisual from "./StoryVisual";
+import { displayableMedia } from "@/lib/media";
 import AudioPlayer, {
   type PlaybackController,
   type PlaybackState,
@@ -335,6 +336,9 @@ export default function EditionReader({
                 (clip) => clip.status === "ready" && clip.asset,
               ) && !brokenVideos.includes(story.id);
             const silent = !!silentVideos[story.id];
+            const newsThumbnail = story.media?.find(
+              (media) => displayableMedia(media) && media.rights === "publisher-preview",
+            );
             return (
               <DeckPage
                 key={story.id}
@@ -373,6 +377,7 @@ export default function EditionReader({
                       onUnavailable={() =>
                         setBrokenVideos((previous) => [...previous, story.id])
                       }
+                      thumbnail={newsThumbnail ? { src: newsThumbnail.url, alt: newsThumbnail.alt } : undefined}
                     />
                   ) : illustrated ? (
                     <IllustratedStoryPlayer

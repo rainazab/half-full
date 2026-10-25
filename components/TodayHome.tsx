@@ -14,10 +14,10 @@ import Icon from "./Icon";
 
 /** Reuse the approved scene; opening Home never requests new artwork. */
 export function storyCover(story: ApprovedStory, date: string, storyboards: StoryboardIndex) {
-  const scene = displayableScenes(storyboards[story.id])[0];
-  if (scene) return { src: assetPath(date, story.id, scene.id), alt: scene.alt, kind: "illustration" as const };
   const media = story.media?.find(m => displayableMedia(m) && m.rights === "publisher-preview");
-  return media ? { src: media.url, alt: media.alt, kind: "photo" as const, attribution: media.attribution } : null;
+  if (media) return { src: media.url, alt: media.alt, kind: "photo" as const, attribution: media.attribution };
+  const scene = displayableScenes(storyboards[story.id])[0];
+  return scene ? { src: assetPath(date, story.id, scene.id), alt: scene.alt, kind: "illustration" as const } : null;
 }
 export default function TodayHome({ date, today, stories, storyboards, complete, position, mode, displayName, onRead, onListen, onMini, onCalendar }: {
   date: string; today: string; stories: ApprovedStory[]; storyboards: StoryboardIndex; complete: boolean; position: number; mode: CatchUpMode; displayName?: string | null; onRead: (index: number) => void; onListen: () => void; onMini: () => void; onCalendar: () => void;
