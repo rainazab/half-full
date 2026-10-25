@@ -6,7 +6,7 @@ import { displayableMedia } from "@/lib/media";
 import { dateLabel } from "@/lib/daily";
 import { readingMinutes } from "@/lib/reading-position";
 import { greeting } from "@/lib/onboarding";
-import { assignThemes } from "@/lib/story-theme";
+import { assignThemes, themeGradient, themeVariables } from "@/lib/story-theme";
 import type { CatchUpMode } from "@/lib/preferences";
 import Icon from "./Icon";
 
@@ -96,10 +96,10 @@ export default function TodayHome({
         className="edition-feature"
         style={
           {
-            "--story-bg": heroTheme?.background,
-            "--story-surface": heroTheme?.surface,
-            "--story-accent": heroTheme?.accent,
-            "--story-ink": heroTheme?.ink,
+            ...(heroTheme ? themeVariables(heroTheme) : {}),
+            backgroundImage: heroTheme
+              ? themeGradient(heroTheme.top, heroTheme.glow)
+              : undefined,
           } as React.CSSProperties
         }
       >
@@ -125,7 +125,7 @@ export default function TodayHome({
             })}
             {date !== today && <span> · On this day</span>}
           </p>
-          <h2>Today’s edition</h2>
+          <h2>{complete ? "Your catch-up, done" : "Your daily catch-up"}</h2>
           <p className="feature-facts">
             {stories.length} {stories.length === 1 ? "story" : "stories"} ·
             about {minutes} min
@@ -152,8 +152,8 @@ export default function TodayHome({
           </div>
         </div>
       </article>
-      <section className="home-inside" aria-label="What's inside">
-        <h2>What’s inside</h2>
+      <section className="home-inside" aria-label="Today's lineup">
+        <h2>Today’s lineup</h2>
         <ol className="inside-list">
           {stories.map((story, i) => {
             const art = storyCover(story, date, storyboards);
@@ -161,9 +161,13 @@ export default function TodayHome({
             return (
               <li key={story.id}>
                 <button
+                  className="lineup-tile"
                   onClick={() => onRead(i)}
                   style={
-                    { "--story-bg": theme.background } as React.CSSProperties
+                    {
+                      ...themeVariables(theme),
+                      backgroundImage: `linear-gradient(135deg, ${theme.top} 0%, ${theme.glow} 100%)`,
+                    } as React.CSSProperties
                   }
                 >
                   <span className="inside-art" aria-hidden="true">
@@ -202,7 +206,7 @@ export default function TodayHome({
         </span>
         <span className="home-mini-copy">
           <strong>The Mini</strong>
-          <span>A little brain break after the news.</span>
+          <span>Today’s puzzle, a two-minute brain break.</span>
         </span>
         <Icon name="next" size={18} />
       </button>

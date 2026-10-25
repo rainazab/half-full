@@ -18,30 +18,34 @@ import {
 } from "../lib/onboarding";
 import { cleanPreferences, defaultPreferences } from "../lib/preferences";
 
-test("every theme keeps ink, muted and accent text readable on its background and surface", () => {
+test("every theme keeps white readable on its deep top and ink readable on the sheet", () => {
   for (const theme of [...STORY_THEMES, ENDING_THEME]) {
-    for (const ground of [theme.background, theme.surface]) {
-      assert.ok(
-        contrastRatio(theme.ink, ground) >= 7,
-        `${theme.id} ink on ${ground}`,
-      );
-      assert.ok(
-        contrastRatio(theme.muted, ground) >= 4.5,
-        `${theme.id} muted on ${ground}`,
-      );
-      assert.ok(
-        contrastRatio(theme.accent, ground) >= 3,
-        `${theme.id} accent on ${ground}`,
-      );
-    }
-    // White controls (progress rail, surfaces) sit on the background, so the ink must read on white too.
-    assert.ok(contrastRatio(theme.ink, "#ffffff") >= 7);
+    assert.ok(
+      contrastRatio("#ffffff", theme.top) >= 4.5,
+      `${theme.id} white on top`,
+    );
+    assert.ok(
+      contrastRatio(theme.ink, "#ffffff") >= 7,
+      `${theme.id} ink on sheet`,
+    );
+    assert.ok(
+      contrastRatio(theme.ink, theme.tint) >= 7,
+      `${theme.id} ink on tint`,
+    );
+    assert.ok(
+      contrastRatio(theme.accent, "#ffffff") >= 4.5,
+      `${theme.id} accent on sheet`,
+    );
+    assert.ok(
+      contrastRatio(theme.muted, "#ffffff") >= 4.5,
+      `${theme.id} muted on sheet`,
+    );
   }
 });
 test("themes come from categories deterministically and neighbours never share one", () => {
-  assert.equal(themeForCategory("Technology")?.id, "sky");
-  assert.equal(themeForCategory("Health")?.id, "sage");
-  assert.equal(themeForCategory("Environment")?.id, "sage");
+  assert.equal(themeForCategory("Technology")?.id, "cobalt");
+  assert.equal(themeForCategory("Health")?.id, "forest");
+  assert.equal(themeForCategory("Environment")?.id, "forest");
   assert.equal(themeForCategory("Unusual")?.id, undefined);
   const stories = [
     "Technology",
@@ -53,9 +57,9 @@ test("themes come from categories deterministically and neighbours never share o
   const first = assignThemes(stories);
   assert.deepEqual(first, assignThemes(stories));
   assert.deepEqual(first.map((t) => t.id).slice(0, 3), [
-    "sky",
-    "sage",
-    "lavender",
+    "cobalt",
+    "forest",
+    "violet",
   ]);
   // Environment and Science would both be sage back to back; the second gets the next unused theme.
   for (let i = 1; i < first.length; i++)
@@ -71,8 +75,8 @@ test("colour mixing follows the drag position between two atmospheres", () => {
   assert.equal(mixColor("#000000", "#ffffff", 0), "#000000");
   assert.equal(mixColor("#000000", "#ffffff", 1), "#ffffff");
   assert.equal(mixColor("#000000", "#ffffff", 0.5), "#808080");
-  assert.equal(mixColor("#dce8fb", "#fbe3cd", 2), "#fbe3cd");
-  assert.equal(mixColor("#dce8fb", "#fbe3cd", -1), "#dce8fb");
+  assert.equal(mixColor("#1d4ed8", "#c2410c", 2), "#c2410c");
+  assert.equal(mixColor("#1d4ed8", "#c2410c", -1), "#1d4ed8");
 });
 test("the intro shows once per device, never on a date deep link, and can be replayed", () => {
   const store = new Map<string, string>();

@@ -126,6 +126,18 @@ export default function IllustratedStoryPlayer({
     return () => observer.disconnect();
   }, []);
   const live = active && inView && motionOn;
+  // Like clips on a now-playing screen: when reading silently, scenes advance
+  // on their own once a scene's timeline (or a flat painting's settle) has
+  // played out, looping gently back to the first. Narration takes over timing.
+  useEffect(() => {
+    if (!live || audioDriven || scenes.length < 2 || !current) return;
+    const seconds = composition?.durationSeconds ?? 6;
+    const timer = window.setTimeout(
+      () => setManual((value) => (value + 1) % scenes.length),
+      (seconds + 1.6) * 1000,
+    );
+    return () => window.clearTimeout(timer);
+  }, [live, audioDriven, scenes.length, current, composition]);
   // Silent reading: play the composition once whenever it comes on screen or the scene changes.
   const sceneKey = current?.id;
   useEffect(() => {

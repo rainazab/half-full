@@ -38,6 +38,9 @@ export default function AudioPlayer({
   onPreferences,
   onPlayback,
   controller,
+  onPrevious,
+  onNext,
+  transportLabel,
 }: {
   story: ApprovedStory;
   editionId: string;
@@ -53,6 +56,10 @@ export default function AudioPlayer({
   onPlayback?: (state: PlaybackState) => void;
   /** Filled in so scene navigation can seek the same clip. */
   controller?: React.RefObject<PlaybackController | null>;
+  /** Story transport: previous/next page, rendered beside the play button. */
+  onPrevious?: () => void;
+  onNext?: () => void;
+  transportLabel?: string;
 }) {
   const audio = useRef<HTMLAudioElement>(null);
   const request = useRef<AbortController | null>(null);
@@ -216,7 +223,22 @@ export default function AudioPlayer({
           loadedNarrator.current = null;
         }}
       />
-      <div className="player-row">
+      <div
+        className={`player-row${onPrevious || onNext ? " with-transport" : ""}`}
+      >
+        {(onPrevious || onNext) && (
+          <button
+            type="button"
+            className="player-skip"
+            aria-label="Previous story"
+            disabled={!onPrevious}
+            onClick={onPrevious}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M6 5h2v14H6zM18 5.5v13L9 12z" fill="currentColor" />
+            </svg>
+          </button>
+        )}
         <button
           className="player-play"
           disabled={busy}
@@ -250,6 +272,19 @@ export default function AudioPlayer({
             </svg>
           )}
         </button>
+        {(onPrevious || onNext) && (
+          <button
+            type="button"
+            className="player-skip"
+            aria-label={transportLabel ?? "Next story"}
+            disabled={!onNext}
+            onClick={onNext}
+          >
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+              <path d="M16 5h2v14h-2zM6 5.5v13l9-6.5z" fill="currentColor" />
+            </svg>
+          </button>
+        )}
         <div className="player-track">
           <div className="player-meta">
             <span className="player-voice">

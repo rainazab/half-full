@@ -4,12 +4,15 @@ import {
   animate,
   motion,
   useDragControls,
+  useMotionTemplate,
   useMotionValue,
   useReducedMotion,
   useTransform,
   type MotionValue,
   type PanInfo,
 } from "motion/react";
+import FollowAlong from "./FollowAlong";
+import { narrationFor } from "@/lib/narration";
 import type { ApprovedStory } from "@/lib/types";
 import Crossword from "./Crossword";
 import Charm from "./Charm";
@@ -133,18 +136,23 @@ export default function EditionReader({
   // Story atmospheres. The deck background follows the track position, so the
   // colour environment moves with the finger and settles with the spring.
   const themes = [...assignThemes(stories), ENDING_THEME];
-  const background = useTransform(x, (value) => {
-    if (!(width > 0))
-      return themes[Math.min(index, themes.length - 1)].background;
+  const blend = (pick: (item: StoryTheme) => string) => (value: number) => {
+    if (!(width > 0)) return pick(themes[Math.min(index, themes.length - 1)]);
     const position = Math.max(0, Math.min(themes.length - 1, -value / width));
     const low = Math.floor(position);
     const high = Math.min(themes.length - 1, low + 1);
-    return mixColor(
-      themes[low].background,
-      themes[high].background,
-      position - low,
-    );
-  });
+    return mixColor(pick(themes[low]), pick(themes[high]), position - low);
+  };
+  const top = useTransform(
+    x,
+    blend((item) => item.top),
+  );
+  const glow = useTransform(
+    x,
+    blend((item) => item.glow),
+  );
+  const sheet = useTransform(glow, (value) => mixColor(value, "#ffffff", 0.82));
+  const background = useMotionTemplate`linear-gradient(180deg, ${top} 0%, ${glow} 42%, ${sheet} 100%)`;
   // The deck owns the viewport while reading: the document itself must not scroll.
   useEffect(() => {
     document.documentElement.classList.add("deck-open");
@@ -228,48 +236,48 @@ export default function EditionReader({
       className="edition-reader story-deck-reader"
       aria-label="Finite edition"
       style={{
-        backgroundColor: background,
+        backgroundImage: background,
         ...themeVariables(themes[Math.min(index, themes.length - 1)]),
       }}
     >
-      <header className="reading-header deck-header">
-        <button
-          className="reader-exit"
-          onClick={onExit}
-          aria-label="Back to cover"
+      <header className="deck-top">
+        <div
+          className={`deck-progress${finished ? " complete" : ""}`}
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={stories.length}
+          aria-valuenow={Math.min(index + 1, stories.length)}
+          aria-label={progressLabel(index, stories.length)}
         >
-          <Icon name="back" />
-          <span>Cover</span>
-        </button>
-        <div className={`reader-progress${finished ? " complete" : ""}`}>
-          <span aria-live="polite">{progressLabel(index, stories.length)}</span>
-          <div aria-hidden="true">
-            {stories.map((s, i) => (
-              <i
-                key={s.id}
-                className={i <= index || finished ? "filled" : ""}
-                style={{ animationDelay: `${i * 70}ms` }}
-              />
-            ))}
-          </div>
+          {stories.map((s, i) => (
+            <i
+              key={s.id}
+              className={
+                i < index || finished ? "done" : i === index ? "now" : ""
+              }
+            />
+          ))}
         </div>
-        <div className="deck-arrows">
+        <div className="deck-topbar">
           <button
-            type="button"
-            aria-label="Previous story"
-            disabled={index === 0}
-            onClick={() => goTo(index - 1)}
+            className="reader-exit"
+            onClick={onExit}
+            aria-label="Back to cover"
           >
-            <Icon name="back" size={18} />
+            <Icon name="back" />
           </button>
-          <button
-            type="button"
-            aria-label="Next story"
-            disabled={index === count - 1}
-            onClick={() => goTo(index + 1)}
-          >
-            <Icon name="next" size={18} />
-          </button>
+          <span className="deck-count" aria-live="polite">
+            {progressLabel(index, stories.length)}
+          </span>
+          <span className="deck-date">
+            {date
+              ? new Date(`${date}T12:00:00Z`).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  timeZone: "UTC",
+                })
+              : ""}
+          </span>
         </div>
       </header>
       <div className="story-deck" ref={deck}>
@@ -307,7 +315,7 @@ export default function EditionReader({
                 label={story.headline}
                 theme={themes[i]}
               >
-                <div className="story-copy">
+                <div className="story-hero">
                   <p className="eyebrow">
                     <span className="story-ordinal">
                       {String(i + 1).padStart(2, "0")}
@@ -333,9 +341,6 @@ export default function EditionReader({
                   ) : (
                     <StoryVisual story={story} />
                   )}
-                  <p className="story-intro">
-                    {story.experience?.explanation.text ?? story.summary}
-                  </p>
                   <AudioPlayer
                     key={story.id}
                     story={story}
@@ -349,11 +354,29 @@ export default function EditionReader({
                     onPreferences={onPreferences}
                     onPlayback={playbackHandler(i)}
                     controller={controllerRef(i)}
+                    onPrevious={i > 0 ? () => goTo(i - 1) : undefined}
+                    onNext={() => goTo(i + 1)}
+                    transportLabel={
+                      i + 1 < stories.length ? "Next story" : "Finish"
+                    }
                     onEnded={() => {
                       // Listen-through is the only mode that turns the page by itself.
                       if (i + 1 < stories.length) setAutoPlayIndex(i + 1);
                       goTo(i + 1);
                     }}
+                  />
+                </div>
+                <div className="story-sheet">
+                  <FollowAlong
+                    script={
+                      playback[i]?.ready
+                        ? narrationFor(story).script
+                        : (story.experience?.explanation.text ?? story.summary)
+                    }
+                    playback={playback[i]}
+                    onSeekFraction={(fraction) =>
+                      controllers.current[i]?.seekFraction(fraction)
+                    }
                   />
                   <div className="why-card">
                     <h3>Why it matters</h3>
